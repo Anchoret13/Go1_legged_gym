@@ -172,7 +172,7 @@
       <geometry>
         <mesh filename="../meshes/calf.stl" scale="1 1 1"/>
       </geometry>
-      <material name="black"/>
+      <material name="white"/>
     </visual>
     <collision>
       <origin rpy="0 1.57079632679 0" xyz="0 0 -0.1065"/>
@@ -197,7 +197,7 @@
       <geometry>
         <sphere radius="0.01"/>
       </geometry>
-      <material name="black"/>
+      <material name="white"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
@@ -320,7 +320,7 @@
       <geometry>
         <sphere radius="0.01"/>
       </geometry>
-      <material name="black"/>
+      <material name="white"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
@@ -418,7 +418,7 @@
       <geometry>
         <mesh filename="../meshes/calf.stl" scale="1 1 1"/>
       </geometry>
-      <material name="black"/>
+      <material name="white"/>
     </visual>
     <collision>
       <origin rpy="0 1.57079632679 0" xyz="0 0 -0.1065"/>
@@ -443,7 +443,7 @@
       <geometry>
         <sphere radius="0.01"/>
       </geometry>
-      <material name="black"/>
+      <material name="white"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
@@ -541,7 +541,7 @@
       <geometry>
         <mesh filename="../meshes/calf.stl" scale="1 1 1"/>
       </geometry>
-      <material name="black"/>
+      <material name="white"/>
     </visual>
     <collision>
       <origin rpy="0 1.57079632679 0" xyz="0 0 -0.1065"/>
@@ -566,7 +566,7 @@
       <geometry>
         <sphere radius="0.01"/>
       </geometry>
-      <material name="black"/>
+      <material name="white"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
@@ -593,13 +593,18 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="../meshes/wheel_tire.stl" />
+        <mesh filename="../meshes/wheel_tire.stl">
+          <scale xyz="0.15 0.15 0.15"/>
+        </mesh>
       </geometry>
+      <material name="blue"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
         <geometry>
-          <mesh filename="../meshes/wheel_tire.stl" />
+          <mesh filename="../meshes/wheel_tire.stl">
+            <scale xyz="0.15 0.15 0.15"/>
+          </mesh>
         </geometry>
     </collision>
 
@@ -619,21 +624,26 @@
   <joint name="FR_roller_foot_joint" type="continuous">
     <parent link="FR_ankle"/>
     <child link="FR_roller_foot"/>
-    <origin xyz="0 0 0" rpy="0 0 0"/>
-    <axis xyz="0 1 0"/> 
+    <origin xyz="0 0 0" rpy="1.57 0 0"/>
+    <axis xyz="0 0 1"/> 
   </joint>
 
   <link name="FR_roller_foot">
     <visual>
-      <origin rpy="1.57 0 0" xyz="0 0 0"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="../meshes/wheel_tire.stl" />
+        <mesh filename="../meshes/wheel_tire.stl">
+          <scale xyz="0.15 0.15 0.15"/>
+        </mesh>
       </geometry>
+            <material name="blue"/>
     </visual>
     <collision>
-      <origin rpy="1.57 0 0" xyz="0 0 0"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="../meshes/wheel_tire.stl" />
+        <mesh filename="../meshes/wheel_tire.stl">
+          <scale xyz="0.15 0.15 0.15"/>
+        </mesh>
       </geometry>
     </collision>
 
@@ -652,21 +662,26 @@
   <joint name="RL_roller_foot_joint" type="continuous">
     <parent link="RL_ankle"/>
     <child link="RL_roller_foot"/>
-    <origin xyz="0 0 0" rpy="0 0 0"/>
-    <axis xyz="0 1 0"/> 
+    <origin xyz="0 0 0" rpy="-1.57 0 0.3"/>
+    <axis xyz="0 0 1"/> 
   </joint>
 
   <link name="RL_roller_foot">
     <visual>
-      <origin rpy="-1.57 0 0" xyz="0 0 0"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="../meshes/wheel_tire.stl" />
+        <mesh filename="../meshes/wheel_tire.stl">
+          <scale xyz="0.15 0.15 0.15"/>
+        </mesh>
       </geometry>
+            <material name="blue"/>
     </visual>
     <collision>
-      <origin rpy="-1.57 0 0" xyz="0 0 0"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
         <geometry>
-          <mesh filename="../meshes/wheel_tire.stl" />
+        <mesh filename="../meshes/wheel_tire.stl">
+          <scale xyz="0.15 0.15 0.15"/>
+        </mesh>
         </geometry>
     </collision>
 
@@ -686,21 +701,26 @@
   <joint name="RR_roller_foot_joint" type="continuous">
     <parent link="RR_ankle"/>
     <child link="RR_roller_foot"/>
-    <origin xyz="0 0 0" rpy="0 0 0"/>
-    <axis xyz="0 1 0"/> 
+    <origin xyz="0 0 0" rpy="1.57 0 -0.3"/>
+    <axis xyz="0 0 1"/> 
   </joint>
 
   <link name="RR_roller_foot">
     <visual>
-      <origin rpy="1.57 0 0" xyz="0 0 0"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="../meshes/wheel_tire.stl" />
+        <mesh filename="../meshes/wheel_tire.stl">
+          <scale xyz="0.15 0.15 0.15"/>
+        </mesh>
       </geometry>
+            <material name="blue"/>
     </visual>
     <collision>
-      <origin rpy="1.57 0 0" xyz="0 0 0"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="../meshes/wheel_tire.stl" />
+        <mesh filename="../meshes/wheel_tire.stl">
+          <scale xyz="0.15 0.15 0.15"/>
+        </mesh>
       </geometry>
     </collision>
 
@@ -714,5 +734,7 @@
       <rolling_friction value="0.0001"/> <!-- Reduced rolling friction for continuous motion -->
     </contact>
   </link>
+
+<!-- ****************************************** ********************************************* -->
  </robot>
 

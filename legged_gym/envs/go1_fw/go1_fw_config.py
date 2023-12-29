@@ -33,8 +33,9 @@ from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobot
 class Go1FwFlatCfg( LeggedRobotCfg ):
     class env( LeggedRobotCfg.env):
         num_envs = 4096
-        num_observations = 54 # 241 when consider the terrain 
+        # num_observations = 54 # 241 when consider the terrain 
         num_actions = 14
+        num_observations = 48 # 241 when consider the terrain 
     class init_state( LeggedRobotCfg.init_state ):
         pos = [0.0, 0.0, 0.3] # x,y,z [m]
         default_joint_angles = { # = target angles [rad] when action = 0.0

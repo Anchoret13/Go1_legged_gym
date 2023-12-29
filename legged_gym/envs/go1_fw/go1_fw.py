@@ -38,62 +38,56 @@ from isaacgym import gymtorch, gymapi, gymutil
 import torch
 from typing import Tuple, Dict
 from legged_gym.envs import LeggedRobot
+from .go1_fw_config import Go1FwFlatCfg
 
 class Go1Fw(LeggedRobot):
-    def _create_envs(self):
+    cfg : Go1FwFlatCfg
+    def __init__(self, cfg, sim_params, physics_engine, sim_device, headless):
+        super().__init__(cfg, sim_params, physics_engine, sim_device, headless)
+        self.num_passive_joints = self.cfg.env.num_passive_joints
+
+    def compute_observations(self):
+        """ Computes observations to exclude passive joint
+        """
+        dofs_to_keep = torch.ones(self.num_dof, dtype=torch.bool)
+        dofs_to_keep[self.dof_roller_ids] = False
+
+        # Select the columns
+        active_dof_pos = self.dof_pos[:, dofs_to_keep]
+        active_default_dof_pos = self.default_dof_pos[:, dofs_to_keep]
+        active_dof_vel = self.dof_vel[:, dofs_to_keep]
+        active_actions = self.actions[:, dofs_to_keep]
+
+        
+        self.obs_buf = torch.cat((  self.base_lin_vel * self.obs_scales.lin_vel,
+                                    self.base_ang_vel  * self.obs_scales.ang_vel,
+                                    self.projected_gravity,
+                                    self.commands[:, :3] * self.commands_scale,
+                                    (active_dof_pos - active_default_dof_pos) * self.obs_scales.dof_pos,
+                                    active_dof_vel * self.obs_scales.dof_vel,
+                                    active_actions
+                                    ),dim=-1)
+        
+        # add perceptive inputs if not blind
+        if self.cfg.terrain.measure_heights:
+            heights = torch.clip(self.root_states[:, 2].unsqueeze(1) - 0.5 - self.measured_heights, -1, 1.) * self.obs_scales.height_measurements
+            self.obs_buf = torch.cat((self.obs_buf, heights), dim=-1)
+        # add noise if needed
+        if self.add_noise:
+            self.obs_buf += (2 * torch.rand_like(self.obs_buf) - 1) * self.noise_scale_vec
+
+
+
+    def _init_buffers(self):
         # # add for wheel robot *************************************************************************************
         # self.num_rollers = 2
-        super()._create_envs()
+        super()._init_buffers()
+        self.base_pos = self.root_states[:self.num_envs, 0:3]
 
-    #     for i in range(self.num_envs):
-    #         props = self.gym.get_actor_dof_properties(ref_env, actor_handle)
-    #     self.gym.load_asset(self.sim, asset_root, asset_file, asset_options)
-
-        # print('*******************************t***************************************************')
-        # self.num_dof
-        # print(self.num_dof)
-        # print(self.num_bodies)
-        # print(self.dof_names)
-        # print(self.num_dof)
-        # self.num_rollers = len(self.dof_names)
-        # self.dof_names = [string for string in self.dof_names if "roller" not in string]
-        # print(self.dof_names)
-        # self.num_rollers = self.num_rollers - len(self.dof_names)
-        # print(self.num_rollers)
-        # self.num_dof = self.num_dof - self.num_rollers
-        # print(self.feet_names )
-        # print('**********************************************************************************')
-
-        # # self.num_dofs = len(self.dof_names) - self.num_rollers
-        # print(self.num_dofs )
-        # # self.num_dofs = len(self.dof_names) - self.num_rollers
-
-
-
-
-    # def reset_idx(self, env_ids):
-    #     super()._create_envs(env_ids)
-    #     self.roller_air_time[env_ids] = 0.
-
-    # def _reward_roller_air_time(self):
-    #     # Reward long steps
-    #     # Need to filter the contacts because the contact reporting of PhysX is unreliable on meshes
-    #     self.roller_names = [s for s in self.dof_names if 'roller' in s]
-    #     self.roller_indices = [] 
-    #     for i in range(len(self.roller_names)):
-    #         self.roller_indices[i] = self.gym.find_actor_rigid_body_handle(self.envs[0], self.actor_handles[0], self.roller_names[i])
-
-    #     contact = self.contact_forces[:, self.self.feet_indices, 2] > 1.
-    #     contact_filt = torch.logical_or(contact, self.last_contacts) 
-    #     self.last_contacts = contact
-
-    #     self.roller_air_time = torch.zeros(self.num_envs, self.roller_indices.shape[0], dtype=torch.float, device=self.device, requires_grad=False)
-
-    #     first_contact = (self.roller_air_time > 0.) * contact_filt
-    #     self.roller_air_time += self.dt
-    #     rew_airTime = torch.sum((self.roller_air_time - 0.5) * first_contact, dim=1) # reward only on first contact with the ground
-    #     rew_airTime *= torch.norm(self.commands[:, :2], dim=1) > 0.1 #no reward for zero command
-    #     self.roller_air_time *= ~contact_filt
-    #     return rew_airTime
+        rigid_body_state = self.gym.acquire_rigid_body_state_tensor(self.sim)
+        self.rigid_body_state = gymtorch.wrap_tensor(rigid_body_state)[:self.num_envs * self.num_bodies, :]
+        self.foot_velocities = self.rigid_body_state.view(self.num_envs, self.num_bodies, 13)[:,
+                               self.feet_indices,
+                               7:10]
 
 
