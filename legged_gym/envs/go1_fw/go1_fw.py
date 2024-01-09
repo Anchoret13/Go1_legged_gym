@@ -44,7 +44,7 @@ class Go1Fw(LeggedRobot):
     cfg : Go1FwFlatCfg
     def __init__(self, cfg, sim_params, physics_engine, sim_device, headless):
         super().__init__(cfg, sim_params, physics_engine, sim_device, headless)
-        self.num_passive_joints = self.cfg.env.num_passive_joints
+        # self.num_passive_joints = self.cfg.env.num_passive_joints
 
     def compute_observations(self):
         """ Computes observations to exclude passive joint

@@ -48,7 +48,7 @@ from legged_gym.utils.math import quat_apply_yaw, wrap_to_pi, torch_rand_sqrt_fl
 from legged_gym.utils.helpers import class_to_dict
 from .legged_robot_config import LeggedRobotCfg
 
-class LeggedRobot(BaseTask):
+class OnlyLeggedRobot(BaseTask):
     def __init__(self, cfg: LeggedRobotCfg, sim_params, physics_engine, sim_device, headless):
         """ Parses the provided config file,
             calls create_sim() (which creates, simulation, terrain and environments),
@@ -647,14 +647,10 @@ class LeggedRobot(BaseTask):
 
         # save body names from the asset
         body_names = self.gym.get_asset_rigid_body_names(robot_asset)
-        # self.body_names = self.gym.get_asset_rigid_body_names(robot_asset) # **************************************************************************************888
-
         self.dof_names = self.gym.get_asset_dof_names(robot_asset)
-
         self.num_bodies = len(body_names)
         self.num_dofs = len(self.dof_names)
         feet_names = [s for s in body_names if self.cfg.asset.foot_name in s]
-        self.feet_names = [s for s in body_names if self.cfg.asset.foot_name in s]
         penalized_contact_names = []
         for name in self.cfg.asset.penalize_contacts_on:
             penalized_contact_names.extend([s for s in body_names if name in s])
@@ -666,22 +662,6 @@ class LeggedRobot(BaseTask):
         self.base_init_state = to_torch(base_init_state_list, device=self.device, requires_grad=False)
         start_pose = gymapi.Transform()
         start_pose.p = gymapi.Vec3(*self.base_init_state[:3])
-
-        # *********************** changed by xiaoyu ************************************
-        #  this code change for passvie joint
-        # 
-        self.dof_name_to_id = {k: v for k, v in zip(self.dof_names, np.arange(self.num_dof))}
-        self.dof_rollor_names = [s for s in self.dof_names if self.cfg.asset.roller_name in s]
-        self.body_roller_names = [s for s in body_names if self.cfg.asset.roller_name in s]
-        self.dof_roller_ids = [self.dof_name_to_id[name] for name in self.dof_rollor_names]
-        # print(self.dof_roller_ids)
-        # 
-        #  
-        # # *****************************************************************************
-        # Helper dictionary to map joint names to tensor ID
-
-        # print(self.dof_rollor_names)
-        # print(self.body_roller_names)
 
         self._get_env_origins()
         env_lower = gymapi.Vec3(0., 0., 0.)
@@ -699,27 +679,10 @@ class LeggedRobot(BaseTask):
             self.gym.set_asset_rigid_shape_properties(robot_asset, rigid_shape_props)
             actor_handle = self.gym.create_actor(env_handle, robot_asset, start_pose, self.cfg.asset.name, i, self.cfg.asset.self_collisions, 0)
             dof_props = self._process_dof_props(dof_props_asset, i)
-            # *********************** changed by xiaoyu ************************************
-            #  this code change for passvie joint
-            # 
-            for i in self.dof_roller_ids:
-                # roller_index = self.dof_name_to_id[each_roller_name]
-                dof_props ["driveMode"][i] = gymapi.DOF_MODE_NONE
-                dof_props ["stiffness"][i] = 0.0
-                dof_props ["damping"][i] = 0.0
-                dof_props ["effort"][i] = 0.0
-                dof_props ["velocity"][i] = 1000000000.0
-                dof_props ["friction"][i] = 0.0
-            # 
-            #  
-            # # *****************************************************************************
             self.gym.set_actor_dof_properties(env_handle, actor_handle, dof_props)
-            
             body_props = self.gym.get_actor_rigid_body_properties(env_handle, actor_handle)
             body_props = self._process_rigid_body_props(body_props, i)
             self.gym.set_actor_rigid_body_properties(env_handle, actor_handle, body_props, recomputeInertia=True)
-
-            self.gym.set_actor_dof_properties(env_handle, actor_handle, dof_props)
             self.envs.append(env_handle)
             self.actor_handles.append(actor_handle)
 
@@ -941,33 +904,3 @@ class LeggedRobot(BaseTask):
     def _reward_feet_contact_forces(self):
         # penalize high contact forces
         return torch.sum((torch.norm(self.contact_forces[:, self.feet_indices, :], dim=-1) -  self.cfg.rewards.max_contact_force).clip(min=0.), dim=1)
-    
-    ## ADDITIONAL REWARD FUNCTION FOR WHEELED ROBOT
-    def _reward_legs_energy(self):
-        return torch.sum(torch.square(self.torques * self.dof_vel), dim = 1)
-    
-    def _reward_legs_energy_abs(self):
-        return torch.sum(torch.abs(self.torques * self.dof_vel), dim=1)
-
-    def _reward_lin_vel_x(self):
-        return self.root_states[:, 7]
-    
-    def _reward_lin_vel_y_abs(self):
-        return torch.abs(self.root_states[:, 8])
-    
-    def _reward_lin_vel_y_square(self):
-        return torch.square(self.root_states[:, 8])
-    
-    def _reward_exceed_torque_limits_i(self):
-        max_torques = torch.abs(self.torque_limits) # TODO: update this
-        exceed_torque_each_dof = max_torques > self.torque_limits
-        exceed_torque = exceed_torque_each_dof.any(dim= 1)
-        return exceed_torque.to(torch.float32)
-
-    def _reward_alive(self):
-        return 1.
-    
-    def _reward_tracking_lin_vel_x(self):
-        # Reward for Tracking of linear velocity commands on x-axis
-        lin_vel_error = torch.square(self.commands[:, 0] - self.base_lin_vel[:, 0])
-        return torch.exp(-lin_vel_error/self.cfg.rewards.tracking_sigma)
