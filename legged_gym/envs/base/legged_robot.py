@@ -971,3 +971,7 @@ class LeggedRobot(BaseTask):
         # Reward for Tracking of linear velocity commands on x-axis
         lin_vel_error = torch.square(self.commands[:, 0] - self.base_lin_vel[:, 0])
         return torch.exp(-lin_vel_error/self.cfg.rewards.tracking_sigma)
+    
+    #------------ kinematics constrains as rewards ----------------
+    def _reward_skating_kinematics_constraints(self):
+        return 0

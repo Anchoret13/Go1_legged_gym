@@ -48,9 +48,9 @@ class Go1FlatCfg( LeggedRobotCfg ):
         resampling_time = 10. # time before command are changed[s]
         heading_command = False # if true: compute ang vel command from heading error
         class ranges:
-            lin_vel_x = [-0.6, 0.6] # min max [m/s]
-            lin_vel_y = [-0.6, 0.6]   # min max [m/s]
-            ang_vel_yaw = [-1, 1]    # min max [rad/s]
+            lin_vel_x = [-0.3, 0.3] # min max [m/s]
+            lin_vel_y = [-0.3, 0.3]   # min max [m/s]
+            ang_vel_yaw = [-0.5, 0.5]    # min max [rad/s]
             heading = [-3.14, 3.14]
 
     class init_state( LeggedRobotCfg.init_state ):
@@ -96,10 +96,15 @@ class Go1FlatCfg( LeggedRobotCfg ):
         base_height_target = 0.34
         class scales( LeggedRobotCfg.rewards.scales ):
             torques = -0.0001
-            dof_pos_limits = -10.0
-            action_rate = -0.01
-            orientation = -5.
+            tracking_lin_vel = 5.0
+            tracking_ang_vel = 0.5
+            dof_pos_limits = -15.0
+            action_rate = -0.5
+            orientation = 1.0
             base_height = -30.
+            lin_vel_z = -0.01
+            feet_air_time = 1.0
+            
             
     class domain_rand( LeggedRobotCfg.domain_rand):
         randomize_friction = True
