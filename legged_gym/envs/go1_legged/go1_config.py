@@ -103,7 +103,7 @@ class Go1FlatCfg( LeggedRobotCfg ):
             orientation = 1.0
             base_height = -30.
             lin_vel_z = -0.01
-            feet_air_time = 1.0
+            # feet_air_time = 1.0
             
             
     class domain_rand( LeggedRobotCfg.domain_rand):
