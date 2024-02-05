@@ -52,7 +52,8 @@ def test_env(args):
         #     # action[10] = 0
         #     # action[7] = 0
         obs, _, rew, done, info = env.step(actions)
-        # print(obs)
+        print(obs)
+        print(actions)
     print("Done")
 
 if __name__ == '__main__':
