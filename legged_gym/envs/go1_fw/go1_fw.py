@@ -167,3 +167,61 @@ class Go1Fw(WheeledRobot):
         if self.privileged_obs_buf is not None:
             self.privileged_obs_buf = torch.clip(self.privileged_obs_buf, -clip_obs, clip_obs)
         return self.obs_buf, self.privileged_obs_buf, self.rew_buf, self.reset_buf, self.extras
+    
+
+
+
+
+# def _create_envs(self):
+#         super()._create_envs()
+#         self.all_feet_body_ids = [4, 9, 14,18] #  the id of body of feet , which used  to  get orn respect to ground
+#         self.roller_body_ids = [4, 9] 
+#         self.feet_only_body_ids = [14,18] 
+#         '''
+#         first step;
+#             1. roller feet perpendular to grounds
+#             2. penalize Z of feet
+            
+#         second step:
+#             1. project [base , all_feet] onto SE(2), ground.
+#             2. [four feet(points)] became a quadhredual, centre is point of base on 2D.
+#             3. design gait based on the pattern of four lines.
+#         '''
+#         # self.envs # envs handle 
+#         # self.actor_handles # robot handle
+#         # for i in range(self.num_envs): 
+#         body_states = self.gym.get_actor_rigid_body_states(
+#         self.envs[0], self.actor_handles[0], gymapi.STATE_ALL)
+
+#         body_names = self.gym.get_actor_rigid_body_names(self.envs[0], self.actor_handles[0])
+#             # Print some state slices
+#         print("Poses from Body State:")
+#         print(body_states['pose'])          # print just the poses
+
+#         print("\nVelocities from Body State:")
+#         print(body_states['vel'])          # print just the velocities
+#         print()
+
+#         # iterate through bodies and print name and position
+#         body_positions = body_states['pose']['p']
+#         for i in range(len(body_names)):
+#             print("Body '%s' has position" % body_names[i], body_positions[i])
+#             # print(body_states['pose']) 
+#         #     self.feet_pose[i] = body_states[self.feet_names]
+#         #     print(self.feet_pose[i])
+#         # print(self.feet_pose)
+#         body_positions[0] = body_positions[1]
+#         print('  ')
+#         print('  ')
+#         print("Body '%s' has position" % body_names[0], body_positions[0])
+#         print('  ')
+#         print('  ')
+#         # iterate through bodies and print name and orn
+#         body_orn = body_states['pose']['r']
+#         for i in range(len(body_names)):
+#             print("Body '%s' has orn" % body_names[i], body_orn[i])
+#             # print(body_states['pose']) 
+#         #     self.feet_pose[i] = body_states[self.feet_names]
+#         #     print(self.feet_pose[i])
+#         # print(self.feet_pose)
+            

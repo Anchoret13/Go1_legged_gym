@@ -710,7 +710,7 @@ class WheeledRobot(BaseTask):
                 dof_props ["stiffness"][i] = 0.0
                 dof_props ["damping"][i] = 0.0
                 dof_props ["effort"][i] = 0.0
-                dof_props ["velocity"][i] = 10.0
+                dof_props ["velocity"][i] = 100000000.0
                 dof_props ["friction"][i] = 0.0
             # 
             #  
