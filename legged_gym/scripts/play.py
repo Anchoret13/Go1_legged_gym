@@ -39,7 +39,7 @@ import numpy as np
 import torch
 from moviepy.editor import ImageSequenceClip
 
-ENV_NUM = 10
+ENV_NUM = 1
 
 
 def play(args):
@@ -77,9 +77,13 @@ def play(args):
     camera_direction = np.array(env_cfg.viewer.lookat) - np.array(env_cfg.viewer.pos)
     img_idx = 0
     frames = []
-
+    for i,dof_name in enumerate(env.dof_names):
+        print(i, " : ",dof_name)
     for i in range(10*int(env.max_episode_length)):
         actions = policy(obs.detach())
+        print("*"*50)
+        print(actions)
+        print("+"*50)
         obs, _, rews, dones, infos = env.step(actions.detach())
         if RECORD_FRAMES:
             if i % 2:
@@ -109,8 +113,10 @@ def play(args):
         if i < stop_state_log:
             logger.log_states(
                 {
-                    'dof_pos_target': actions[robot_index, joint_index].item() * env.cfg.control.action_scale,
-                    'dof_pos': env.dof_pos[robot_index, joint_index].item(),
+                    # 'dof_pos_target': actions[robot_index, joint_index].item() * env.cfg.control.action_scale,
+                    # 'dof_pos': env.dof_pos[robot_index, joint_index].item(),
+                    'dof_pos_target': actions[robot_index,:].cpu().detach().numpy() * env.cfg.control.action_scale,
+                    'dof_pos':env.dof_pos[robot_index,:].cpu().detach().numpy(),
                     'dof_vel': env.dof_vel[robot_index, joint_index].item(),
                     'dof_torque': env.torques[robot_index, joint_index].item(),
                     'command_x': env.commands[robot_index, 0].item(),
