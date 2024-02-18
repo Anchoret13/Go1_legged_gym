@@ -62,84 +62,111 @@ class Logger:
         self.plot_process = Process(target=self._plot)
         self.plot_process.start()
 
+    # def _plot(self):
+    #     nb_rows = 4
+    #     nb_cols = 3
+    #     fig, axs = plt.subplots(nb_rows, nb_cols)
+    #     for key, value in self.state_log.items():
+    #         time = np.linspace(0, len(value)*self.dt, len(value))
+    #         break
+    #     log= self.state_log
+    #     # plot joint targets and measured positions
+    #     a = axs[1, 0]
+    #     if log["dof_pos"]: a.plot(time, log["dof_pos"], label='measured')
+    #     if log["dof_pos_target"]: a.plot(time, log["dof_pos_target"], label='target')
+    #     a.set( ylabel='Position [rad]', title='DOF Position vs time [s]')
+    #     a.legend()
+    #     # plot joint velocity
+    #     a = axs[1, 1]
+    #     if log["dof_vel"]: a.plot(time, log["dof_vel"], label='measured')
+    #     if log["dof_vel_target"]: a.plot(time, log["dof_vel_target"], label='target')
+    #     a.set( ylabel='Velocity [rad/s]', title='Joint Velocity vs time [s]')
+    #     a.legend()
+    #     # plot base vel x
+    #     a = axs[0, 0]
+    #     if log["base_vel_x"]: a.plot(time, log["base_vel_x"], label='measured')
+    #     if log["command_x"]: a.plot(time, log["command_x"], label='commanded')
+    #     a.set(ylabel='base lin vel [m/s]', title='Base velocity x vs time [s]')
+    #     a.legend()
+    #     # plot base vel y
+    #     a = axs[0, 1]
+    #     if log["base_vel_y"]: a.plot(time, log["base_vel_y"], label='measured')
+    #     if log["command_y"]: a.plot(time, log["command_y"], label='commanded')
+    #     a.set( ylabel='base lin vel [m/s]', title='Base velocity y vs time [s]')
+    #     a.legend()
+    #     # plot base vel yaw
+    #     a = axs[0, 2]
+    #     if log["base_vel_yaw"]: a.plot(time, log["base_vel_yaw"], label='measured')
+    #     if log["command_yaw"]: a.plot(time, log["command_yaw"], label='commanded')
+    #     a.set(ylabel='base ang vel [rad/s]', title='Base velocity yaw vs time [s]')
+    #     a.legend()
+    #     # plot base vel z
+    #     a = axs[1, 2]
+    #     if log["base_vel_z"]: a.plot(time, log["base_vel_z"], label='measured')
+    #     a.set(ylabel='base lin vel [m/s]', title='Base velocity z vs time [s]')
+    #     a.legend()
+    #     # plot contact forces
+    #     a = axs[2, 0]
+    #     if log["contact_forces_z"]:
+    #         forces = np.array(log["contact_forces_z"])
+    #         for i in range(forces.shape[1]):
+    #             a.plot(time, forces[:, i], label=f'force {i}')
+    #     a.set(ylabel='Forces z [N]', title='Vertical Contact forces vs time [s]')
+    #     a.legend()
+    #     # plot torque/vel curves
+    #     a = axs[2, 1]
+    #     if log["dof_vel"]!=[] and log["dof_torque"]!=[]: a.plot(log["dof_vel"], log["dof_torque"], 'x', label='measured')
+    #     a.set( ylabel='Joint Torque [Nm]', title='Torque/velocity curves')
+    #     a.legend()
+    #     # plot torques
+    #     a = axs[2, 2]
+    #     if log["dof_torque"]!=[]: a.plot(time, log["dof_torque"], label='measured')
+    #     a.set( ylabel='Joint Torque [Nm]', title='Torque vs tims s')
+    #     a.legend()
+    #     # *************************   added for debug  by xiaoyu
+    #     a = axs[3,0]
+    #     if log["roller_pos1"]: a.plot(time, log["roller_pos1"], label='roller_1')
+    #     a.set(title='1-roller measure pos')
+    #     a = axs[3,1]
+    #     if log["roller_pos2"]: a.plot(time, log["roller_pos2"], label='roller_2')
+    #     a.set(title='2-roller measure pos')
+    #             # plot contact forces
+    #     a = axs[3, 2]
+    #     if log["contact_forces_rollers"]:
+    #         forces = np.array(log["contact_forces_rollers"])
+    #         for i in range(forces.shape[1]):
+    #             a.plot(time, forces[:, i], label=f'force {i}')
+    #     a.set(xlabel='time [s]', ylabel='Forces z [N]', title='Vertical Contact forces rollers')
+    #     a.legend()
+
+
+    #     plt.show()
     def _plot(self):
         nb_rows = 4
-        nb_cols = 3
+        nb_cols = 4
         fig, axs = plt.subplots(nb_rows, nb_cols)
+
+        axs = axs.flatten()
         for key, value in self.state_log.items():
             time = np.linspace(0, len(value)*self.dt, len(value))
             break
         log= self.state_log
-        # plot joint targets and measured positions
-        a = axs[1, 0]
-        if log["dof_pos"]: a.plot(time, log["dof_pos"], label='measured')
-        if log["dof_pos_target"]: a.plot(time, log["dof_pos_target"], label='target')
-        a.set( ylabel='Position [rad]', title='DOF Position vs time [s]')
-        a.legend()
-        # plot joint velocity
-        a = axs[1, 1]
-        if log["dof_vel"]: a.plot(time, log["dof_vel"], label='measured')
-        if log["dof_vel_target"]: a.plot(time, log["dof_vel_target"], label='target')
-        a.set( ylabel='Velocity [rad/s]', title='Joint Velocity vs time [s]')
-        a.legend()
-        # plot base vel x
-        a = axs[0, 0]
-        if log["base_vel_x"]: a.plot(time, log["base_vel_x"], label='measured')
-        if log["command_x"]: a.plot(time, log["command_x"], label='commanded')
-        a.set(ylabel='base lin vel [m/s]', title='Base velocity x vs time [s]')
-        a.legend()
-        # plot base vel y
-        a = axs[0, 1]
-        if log["base_vel_y"]: a.plot(time, log["base_vel_y"], label='measured')
-        if log["command_y"]: a.plot(time, log["command_y"], label='commanded')
-        a.set( ylabel='base lin vel [m/s]', title='Base velocity y vs time [s]')
-        a.legend()
-        # plot base vel yaw
-        a = axs[0, 2]
-        if log["base_vel_yaw"]: a.plot(time, log["base_vel_yaw"], label='measured')
-        if log["command_yaw"]: a.plot(time, log["command_yaw"], label='commanded')
-        a.set(ylabel='base ang vel [rad/s]', title='Base velocity yaw vs time [s]')
-        a.legend()
-        # plot base vel z
-        a = axs[1, 2]
-        if log["base_vel_z"]: a.plot(time, log["base_vel_z"], label='measured')
-        a.set(ylabel='base lin vel [m/s]', title='Base velocity z vs time [s]')
-        a.legend()
-        # plot contact forces
-        a = axs[2, 0]
-        if log["contact_forces_z"]:
-            forces = np.array(log["contact_forces_z"])
-            for i in range(forces.shape[1]):
-                a.plot(time, forces[:, i], label=f'force {i}')
-        a.set(ylabel='Forces z [N]', title='Vertical Contact forces vs time [s]')
-        a.legend()
-        # plot torque/vel curves
-        a = axs[2, 1]
-        if log["dof_vel"]!=[] and log["dof_torque"]!=[]: a.plot(log["dof_vel"], log["dof_torque"], 'x', label='measured')
-        a.set( ylabel='Joint Torque [Nm]', title='Torque/velocity curves')
-        a.legend()
-        # plot torques
-        a = axs[2, 2]
-        if log["dof_torque"]!=[]: a.plot(time, log["dof_torque"], label='measured')
-        a.set( ylabel='Joint Torque [Nm]', title='Torque vs tims s')
-        a.legend()
-        # *************************   added for debug  by xiaoyu
-        a = axs[3,0]
-        if log["roller_pos1"]: a.plot(time, log["roller_pos1"], label='roller_1')
-        a.set(title='1-roller measure pos')
-        a = axs[3,1]
-        if log["roller_pos2"]: a.plot(time, log["roller_pos2"], label='roller_2')
-        a.set(title='2-roller measure pos')
-                # plot contact forces
-        a = axs[3, 2]
-        if log["contact_forces_rollers"]:
-            forces = np.array(log["contact_forces_rollers"])
-            for i in range(forces.shape[1]):
-                a.plot(time, forces[:, i], label=f'force {i}')
-        a.set(xlabel='time [s]', ylabel='Forces z [N]', title='Vertical Contact forces rollers')
-        a.legend()
 
-
+        counter = 0
+        for joint_idx in range(len(log['dof_pos_target'][0])):
+        # for joint_idx in range(14):
+            # if joint_idx == 3 or joint_idx == 7:
+            #     counter += 0
+            #     continue
+            commanded_joint_pos = []
+            measured_joint_pos = []
+            for i in range(len(time)):
+                commanded_joint_pos.append(log['dof_pos_target'][i][joint_idx])
+                measured_joint_pos.append(log['dof_pos'][i][joint_idx])
+            axs[joint_idx-counter].plot(time, commanded_joint_pos, color = 'red', label = "commanded")
+            axs[joint_idx-counter].plot(time, measured_joint_pos, color = 'blue', label = 'measured')
+            axs[joint_idx-counter].legend()
+        plt.tight_layout(rect = [0, 0.03, 1, 0.95])
         plt.show()
 
     def print_rewards(self):

@@ -34,10 +34,12 @@ class Go1FwFlatCfg( LeggedRobotCfg ):
     class env( LeggedRobotCfg.env):
         num_envs = 4096
         # num_observations = 54 # 241 when consider the terrain 
-        num_actions = 14
+        # num_actions = 14
+        num_actions = 12
         num_observations = 42 # 241 when consider the terrain 
     class init_state( LeggedRobotCfg.init_state ):
         pos = [0.0, 0.0, 0.3] # x,y,z [m]
+
         default_joint_angles = { # = target angles [rad] when action = 0.0
             'FL_hip_joint': 0.1,   # [rad]
             'RL_hip_joint': 0.1,   # [rad]
@@ -66,7 +68,8 @@ class Go1FwFlatCfg( LeggedRobotCfg ):
     class control( LeggedRobotCfg.control ):
         # PD Drive parameters:
         control_type = 'P'
-        stiffness = {'hip_joint': 20.0, 'thigh_joint': 25.0, 'calf_joint': 25.0, 'roller': 0.0}  # [N*m/rad]
+        gaits_type = 'fix_f'
+        stiffness = {'hip_joint': 20.0, 'thigh_joint': 20.0, 'calf_joint': 20.0, 'roller': 0.0}  # [N*m/rad]
         damping = {'hip_joint': 0.5, 'thigh_joint': 0.5, 'calf_joint': 0.5, 'roller': 0.0}     # [N*m*s/rad]
         # action scale: target angle = actionScale * action + defaultAngle
         action_scale = 0.25
@@ -75,7 +78,7 @@ class Go1FwFlatCfg( LeggedRobotCfg ):
 
     class asset( LeggedRobotCfg.asset ):
         file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/go1_fw/urdf/go1_fw.urdf'
-        name = "a1"
+        name = "go1"
         foot_name = "foot"
         roller_name = "roller"
         penalize_contacts_on = ["thigh", "calf"]
@@ -100,21 +103,34 @@ class Go1FwFlatCfg( LeggedRobotCfg ):
     class rewards( LeggedRobotCfg.rewards ):
         soft_dof_pos_limit = 0.01
         self_dof_vel_limit = 0.01
-        base_height_target = 0.25
+        base_height_target = 0.30
+
+        # add by xiaoyu 
+        max_contact_force = 150
         class scales:
-            tracking_ang_vel = 0.05
-            legs_energy = -1e-4
-            torques = -0.001
+            # tracking_ang_vel = 0.05
+
+            # legs_energy = -1e-4
+            # torques = -0.001
             # lin_vel_x = 3.0
-            tracking_lin_vel = 2.5
-            lin_vel_z = -0.5
-            tracking_lin_vel_x = 2.5
-            base_height = -0.1
-            action_rate = -0.01
+            # tracking_lin_vel = 5.0
+            # lin_vel_z = -0.5
+            # tracking_lin_vel_x = 2.5
+            # base_height = -0.1
+            # action_rate = -0.01
+
             collision = -1.0
-            dof_pos_limits = -0.4
-            torque_limits = -0.01
-            dof_vel_limits = -10.0
+            # dof_pos_limits = -0.4
+            # torque_limits = -0.01
+            # dof_vel_limits = -10.0
+            # orientation = -2.0
+
+            # add by xiaoyu
+            tracking_ang_vel = 0.5
+            torques = -0.001
+            lin_vel_x = 3.0
+            tracking_lin_vel = 1.5
+            masked_legs_energy = -1e-3
 
 
 

@@ -935,6 +935,23 @@ class OnlyLeggedRobot(BaseTask):
         lin_vel_error = torch.square(self.commands[:, 0] - self.base_lin_vel[:, 0])
         return torch.exp(-lin_vel_error/self.cfg.rewards.tracking_sigma)
     
+    def _reward_orientation_control(self):
+        # Penalize non flat base orientation
+        roll_pitch_commands = self.commands[10:12]
+        quat_roll = quat_from_angle_axis(-roll_pitch_commands[1],
+                                         torch.tensor([1, 0, 0], device=self.device, dtype=torch.float))
+        quat_pitch = quat_from_angle_axis(-roll_pitch_commands[0],
+                                          torch.tensor([0, 1, 0], device=self.device, dtype=torch.float))
+
+        desired_base_quat = quat_mul(quat_roll, quat_pitch)
+        print("+"*50)
+        print(self.base_quat)
+        print(desired_base_quat)
+        desired_projected_gravity = quat_rotate_inverse(desired_base_quat, self.gravity_vec)
+
+        return torch.sum(torch.square(self.projected_gravity[:2] - desired_projected_gravity[:, :2]), dim=1)
+
+    
     #------------ kinematics constrains as rewards ----------------
     def _reward_skating_kinematics_constraints(self):
         return 0

@@ -32,7 +32,7 @@ from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobot
 
 class Go1FlatCfg( LeggedRobotCfg ):
     class env (LeggedRobotCfg.env):
-        num_observations = 48
+        num_observations = 42
         observe_vel = False
 
     class terrain (LeggedRobotCfg.terrain):
@@ -48,10 +48,10 @@ class Go1FlatCfg( LeggedRobotCfg ):
         resampling_time = 10. # time before command are changed[s]
         heading_command = False # if true: compute ang vel command from heading error
         class ranges:
-            lin_vel_x = [-0.3, 0.3] # min max [m/s]
-            lin_vel_y = [-0.3, 0.3]   # min max [m/s]
-            ang_vel_yaw = [-0.5, 0.5]    # min max [rad/s]
-            heading = [-3.14, 3.14]
+            lin_vel_x = [-0.3, 2.5] # min max [m/s]
+            lin_vel_y = [-0.0, 0.0]   # min max [m/s]
+            ang_vel_yaw = [-0.0, 0.0]    # min max [rad/s]
+            heading = [0, 0]
 
     class init_state( LeggedRobotCfg.init_state ):
         pos = [0.0, 0.0, 0.34] # x,y,z [m]
@@ -96,13 +96,14 @@ class Go1FlatCfg( LeggedRobotCfg ):
         base_height_target = 0.34
         class scales( LeggedRobotCfg.rewards.scales ):
             torques = -0.0001
-            tracking_lin_vel = 5.0
-            tracking_ang_vel = 0.5
+            # tracking_lin_vel = 5.0
+            # tracking_ang_vel = 0.5
+            tracking_lin_vel_x = 5.0
             dof_pos_limits = -15.0
             action_rate = -0.5
-            orientation = 1.0
+            orientation = - 1.0
             base_height = -30.
-            lin_vel_z = -0.01
+            lin_vel_z = -0.3
             # feet_air_time = 1.0
             
             

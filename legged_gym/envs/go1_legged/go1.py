@@ -42,3 +42,33 @@ from legged_gym.envs.base.only_legged_robot import OnlyLeggedRobot
 class Go1_Flat(OnlyLeggedRobot):
     def _create_envs(self):
         super()._create_envs()
+
+    def compute_observations(self):
+        """ Computes observations to exclude passive joint
+        """
+        # dofs_to_keep = torch.ones(self.num_dof, dtype=torch.bool)
+        # dofs_to_keep[self.dof_roller_ids] = False
+
+        # # Select the columns
+        # active_dof_pos = self.dof_pos[:, dofs_to_keep]
+        # active_default_dof_pos = self.default_dof_pos[:, dofs_to_keep]
+        # active_dof_vel = self.dof_vel[:, dofs_to_keep]
+        # active_actions = self.actions[:, dofs_to_keep]
+
+        
+        # self.obs_buf = torch.cat((  self.base_lin_vel * self.obs_scales.lin_vel,
+        #                             self.base_ang_vel  * self.obs_scales.ang_vel,
+        #                             self.projected_gravity,
+        #                             self.commands[:, :3] * self.commands_scale,
+        #                             (active_dof_pos - active_default_dof_pos) * self.obs_scales.dof_pos,
+        #                             active_dof_vel * self.obs_scales.dof_vel,
+        #                             active_actions
+        #                             ),dim=-1)
+
+        self.obs_buf = torch.cat((
+            self.projected_gravity,
+            self.commands[:, :3] * self.commands_scale,
+            (self.dof_pos - self.default_dof_pos) * self.obs_scales.dof_pos,
+            self.dof_vel * self.obs_scales.dof_vel,
+            torch.clip(self.actions, -1, 1)
+        ), dim = -1)
