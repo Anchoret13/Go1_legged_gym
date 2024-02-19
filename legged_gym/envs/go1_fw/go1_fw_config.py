@@ -110,7 +110,7 @@ class Go1FwFlatCfg( LeggedRobotCfg ):
         class scales:
             # tracking_ang_vel = 0.05
 
-            # legs_energy = -1e-4
+            legs_energy = -1e-4
             # torques = -0.001
             # lin_vel_x = 3.0
             # tracking_lin_vel = 5.0

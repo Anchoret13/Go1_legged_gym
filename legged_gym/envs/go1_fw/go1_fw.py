@@ -76,9 +76,6 @@ class Go1Fw(WheeledRobot):
             active_dof_vel * self.obs_scales.dof_vel,
             torch.clip(self.actions, -1, 1)
         ), dim = -1)
-        # print("+"*50)
-        # print(self.obs_buf)
-        # print(self.obs_buf.shape)
         # # add perceptive inputs if not blind
         # if self.cfg.terrain.measure_heights:
         #     heights = torch.clip(self.root_states[:, 2].unsqueeze(1) - 0.5 - self.measured_heights, -1, 1.) * self.obs_scales.height_measurements
@@ -172,56 +169,98 @@ class Go1Fw(WheeledRobot):
 
 
 
-# def _create_envs(self):
-#         super()._create_envs()
-#         self.all_feet_body_ids = [4, 9, 14,18] #  the id of body of feet , which used  to  get orn respect to ground
-#         self.roller_body_ids = [4, 9] 
-#         self.feet_only_body_ids = [14,18] 
-#         '''
-#         first step;
-#             1. roller feet perpendular to grounds
-#             2. penalize Z of feet
+    def _create_envs(self):
+        super()._create_envs()
+        self.all_feet_body_ids = [4, 9, 14,18] #  the id of body of feet , which used  to  get orn respect to ground
+        self.roller_body_ids = [4, 9] 
+        self.feet_only_body_ids = [14,18] 
+        '''
+        first step;
+            1. roller feet perpendular to grounds
+            2. penalize Z of feet
+            3. four dis(foot, calf joint) diff < a number; and 
+            4. initial values: e.g back legs deflaut value, front leg defalut(foot perpd to ground)
+            5. hip joint limit
             
-#         second step:
-#             1. project [base , all_feet] onto SE(2), ground.
-#             2. [four feet(points)] became a quadhredual, centre is point of base on 2D.
-#             3. design gait based on the pattern of four lines.
-#         '''
-#         # self.envs # envs handle 
-#         # self.actor_handles # robot handle
-#         # for i in range(self.num_envs): 
-#         body_states = self.gym.get_actor_rigid_body_states(
-#         self.envs[0], self.actor_handles[0], gymapi.STATE_ALL)
+        second step:
+            1. project [base , all_feet] onto SE(2), ground.
+            2. [four feet(points)] became a quadhredual, centre is point of base on 2D.
+            3. design gait based on the pattern of four lines.
+        '''
+        # self.envs # envs handle 
+        # self.actor_handles # robot handle
+        self.bodies_orns = []
+        for i in range(self.num_envs): 
+            body_states = self.gym.get_actor_rigid_body_states(
+                                self.envs[i], self.actor_handles[i], gymapi.STATE_ALL)
+            body_orns = body_states["pose"]["r"]
+            self.bodies_orns.append(body_orns)
+        
+        print("+T"*50)
+        print(len(self.bodies_orns))
 
-#         body_names = self.gym.get_actor_rigid_body_names(self.envs[0], self.actor_handles[0])
-#             # Print some state slices
-#         print("Poses from Body State:")
-#         print(body_states['pose'])          # print just the poses
+        # body_names = self.gym.get_actor_rigid_body_names(self.envs[0], self.actor_handles[0])
+            # Print some state slices
+        # print("Poses from Body State:")
+        # print(body_states['pose'])          # print just the poses
 
-#         print("\nVelocities from Body State:")
-#         print(body_states['vel'])          # print just the velocities
-#         print()
+        # print("\nVelocities from Body State:")
+        # print(body_states['vel'])          # print just the velocities
+        # print()
 
-#         # iterate through bodies and print name and position
-#         body_positions = body_states['pose']['p']
-#         for i in range(len(body_names)):
-#             print("Body '%s' has position" % body_names[i], body_positions[i])
-#             # print(body_states['pose']) 
-#         #     self.feet_pose[i] = body_states[self.feet_names]
-#         #     print(self.feet_pose[i])
-#         # print(self.feet_pose)
-#         body_positions[0] = body_positions[1]
-#         print('  ')
-#         print('  ')
-#         print("Body '%s' has position" % body_names[0], body_positions[0])
-#         print('  ')
-#         print('  ')
-#         # iterate through bodies and print name and orn
-#         body_orn = body_states['pose']['r']
-#         for i in range(len(body_names)):
-#             print("Body '%s' has orn" % body_names[i], body_orn[i])
-#             # print(body_states['pose']) 
-#         #     self.feet_pose[i] = body_states[self.feet_names]
-#         #     print(self.feet_pose[i])
-#         # print(self.feet_pose)
-            
+        # iterate through bodies and print name and position
+        # body_positions = body_states['pose']['p']
+        # for i in range(len(body_names)):
+        #     print("Body '%s' has position" % body_names[i], body_positions[i])
+        #     # print(body_states['pose']) 
+        # #     self.feet_pose[i] = body_states[self.feet_names]
+        # #     print(self.feet_pose[i])
+        # # print(self.feet_pose)
+        # body_positions[0] = body_positions[1]
+        # print('  ')
+        # print('  ')
+        # print("Body '%s' has position" % body_names[0], body_positions[0])
+        # print('  ')
+        # print('  ')
+        # iterate through bodies and print name and orn
+        # body_orn = body_states['pose']['r']
+        # for i in range(len(body_names)):
+        #     print("Body '%s' has orn" % body_names[i], body_orn[i])
+            # print(body_states['pose']) 
+        #     self.feet_pose[i] = body_states[self.feet_names]
+        #     print(self.feet_pose[i])
+        # print(self.feet_pose)
+        
+    ## ADDITIONAL REWARD FUNCTION FOR WHEELED ROBOT
+    def _reward_legs_energy(self):
+        return torch.sum(torch.square(self.torques * self.dof_vel), dim = 1)
+    
+    def _reward_legs_energy_abs(self):
+        return torch.sum(torch.abs(self.torques * self.dof_vel), dim=1)
+
+    def _reward_lin_vel_x(self):
+        return self.root_states[:, 7]
+    
+    def _reward_lin_vel_y_abs(self):
+        return torch.abs(self.root_states[:, 8])
+    
+    def _reward_lin_vel_y_square(self):
+        return torch.square(self.root_states[:, 8])
+    
+    def _reward_exceed_torque_limits_i(self):
+        max_torques = torch.abs(self.torque_limits) # TODO: update this
+        exceed_torque_each_dof = max_torques > self.torque_limits
+        exceed_torque = exceed_torque_each_dof.any(dim= 1)
+        return exceed_torque.to(torch.float32)
+
+    def _reward_alive(self):
+        return 1.
+    
+    def _reward_tracking_lin_vel_x(self):
+        # Reward for Tracking of linear velocity commands on x-axis
+        lin_vel_error = torch.square(self.commands[:, 0] - self.base_lin_vel[:, 0])
+        return torch.exp(-lin_vel_error/self.cfg.rewards.tracking_sigma)
+    
+    def _reward_roller_orn(self):
+        
+        roller_orn = self.bodies_orns[:self.roller_body_ids]
