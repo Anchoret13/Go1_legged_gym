@@ -262,5 +262,8 @@ class Go1Fw(WheeledRobot):
         return torch.exp(-lin_vel_error/self.cfg.rewards.tracking_sigma)
     
     def _reward_roller_orn(self):
-        
+        # TODO: to be updated
         roller_orn = self.bodies_orns[:self.roller_body_ids]
+
+    def _reward_roller_action_rate(self):
+        return torch.sum(torch.square(self.last_actions[:,:6] - self.actions[:,:6]), dim=1)

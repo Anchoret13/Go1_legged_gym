@@ -77,7 +77,7 @@ class Go1FwFlatCfg( LeggedRobotCfg ):
         decimation = 4
 
     class asset( LeggedRobotCfg.asset ):
-        file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/go1_fw/urdf/go1_fw.urdf'
+        file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/go1_fw/urdf/go1_fw3.urdf'
         name = "go1"
         foot_name = "foot"
         roller_name = "roller"
@@ -92,7 +92,7 @@ class Go1FwFlatCfg( LeggedRobotCfg ):
     class commands(LeggedRobotCfg.commands):
         # num_commands = 1
         class ranges(LeggedRobotCfg.commands.ranges):
-            lin_vel_x = [-0.3, 1.0] # min max [m/s]
+            lin_vel_x = [0.5, 1.5] # min max [m/s]
             line_vel_y = [0.0, 0.0]
             ang_vel_yaw = [0.0, 0.0]
             heading = [0.0, 0.0]
@@ -105,21 +105,15 @@ class Go1FwFlatCfg( LeggedRobotCfg ):
         self_dof_vel_limit = 0.01
         base_height_target = 0.30
 
+        only_positive_rewards = True
         # add by xiaoyu 
-        max_contact_force = 300
+        # max_contact_force = 300
         class scales:
-            # tracking_ang_vel = 0.05
 
-            legs_energy = -1e-4
-            # torques = -0.001
-            # lin_vel_x = 3.0
+            # legs_energy = -1e-4
             # tracking_lin_vel = 5.0
-            # lin_vel_z = -0.5
+            
             # tracking_lin_vel_x = 2.5
-            # base_height = -0.1
-            # action_rate = -0.01
-
-
             # dof_pos_limits = -0.4
             # torque_limits = -0.01
             # dof_vel_limits = -10.0
@@ -127,16 +121,16 @@ class Go1FwFlatCfg( LeggedRobotCfg ):
 
             # add by xiaoyu
             # tracking_ang_vel = 0.5
-            tracking_lin_vel = 1.5
-
+            tracking_lin_vel = 5.0
             torques = -0.001
-            lin_vel_x = 1.0
-
+            # lin_vel_x = 1.0
             masked_legs_energy = -1e-3
-
             orientation = -2.0
             collision = -1.0
-
+            base_height = -0.1
+            # lin_vel_z = -0.5
+            action_rate = -0.01
+            roller_action_rate = -0.04
 
 
     
