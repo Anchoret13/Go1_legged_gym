@@ -49,8 +49,8 @@ from .go1_fw.go1_fw_config import Go1FwFlatCfg, Go1FwFlatCfgPPO
 from .go1_aw.go1_aw import Go1Aw
 from .go1_aw.go1_aw_config import Go1AwFlatCfg, Go1AwFlatCfgPPO
 
-from .go1_fw_stairs.go1_fw import Go1StairFw
-from .go1_fw_stairs.go1_fw_config import Go1FwStairCfg, Go1FwStairCfgPPO
+from .go1_fw_terrain.go1_fw import Go1StairFw
+from .go1_fw_terrain.go1_fw_config import Go1FwStairCfg, Go1FwStairCfgPPO
 
 from .go1_legged.go1 import Go1_Flat
 from .go1_legged.go1_config import Go1FlatCfg, Go1FlatCfgPPO
@@ -69,5 +69,5 @@ task_registry.register( "a1_w", A1W, A1wFlatCfg(), A1wFlatCfgPPO())
 task_registry.register( "go1", LeggedRobot, Go1RoughCfg(), Go1RoughCfgPPO() )
 task_registry.register( "go1_fw", Go1Fw, Go1FwFlatCfg(), Go1FwFlatCfgPPO() )
 task_registry.register( "go1_aw", Go1Aw, Go1AwFlatCfg(), Go1AwFlatCfgPPO() )
-task_registry.register( "go1_fw_stair", Go1StairFw, Go1FwStairCfg(), Go1FwStairCfgPPO())
+task_registry.register( "go1_fw_terrain", Go1StairFw, Go1FwStairCfg(), Go1FwStairCfgPPO())
 task_registry.register( "go1_legged", Go1_Flat, Go1FlatCfg(), Go1FlatCfgPPO())

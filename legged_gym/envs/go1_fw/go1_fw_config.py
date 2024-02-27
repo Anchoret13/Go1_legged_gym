@@ -59,11 +59,18 @@ class Go1FwFlatCfg( LeggedRobotCfg ):
             'FL_roller_foot_joint': 0,
             'FR_roller_foot_joint': 0
         }
-    class terrain( LeggedRobotCfg.terrain ):
+    # class terrain( LeggedRobotCfg.terrain ):
+    #     mesh_type = 'plane'
+    #     # static_friction = 10.0
+    #     # dynamic_friction = 1.0
+    #     measure_heights = True
+    #     selected = True
+
+    class terrain( LeggedRobotCfg.terrain) :
         mesh_type = 'plane'
-        # static_friction = 10.0
-        # dynamic_friction = 1.0
-        measure_heights = False
+        curriculum = True
+        measure_heights = True
+        selected = True
 
     class control( LeggedRobotCfg.control ):
         # PD Drive parameters:
@@ -92,7 +99,7 @@ class Go1FwFlatCfg( LeggedRobotCfg ):
     class commands(LeggedRobotCfg.commands):
         # num_commands = 1
         class ranges(LeggedRobotCfg.commands.ranges):
-            lin_vel_x = [0.5, 1.5] # min max [m/s]
+            lin_vel_x = [1.0, 3.5] # min max [m/s]
             line_vel_y = [0.0, 0.0]
             ang_vel_yaw = [0.0, 0.0]
             heading = [0.0, 0.0]
@@ -105,41 +112,45 @@ class Go1FwFlatCfg( LeggedRobotCfg ):
         self_dof_vel_limit = 0.01
         base_height_target = 0.30
 
-        only_positive_rewards = True
+        only_positive_rewards = False
         # add by xiaoyu 
         # max_contact_force = 300
         class scales:
-
             # legs_energy = -1e-4
             # tracking_lin_vel = 5.0
-            
             # tracking_lin_vel_x = 2.5
             # dof_pos_limits = -0.4
             # torque_limits = -0.01
             # dof_vel_limits = -10.0
 
-
             # add by xiaoyu
             # tracking_ang_vel = 0.5
-            tracking_lin_vel = 5.0
-            torques = -0.001
+            tracking_lin_vel = 5.
+            # torques = -0.001
             # lin_vel_x = 1.0
             masked_legs_energy = -1e-3
-            orientation = -2.0
+            # orientation = -3.0
             collision = -1.0
-            base_height = -0.1
+            # base_height = -0.1
             # lin_vel_z = -0.5
             action_rate = -0.01
-            roller_action_rate = -0.04
+            # roller_action_rate = -0.05
+            hip = -0.5
+            front_leg = -2.5
+            front_hip = -1.
+
 
 
     
     class domain_rand(LeggedRobotCfg.domain_rand):
         randomize_friction = True
-        friction_range = [0.75, 1.25]
+        friction_range = [0.5, 1.5]
         push_robots = True
-        push_interval_s = 15
-        max_push_vel_xy = 0.5
+        # push_interval_s = 15
+        # max_push_vel_xy = 1.0
+        randomize_base_mass = False
+        # added_mass_range = [-1, 3]
+        
 
 class Go1FwFlatCfgPPO( LeggedRobotCfgPPO ):
     class algorithm( LeggedRobotCfgPPO.algorithm ):

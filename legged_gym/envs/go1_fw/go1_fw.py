@@ -53,8 +53,8 @@ class Go1Fw(WheeledRobot):
         dofs_to_keep[self.dof_roller_ids] = False
 
         # Select the columns
-        active_dof_pos = self.dof_pos[:, dofs_to_keep]
-        active_default_dof_pos = self.default_dof_pos[:, dofs_to_keep]
+        self.active_dof_pos = self.dof_pos[:, dofs_to_keep]
+        self.active_default_dof_pos = self.default_dof_pos[:, dofs_to_keep]
         active_dof_vel = self.dof_vel[:, dofs_to_keep]
         # active_actions = self.actions[:, dofs_to_keep]
 
@@ -72,7 +72,7 @@ class Go1Fw(WheeledRobot):
         self.obs_buf = torch.cat((
             self.projected_gravity,
             self.commands[:, :3] * self.commands_scale,
-            (active_dof_pos - active_default_dof_pos) * self.obs_scales.dof_pos,
+            (self.active_dof_pos - self.active_default_dof_pos) * self.obs_scales.dof_pos,
             active_dof_vel * self.obs_scales.dof_vel,
             torch.clip(self.actions, -1, 1)
         ), dim = -1)
@@ -87,7 +87,7 @@ class Go1Fw(WheeledRobot):
 
 
     def _init_buffers(self):
-        # # add for wheel robot *************************************************************************************
+        # # add for wheel robot 
         # self.num_rollers = 2
         super()._init_buffers()
         self.base_pos = self.root_states[:self.num_envs, 0:3]
@@ -196,40 +196,6 @@ class Go1Fw(WheeledRobot):
             body_orns = body_states["pose"]["r"]
             self.bodies_orns.append(body_orns)
         
-        print("+T"*50)
-        print(len(self.bodies_orns))
-
-        # body_names = self.gym.get_actor_rigid_body_names(self.envs[0], self.actor_handles[0])
-            # Print some state slices
-        # print("Poses from Body State:")
-        # print(body_states['pose'])          # print just the poses
-
-        # print("\nVelocities from Body State:")
-        # print(body_states['vel'])          # print just the velocities
-        # print()
-
-        # iterate through bodies and print name and position
-        # body_positions = body_states['pose']['p']
-        # for i in range(len(body_names)):
-        #     print("Body '%s' has position" % body_names[i], body_positions[i])
-        #     # print(body_states['pose']) 
-        # #     self.feet_pose[i] = body_states[self.feet_names]
-        # #     print(self.feet_pose[i])
-        # # print(self.feet_pose)
-        # body_positions[0] = body_positions[1]
-        # print('  ')
-        # print('  ')
-        # print("Body '%s' has position" % body_names[0], body_positions[0])
-        # print('  ')
-        # print('  ')
-        # iterate through bodies and print name and orn
-        # body_orn = body_states['pose']['r']
-        # for i in range(len(body_names)):
-        #     print("Body '%s' has orn" % body_names[i], body_orn[i])
-            # print(body_states['pose']) 
-        #     self.feet_pose[i] = body_states[self.feet_names]
-        #     print(self.feet_pose[i])
-        # print(self.feet_pose)
         
     ## ADDITIONAL REWARD FUNCTION FOR WHEELED ROBOT
     def _reward_legs_energy(self):
@@ -266,4 +232,29 @@ class Go1Fw(WheeledRobot):
         roller_orn = self.bodies_orns[:self.roller_body_ids]
 
     def _reward_roller_action_rate(self):
-        return torch.sum(torch.square(self.last_actions[:,:6] - self.actions[:,:6]), dim=1)
+        return torch.sum(torch.square(self.last_actions[:,:6] - self.actions[:,:6]), dim = 1)
+    
+    def _reward_roller_action_diff(self):
+        return torch.sum(torch.square(self.actions[:,0:3] - self.actions[:, 3:6]), dim = 1)
+    
+    def _reward_hip(self):
+        # penalize hip action
+        hips_idxs = torch.tensor([0, 4, 8, 11], device=self.torques.device)
+        self.hips_default_pos = torch.index_select(self.default_dof_pos, 1, hips_idxs)
+        self.hips_pos = torch.index_select(self.dof_pos, 1, hips_idxs)
+        diff = torch.sum(torch.square(self.hips_default_pos - self.hips_pos), dim = 1)
+        return diff
+    
+    def _reward_front_hip(self):
+        front_hips_idxs = torch.tensor([0, 4], device=self.torques.device)
+        front_hips_default_pos = torch.index_select(self.default_dof_pos, 1, front_hips_idxs)
+        front_hips_pos = torch.index_select(self.dof_pos, 1, front_hips_idxs)
+        diff = torch.sum(torch.square(front_hips_default_pos - front_hips_pos), dim = 1)
+        return diff
+
+    def _reward_front_leg(self):
+        front_leg_idxs = torch.tensor([0, 1, 2, 4, 5, 6], device = self.torques.device)
+        self.front_default_pos = torch.index_select(self.default_dof_pos, 1, front_leg_idxs)
+        self.front_pos = torch.index_select(self.dof_pos, 1, front_leg_idxs)
+        diff = torch.sum(torch.square(self.front_default_pos - self.front_pos), dim = 1)
+        return diff

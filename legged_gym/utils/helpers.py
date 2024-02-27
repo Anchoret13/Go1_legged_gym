@@ -163,7 +163,7 @@ def get_args():
         {"name": "--rl_device", "type": str, "default": "cuda:0", "help": 'Device used by the RL algorithm, (cpu, gpu, cuda:0, cuda:1 etc..)'},
         {"name": "--num_envs", "type": int, "help": "Number of environments to create. Overrides config file if provided."},
         {"name": "--seed", "type": int, "help": "Random seed. Overrides config file if provided."},
-        {"name": "--max_iterations", "type": int, "default": 4000,"help": "Maximum number of training iterations. Overrides config file if provided."},
+        {"name": "--max_iterations", "type": int, "default": 1000,"help": "Maximum number of training iterations. Overrides config file if provided."},
     ]
     # parse arguments
     args = gymutil.parse_arguments(

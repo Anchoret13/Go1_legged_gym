@@ -209,11 +209,12 @@
       <mass value="0.06"/>
       <inertia ixx="9.6e-06" ixy="0.0" ixz="0.0" iyy="9.6e-06" iyz="0.0" izz="9.6e-06"/>
     </inertial>
+    
     <!-- Add Block -->
     <visual>
-    <origin xyz="-0.0 0.0 -0.0" rpy="0.0 0.45 0"/> <!-- Adjust as needed -->
+    <origin xyz="-0.04 -0.0475 -0.045" rpy="1.98 0. 1.58"/> <!-- Adjust as needed -->
     <geometry>
-      <box size="0.04 0.07 0.01"/> <!-- Example size, adjust as needed -->
+      <mesh filename="../meshes/hunong.stl" scale="0.1 0.1 0.1"/> <!-- Example size, adjust as needed -->
     </geometry>
     <material name="silver"/> <!-- Choose appropriate material -->
   </visual>
@@ -351,9 +352,9 @@
 
     <!-- Add Block -->
     <visual>
-    <origin xyz="-0.0 0.0 -0.0" rpy="0.0 0.45 0"/> <!-- Adjust as needed -->
+    <origin xyz="-0.04 -0.0475 -0.045" rpy="1.98 0. 1.58"/> <!-- Adjust as needed -->
     <geometry>
-      <box size="0.04 0.07 0.01"/> <!-- Example size, adjust as needed -->
+      <mesh filename="../meshes/hunong.stl" scale="0.1 0.1 0.1"/> <!-- Example size, adjust as needed -->
     </geometry>
     <material name="silver"/> <!-- Choose appropriate material -->
   </visual>
@@ -623,10 +624,10 @@
   </joint>
 
   <link name="FL_roller_foot">
-    <visual>
-      <origin rpy="-1.57 0 0" xyz="0 0 0"/>
+     <visual>
+      <origin rpy="-1.57 0 0" xyz="-0.0 -0.0 -0.0"/>
       <geometry>
-        <mesh filename="../meshes/wheel_tire.stl" scale="0.5 0.5 0.5"/>
+        <mesh filename="../meshes/wheel_tire.stl" scale="0.5 0.5 0.4"/>
       </geometry>
       <material name="some_color">
       <color rgba="1 0 0 1"/> <!-- Red color -->
@@ -635,7 +636,7 @@
     <collision>
       <origin rpy="-1.57 0 0" xyz="0 0 0"/>
         <geometry>
-          <mesh filename="../meshes/wheel_tire.stl" scale="0.5 0.5 0.5"/>
+          <mesh filename="../meshes/wheel_tire.stl" scale="0.5 0.5 0.2"/>
         </geometry>
     </collision>
 
@@ -661,19 +662,19 @@
 
   <link name="FR_roller_foot">
     <visual>
-      <origin rpy="1.57 0 0" xyz="0 0 0"/>
+      <origin rpy="-1.57 0 0" xyz="-0.0 -0.0 -0.0"/>
       <geometry>
-        <mesh filename="../meshes/wheel_tire.stl" scale="0.5 0.5 0.5"/>
+        <mesh filename="../meshes/wheel_tire.stl" scale="0.5 0.5 0.4"/>
       </geometry>
       <material name="some_color">
       <color rgba="1 0 0 1"/> <!-- Red color -->
       </material>
     </visual>
     <collision>
-      <origin rpy="1.57 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="../meshes/wheel_tire.stl" scale="0.5 0.5 0.5"/>
-      </geometry>
+      <origin rpy="-1.57 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="../meshes/wheel_tire.stl" scale="0.5 0.5 0.2"/>
+        </geometry>
     </collision>
 
     <inertial>
