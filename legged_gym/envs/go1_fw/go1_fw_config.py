@@ -46,14 +46,14 @@ class Go1FwFlatCfg( LeggedRobotCfg ):
             'FR_hip_joint': -0.1 ,  # [rad]
             'RR_hip_joint': -0.1,   # [rad]
 
-            'FL_thigh_joint': 0.8,     # [rad]
+            'FL_thigh_joint': 0.7,     # [rad]
             'RL_thigh_joint': 1.,   # [rad]
-            'FR_thigh_joint': 0.8,     # [rad]
+            'FR_thigh_joint': 0.7,     # [rad]
             'RR_thigh_joint': 1.,   # [rad]
 
-            'FL_calf_joint': -1.5,   # [rad]
+            'FL_calf_joint': -1.4,   # [rad]
             'RL_calf_joint': -1.5,    # [rad]
-            'FR_calf_joint': -1.5,  # [rad]
+            'FR_calf_joint': -1.4,  # [rad]
             'RR_calf_joint': -1.5,    # [rad]
 
             'FL_roller_foot_joint': 0,
