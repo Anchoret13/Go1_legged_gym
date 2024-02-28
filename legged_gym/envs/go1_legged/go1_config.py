@@ -36,7 +36,7 @@ class Go1FlatCfg( LeggedRobotCfg ):
         observe_vel = False
 
     class terrain (LeggedRobotCfg.terrain):
-        mesh_type = 'plane'
+        mesh_type = 'trimesh'
         # static_friction = 10.0
         # dynamic_friction = 1.0
         measure_heights = False

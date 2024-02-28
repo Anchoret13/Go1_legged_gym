@@ -258,3 +258,13 @@ class Go1Fw(WheeledRobot):
         self.front_pos = torch.index_select(self.dof_pos, 1, front_leg_idxs)
         diff = torch.sum(torch.square(self.front_default_pos - self.front_pos), dim = 1)
         return diff
+    
+    def _reward_front_hip(self):
+        front_hips_idxs = torch.tensor([0, 4], device=self.torques.device)
+        self.front_hips_default_pos = torch.index_select(self.default_dof_pos, 1, front_hips_idxs)
+        self.front_hips_pos = torch.index_select(self.dof_pos, 1, front_hips_idxs)
+        diff = torch.sum(torch.square(self.front_hips_default_pos - self.front_hips_pos), dim = 1)
+        return diff
+    
+    def _reward_rear_leg_periodic(self):
+        pass

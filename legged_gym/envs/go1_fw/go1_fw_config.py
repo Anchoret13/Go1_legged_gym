@@ -125,16 +125,16 @@ class Go1FwFlatCfg( LeggedRobotCfg ):
 
             # add by xiaoyu
             # tracking_ang_vel = 0.5
-            tracking_lin_vel = 5.
+            tracking_lin_vel = 6.5
             # torques = -0.001
-            # lin_vel_x = 1.0
+            lin_vel_x = 1.0
             masked_legs_energy = -1e-3
             # orientation = -3.0
-            collision = -1.0
+            # collision = -1.0
             # base_height = -0.1
             # lin_vel_z = -0.5
-            action_rate = -0.01
-            # roller_action_rate = -0.05
+            # action_rate = -0.01
+            roller_action_rate = -0.05
             hip = -0.5
             front_leg = -2.5
             front_hip = -1.

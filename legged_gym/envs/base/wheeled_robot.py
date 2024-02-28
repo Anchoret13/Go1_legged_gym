@@ -541,6 +541,13 @@ class WheeledRobot(BaseTask):
                 self.d_gains[i] = 0.
                 if self.cfg.control.control_type in ["P", "V"]:
                     print(f"PD gain of joint {name} were not defined, setting them to zero")
+        
+        # Front wheel pose adjustment
+        # self.default_dof_pos[1] = 0.7
+        # self.default_dof_pos[5] = 0.7
+
+        # self.default_dof_pos[2] = -1.4
+        # self.default_dof_pos[6] = -1.4
         self.default_dof_pos = self.default_dof_pos.unsqueeze(0)
 
     def _prepare_reward_function(self):
