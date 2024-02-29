@@ -38,10 +38,11 @@ from isaacgym import gymtorch, gymapi, gymutil
 import torch
 from typing import Tuple, Dict
 from ..base.wheeled_robot import WheeledRobot
-from .go1_fw_config import Go1FwStairCfgPPO
+from .go1_fw_config import Go1FwFlatCfg
 
-class Go1StairFw(WheeledRobot):
-    cfg : Go1FwStairCfgPPO
+
+class Go1FwClock(WheeledRobot):
+    cfg : Go1FwFlatCfg
     def __init__(self, cfg, sim_params, physics_engine, sim_device, headless):
         super().__init__(cfg, sim_params, physics_engine, sim_device, headless)
         # self.num_passive_joints = self.cfg.env.num_passive_joints
@@ -56,18 +57,6 @@ class Go1StairFw(WheeledRobot):
         self.active_dof_pos = self.dof_pos[:, dofs_to_keep]
         self.active_default_dof_pos = self.default_dof_pos[:, dofs_to_keep]
         active_dof_vel = self.dof_vel[:, dofs_to_keep]
-        # active_actions = self.actions[:, dofs_to_keep]
-
-
-        
-        # self.obs_buf = torch.cat((  self.base_lin_vel * self.obs_scales.lin_vel,
-        #                             self.base_ang_vel  * self.obs_scales.ang_vel,
-        #                             self.projected_gravity,
-        #                             self.commands[:, :3] * self.commands_scale,
-        #                             (active_dof_pos - active_default_dof_pos) * self.obs_scales.dof_pos,
-        #                             active_dof_vel * self.obs_scales.dof_vel,
-        #                             active_actions
-        #                             ),dim=-1)
 
         self.obs_buf = torch.cat((
             self.projected_gravity,
@@ -76,14 +65,6 @@ class Go1StairFw(WheeledRobot):
             active_dof_vel * self.obs_scales.dof_vel,
             torch.clip(self.actions, -1, 1)
         ), dim = -1)
-        # # add perceptive inputs if not blind
-        # if self.cfg.terrain.measure_heights:
-        #     heights = torch.clip(self.root_states[:, 2].unsqueeze(1) - 0.5 - self.measured_heights, -1, 1.) * self.obs_scales.height_measurements
-        #     self.obs_buf = torch.cat((self.obs_buf, heights), dim=-1)
-        # # add noise if needed
-        # if self.add_noise:
-        #     self.obs_buf += (2 * torch.rand_like(self.obs_buf) - 1) * self.noise_scale_vec
-
 
 
     def _init_buffers(self):
@@ -97,7 +78,14 @@ class Go1StairFw(WheeledRobot):
         self.foot_velocities = self.rigid_body_state.view(self.num_envs, self.num_bodies, 13)[:,
                                self.feet_indices,
                                7:10]
+        self.left_idx = torch.tensor([14], device = self.device)
+        self.right_idx = torch.tensor([18], device = self.device)
+        self.left_rear_contact = torch.zeros(self.num_envs, len(self.left_idx), dtype=torch.bool, device=self.device, requires_grad=False)
+        self.right_rear_contact = torch.zeros(self.num_envs, len(self.right_idx), dtype=torch.bool, device=self.device, requires_grad=False)
+        self.rear_feet_indices = torch.tensor([14, 18], device = self.device)
+        self.gym.refresh_rigid_body_state_tensor(self.sim)
 
+        
 
     def _reward_masked_legs_energy(self):
         mask = torch.ones(self.torques.size(-1), device=self.torques.device, dtype=torch.bool)
@@ -107,33 +95,6 @@ class Go1StairFw(WheeledRobot):
         masked_dof_vel = self.dof_vel[:, mask]
 
         return torch.sum(torch.square(masked_torques * masked_dof_vel), dim=1)
-
-    # def _compute_torques(self, actions):
-    #     #pd controller
-    #     actions_scaled = actions * self.cfg.control.action_scale
-    #     control_type = self.cfg.control.control_type
-    #     gaits_type = self.cfg.control.gaits_type
-    #     if gaits_type == "fix_f":
-    #         actions_scaled[:8] = 0.0
-
-    #     if control_type=="P":    
-            # torques = self.p_gains*(actions_scaled + self.default_dof_pos - self.dof_pos) - self.d_gains*self.dof_vel
-    #     elif control_type=="V":
-    #         torques = self.p_gains*(actions_scaled - self.dof_vel) - self.d_gains*(self.dof_vel - self.last_dof_vel)/self.sim_params.dt
-    #     elif control_type=="T":
-    #         torques = actions_scaled
-    #     else:
-    #         raise NameError(f"Unknown controller type: {control_type}")
-        
-    #     return torch.clip(torques, -self.torque_limits, self.torque_limits)
-    
-
-    # def _reward_legs_energy(self):
-    #     return torch.sum(torch.square(self.torques * self.dof_vel), dim = 1)
-    
-    # def _reward_legs_energy_abs(self):
-    #     return torch.sum(torch.abs(self.torques * self.dof_vel), dim=1)
-        
 
     def step(self, actions):
         clip_actions = self.cfg.normalization.clip_actions
@@ -163,10 +124,14 @@ class Go1StairFw(WheeledRobot):
         self.obs_buf = torch.clip(self.obs_buf, -clip_obs, clip_obs)
         if self.privileged_obs_buf is not None:
             self.privileged_obs_buf = torch.clip(self.privileged_obs_buf, -clip_obs, clip_obs)
+
+        self.foot_positions = self.rigid_body_state.view(self.num_envs, self.num_bodies, 13)[:, self.feet_indices,
+                               0:3]
+        
+        self.rear_foot_positions = self.rigid_body_state.view(self.num_envs, self.num_bodies, 13)[:, self.rear_feet_indices,
+                               0:3]
         return self.obs_buf, self.privileged_obs_buf, self.rew_buf, self.reset_buf, self.extras
     
-
-
 
 
     def _create_envs(self):
@@ -195,6 +160,45 @@ class Go1StairFw(WheeledRobot):
                                 self.envs[i], self.actor_handles[i], gymapi.STATE_ALL)
             body_orns = body_states["pose"]["r"]
             self.bodies_orns.append(body_orns)
+
+
+    def post_physics_step(self):
+        self.gym.refresh_actor_root_state_tensor(self.sim)
+        self.gym.refresh_net_contact_force_tensor(self.sim)
+        self.gym.refresh_rigid_body_state_tensor(self.sim)
+
+        self.episode_length_buf += 1
+        self.common_step_counter += 1
+
+        # prepare quantities
+        self.base_pos[:] = self.root_states[:self.num_envs, 0:3]
+        self.base_quat[:] = self.root_states[:, 3:7]
+        self.base_lin_vel[:] = quat_rotate_inverse(self.base_quat, self.root_states[:, 7:10])
+        self.base_ang_vel[:] = quat_rotate_inverse(self.base_quat, self.root_states[:, 10:13])
+        self.projected_gravity[:] = quat_rotate_inverse(self.base_quat, self.gravity_vec)
+
+        self.foot_velocities = self.rigid_body_state.view(self.num_envs, self.num_bodies, 13
+                                                          )[:, self.feet_indices, 7:10]
+        self.foot_positions = self.rigid_body_state.view(self.num_envs, self.num_bodies, 13)[:, self.feet_indices,
+                              0:3]
+        self._post_physics_step_callback()
+        
+        # compute observations, rewards, resets, ...
+        self.check_termination()
+        self.compute_reward()
+        env_ids = self.reset_buf.nonzero(as_tuple=False).flatten()
+        self.reset_idx(env_ids)
+        self.compute_observations() 
+        
+        self.last_last_actions[:] = self.last_actions[:]
+        self.last_actions[:] = self.actions[:]
+        self.last_last_joint_pos_target[:] = self.last_joint_pos_target[:]
+        self.last_joint_pos_target[:] = self.joint_pos_target[:]
+        self.last_dof_vel[:] = self.dof_vel[:]
+        self.last_root_vel[:] = self.root_states[:, 7:13]
+
+        if self.viewer and self.enable_viewer_sync and self.debug_viz:
+            self._draw_debug_vis()
         
         
     ## ADDITIONAL REWARD FUNCTION FOR WHEELED ROBOT
@@ -246,15 +250,32 @@ class Go1StairFw(WheeledRobot):
         return diff
     
     def _reward_front_hip(self):
-        hips_idxs = torch.tensor([0, 4], device=self.torques.device)
-        front_hips_default_pos = torch.index_select(self.default_dof_pos, 1, hips_idxs)
-        front_hips_pos = torch.index_select(self.dof_pos, 1, hips_idxs)
+        front_hips_idxs = torch.tensor([0, 4], device=self.torques.device)
+        front_hips_default_pos = torch.index_select(self.default_dof_pos, 1, front_hips_idxs)
+        front_hips_pos = torch.index_select(self.dof_pos, 1, front_hips_idxs)
         diff = torch.sum(torch.square(front_hips_default_pos - front_hips_pos), dim = 1)
         return diff
 
     def _reward_front_leg(self):
-        roller_idxs = torch.tensor([0, 1, 2, 4, 5, 6], device = self.torques.device)
-        self.front_default_pos = torch.index_select(self.default_dof_pos, 1, roller_idxs)
-        self.front_pos = torch.index_select(self.dof_pos, 1, roller_idxs)
+        front_leg_idxs = torch.tensor([0, 1, 2, 4, 5, 6], device = self.torques.device)
+        self.front_default_pos = torch.index_select(self.default_dof_pos, 1, front_leg_idxs)
+        self.front_pos = torch.index_select(self.dof_pos, 1, front_leg_idxs)
         diff = torch.sum(torch.square(self.front_default_pos - self.front_pos), dim = 1)
         return diff
+    
+    def _reward_front_hip(self):
+        front_hips_idxs = torch.tensor([0, 4], device=self.torques.device)
+        self.front_hips_default_pos = torch.index_select(self.default_dof_pos, 1, front_hips_idxs)
+        self.front_hips_pos = torch.index_select(self.dof_pos, 1, front_hips_idxs)
+        diff = torch.sum(torch.square(self.front_hips_default_pos - self.front_hips_pos), dim = 1)
+        return diff
+    
+    def _reward_penalize_roll(self):
+        # Penalize non flat base orientation
+        return torch.sum(torch.square(self.projected_gravity[:, :1]), dim=1)
+    
+    def _reward_rear_leg_periodic(self):
+        phases = 1 - torch.abs(1.0 - torch.clip((self.rear_feet_indices * 2.0) - 1.0, 0.0, 1.0) * 2.0)
+        foot_height = (self.rear_foot_positions[:, :, 2]).view(self.num_envs, -1)
+        target_height = phases + 0.02
+        rew_foot_clearance = torch.square(target_height - foot_height) * (1 - self.desired_contact_states)

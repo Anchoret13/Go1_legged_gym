@@ -140,6 +140,9 @@ class Go1FwFlatCfg( LeggedRobotCfg ):
             front_leg = -2.5
             front_hip = -1.
 
+            # periodic reward
+            rear_leg_periodic = -1.0
+
 
 
     

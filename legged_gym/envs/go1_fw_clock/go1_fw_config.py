@@ -30,7 +30,7 @@
 
 from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobotCfgPPO
 
-class Go1FwStairCfg( LeggedRobotCfg ):
+class Go1FwFlatClockCfg( LeggedRobotCfg ):
     class env( LeggedRobotCfg.env):
         num_envs = 4096
         # num_observations = 54 # 241 when consider the terrain 
@@ -46,24 +46,25 @@ class Go1FwStairCfg( LeggedRobotCfg ):
             'FR_hip_joint': -0.1 ,  # [rad]
             'RR_hip_joint': -0.1,   # [rad]
 
-            'FL_thigh_joint': 0.8,     # [rad]
+            'FL_thigh_joint': 0.7,     # [rad]
             'RL_thigh_joint': 1.,   # [rad]
-            'FR_thigh_joint': 0.8,     # [rad]
+            'FR_thigh_joint': 0.7,     # [rad]
             'RR_thigh_joint': 1.,   # [rad]
 
-            'FL_calf_joint': -1.5,   # [rad]
+            'FL_calf_joint': -1.4,   # [rad]
             'RL_calf_joint': -1.5,    # [rad]
-            'FR_calf_joint': -1.5,  # [rad]
+            'FR_calf_joint': -1.4,  # [rad]
             'RR_calf_joint': -1.5,    # [rad]
 
             'FL_roller_foot_joint': 0,
             'FR_roller_foot_joint': 0
         }
-    class terrain( LeggedRobotCfg.terrain ):
-        mesh_type = 'heightfield'
-        # static_friction = 10.0
-        # dynamic_friction = 1.0
-        measure_heights = False
+
+    class terrain( LeggedRobotCfg.terrain) :
+        mesh_type = 'plane'
+        curriculum = True
+        measure_heights = True
+        selected = True
 
     class control( LeggedRobotCfg.control ):
         # PD Drive parameters:
@@ -92,7 +93,7 @@ class Go1FwStairCfg( LeggedRobotCfg ):
     class commands(LeggedRobotCfg.commands):
         # num_commands = 1
         class ranges(LeggedRobotCfg.commands.ranges):
-            lin_vel_x = [0.6, 1.5] # min max [m/s]
+            lin_vel_x = [1.0, 5.5] # min max [m/s]
             line_vel_y = [0.0, 0.0]
             ang_vel_yaw = [0.0, 0.0]
             heading = [0.0, 0.0]
@@ -118,34 +119,42 @@ class Go1FwStairCfg( LeggedRobotCfg ):
 
             # add by xiaoyu
             # tracking_ang_vel = 0.5
-            tracking_lin_vel = 2.5
-            torques = -0.001
-            # lin_vel_x = 1.0
-            masked_legs_energy = -1e-3
-            orientation = -2.0
-            collision = -1.0
-            base_height = -0.1
+            tracking_lin_vel = 6.5
+            # torques = -0.001
+            lin_vel_x = 1.0
+            masked_legs_energy = -1e-4
+            # orientation = -3.0
+            # collision = -1.0
+            # base_height = -0.1
             # lin_vel_z = -0.5
-            action_rate = -0.01
-            roller_action_rate = -0.04
+            # action_rate = -0.01
+            roller_action_rate = -0.05
             hip = -0.5
-            front_leg = -1.0
+            penalize_roll = -2.0
+            front_leg = -2.5
+            front_hip = -1.
+
+            # periodic reward
+            rear_leg_periodic = -1.0
 
 
 
     
     class domain_rand(LeggedRobotCfg.domain_rand):
         randomize_friction = True
-        friction_range = [0.75, 1.25]
+        friction_range = [0.5, 1.5]
         push_robots = True
-        push_interval_s = 15
-        max_push_vel_xy = 0.5
+        # push_interval_s = 15
+        # max_push_vel_xy = 1.0
+        randomize_base_mass = False
+        # added_mass_range = [-1, 3]
+        
 
-class Go1FwStairCfgPPO( LeggedRobotCfgPPO ):
+class Go1FwFlatClockCfgPPO( LeggedRobotCfgPPO ):
     class algorithm( LeggedRobotCfgPPO.algorithm ):
         entropy_coef = 0.01
     class runner( LeggedRobotCfgPPO.runner ):
         run_name = ''
-        experiment_name = 'roller_skating_terrain'
+        experiment_name = 'roller_skating'
 
   

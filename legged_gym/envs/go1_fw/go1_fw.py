@@ -40,30 +40,6 @@ from typing import Tuple, Dict
 from ..base.wheeled_robot import WheeledRobot
 from .go1_fw_config import Go1FwFlatCfg
 
-class TwoFeetPeriodicGaitChecker:
-    def __init__(self):
-        self.history = []
-
-    def update_history(self, foot_a, foot_b):
-        assert foot_a.shape == foot_b.shape, "Shapes of foot_a and foot_b tensors must match"
-        combined_state = torch.cat((foot_a, foot_b), dim=1)  
-        self.history.append(combined_state)
-
-
-    def find_period(self):
-        history_length = len(self.history)
-        for t in range(1, history_length // 2 + 1):  # Only need to check up to half the history length
-            period_found = True
-            for i in range(t, history_length):
-                if not torch.equal(self.history[i], self.history[i - t]):
-                    period_found = False
-                    break
-            if period_found:
-                return t  # Found the repeating period
-        return -1  # No repeating period found
-
-    def update_and_check(self):
-        pass
 
 class Go1Fw(WheeledRobot):
     cfg : Go1FwFlatCfg
@@ -126,9 +102,8 @@ class Go1Fw(WheeledRobot):
         self.right_idx = torch.tensor([18], device = self.device)
         self.left_rear_contact = torch.zeros(self.num_envs, len(self.left_idx), dtype=torch.bool, device=self.device, requires_grad=False)
         self.right_rear_contact = torch.zeros(self.num_envs, len(self.right_idx), dtype=torch.bool, device=self.device, requires_grad=False)
-        print("_+"*50)
-        print(self.left_rear_contact)
-        print(self.left_rear_contact.shape)
+        self.rear_feet_indices = torch.tensor([14, 18], device = self.device)
+
 
     def _reward_masked_legs_energy(self):
         mask = torch.ones(self.torques.size(-1), device=self.torques.device, dtype=torch.bool)
@@ -194,6 +169,12 @@ class Go1Fw(WheeledRobot):
         self.obs_buf = torch.clip(self.obs_buf, -clip_obs, clip_obs)
         if self.privileged_obs_buf is not None:
             self.privileged_obs_buf = torch.clip(self.privileged_obs_buf, -clip_obs, clip_obs)
+
+        self.foot_positions = self.rigid_body_state.view(self.num_envs, self.num_bodies, 13)[:, self.feet_indices,
+                               0:3]
+        
+        self.rear_foot_positions = self.rigid_body_state.view(self.num_envs, self.num_bodies, 13)[:, self.rear_feet_indices,
+                               0:3]
         return self.obs_buf, self.privileged_obs_buf, self.rew_buf, self.reset_buf, self.extras
     
 
@@ -300,5 +281,7 @@ class Go1Fw(WheeledRobot):
         return torch.sum(torch.square(self.projected_gravity[:, :1]), dim=1)
     
     def _reward_rear_leg_periodic(self):
-        left_contact = self.contact_forces[:, self.left_idx, 2] > 1
-        right_contact = self.contact_forces[:, self.right_idx, 2] > 1
+        phases = 1 - torch.abs(1.0 - torch.clip((self.rear_feet_indices * 2.0) - 1.0, 0.0, 1.0) * 2.0)
+        foot_height = (self.rear_foot_positions[:, :, 2]).view(self.num_envs, -1)
+        target_height = phases + 0.02
+        rew_foot_clearance = torch.square(target_height - foot_height) * (1 - self.desired)
