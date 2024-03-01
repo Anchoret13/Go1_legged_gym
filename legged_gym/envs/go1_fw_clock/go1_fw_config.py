@@ -135,15 +135,16 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             front_hip = -1.
 
             # periodic reward
-            rear_leg_periodic = -1.0
+            tracking_contacts_shaped_force = 10.0
+
 
 
 
     
     class domain_rand(LeggedRobotCfg.domain_rand):
-        randomize_friction = True
+        randomize_friction = False
         friction_range = [0.5, 1.5]
-        push_robots = True
+        push_robots = False
         # push_interval_s = 15
         # max_push_vel_xy = 1.0
         randomize_base_mass = False
@@ -155,6 +156,6 @@ class Go1FwFlatClockCfgPPO( LeggedRobotCfgPPO ):
         entropy_coef = 0.01
     class runner( LeggedRobotCfgPPO.runner ):
         run_name = ''
-        experiment_name = 'roller_skating'
+        experiment_name = 'roller_skating_gait_cond'
 
   
