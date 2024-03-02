@@ -135,7 +135,8 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             front_hip = -1.
 
             # periodic reward
-            tracking_contacts_shaped_force = 10.0
+            tracking_contacts_shaped_force = 5.0
+            # tracking_contacts_shaped_vel = 5.0
 
 
 

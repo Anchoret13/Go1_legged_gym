@@ -34,6 +34,7 @@ import os
 
 from isaacgym.torch_utils import *
 from isaacgym import gymtorch, gymapi, gymutil
+from legged_gym.utils.math import *
 
 import torch
 from typing import Tuple, Dict
@@ -87,7 +88,6 @@ class Go1FwClock(WheeledRobot):
 
         rigid_body_state = self.gym.acquire_rigid_body_state_tensor(self.sim)
         self.rigid_body_state = gymtorch.wrap_tensor(rigid_body_state)[:self.num_envs * self.num_bodies, :]
-
         self.foot_velocities = self.rigid_body_state.view(self.num_envs, self.num_bodies, 13)[:,
                                self.feet_indices,
                                7:10]
@@ -242,10 +242,8 @@ class Go1FwClock(WheeledRobot):
                         self.gait_indices + bounds,
                         self.gait_indices + phase]
         
-        # foot_indices = [self.gait_indices + phase + offsets + bounds,
-        #                         self.gait_indices + offsets,
-        #                         self.gait_indices + bounds,
-        #                         self.gait_indices + phase]
+        self.foot_indices = torch.remainder(torch.cat([foot_indices[i].unsqueeze(1) for i in range(4)], dim=1), 1.0)
+        
         for idxs in foot_indices:
  
             stance_idxs = torch.remainder(idxs, 1) < durations
@@ -258,11 +256,6 @@ class Go1FwClock(WheeledRobot):
             #             0.5 / (1 - durations[swing_idxs]))
             idxs[swing_idxs] = 0.5 + (torch.remainder(idxs[swing_idxs], 1) - 0.5) * (
                         0.5 / (1 - 0.5))
-            
-        print("+"*50)
-        print("stance INDICES")
-        print(foot_indices)
-        print("+"*50)
 
         smoothing_multiplier_FL = 1.
         smoothing_multiplier_FR = 1.
@@ -362,11 +355,6 @@ class Go1FwClock(WheeledRobot):
         # TODO: check this
         foot_forces = torch.norm(self.contact_forces[:, self.feet_indices, :], dim=-1)
         desired_contact = self.desired_contact_states
-        # print("+"*50)
-        # print("TRACKING CONTACT PATTERN")
-        # print(1 - torch.exp(-1 * foot_forces[:, 3] ** 2 / 100.))
-        # print(desired_contact)
-        # print("+"*50)
         reward = 0
         for i in range(4):
             reward += - (1 - desired_contact[:, i]) * (
@@ -390,5 +378,33 @@ class Go1FwClock(WheeledRobot):
         rew_foot_clearance = torch.square(target_height - foot_height) * (1 - self.desired_contact_states)
 
     def _reward_raibert_heuristic(self):
-        pass 
-        cur_footsteps_translated
+        # pass 
+        cur_footsteps_translated = self.foot_positions - self.base_pos.unsqueeze(1)
+        footsteps_in_body_frame = torch.zeros(self.num_envs, 4, 3, device = self.device)
+        for i in range(4):
+            footsteps_in_body_frame[:, i, :] = quat_apply_yaw(quat_conjugate(self.env.base_quat),
+                                                              cur_footsteps_translated[:, i, :])
+        
+        # nomial positions: FR, FL, RR, RL
+        desired_stance_width = 0.3
+        desired_stance_length = 0.45
+
+        desired_ys_nom = torch.tensor([desired_stance_width / 2,  -desired_stance_width / 2, desired_stance_width / 2, -desired_stance_width / 2], device=self.device).unsqueeze(0)
+        desired_xs_nom = torch.tensor([desired_stance_length / 2,  desired_stance_length / 2, -desired_stance_length / 2, -desired_stance_length / 2], device=self.device).unsqueeze(0)
+
+        phase = torch.abs(1.0 - (self.foot_indices * 2.0)) * 1.0 - 0.5
+        frequencies = 3.0
+        x_vel_des = self.commands[:, 0]
+        yaw_vel_des = self.commands[:, 2]
+        y_vel_des = yaw_vel_des * desired_stance_length / 2
+        desired_ys_offset = phase * y_vel_des * (0.5 / frequencies.unsqueeze(1))
+        desired_ys_offset[:, 2:4] *= -1
+        desired_xs_offset = phase * x_vel_des * (0.5 / frequencies.unsqueeze(1))
+
+        desired_ys_nom = desired_ys_nom + desired_ys_offset
+        desired_xs_nom = desired_xs_nom + desired_xs_offset
+
+        desired_footsteps_body_frame = torch.cat((desired_xs_nom.unsqueeze(2), desired_ys_nom.unsqueeze(2)), dim=2)
+        err_raibert_heuristic = torch.abs(desired_footsteps_body_frame - footsteps_in_body_frame[:, :, 0:2])
+        reward = torch.sum(torch.square(err_raibert_heuristic), dim=(1, 2))
+        return reward
