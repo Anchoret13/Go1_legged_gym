@@ -42,6 +42,7 @@ from ..base.wheeled_robot import WheeledRobot
 from .go1_fw_config import Go1FwFlatClockCfg
 
 
+
 class Go1FwClock(WheeledRobot):
     cfg : Go1FwFlatClockCfg
     def __init__(self, cfg, sim_params, physics_engine, sim_device, headless):

@@ -138,9 +138,6 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             tracking_contacts_shaped_force = 5.0
             # tracking_contacts_shaped_vel = 5.0
 
-
-
-
     
     class domain_rand(LeggedRobotCfg.domain_rand):
         randomize_friction = False
