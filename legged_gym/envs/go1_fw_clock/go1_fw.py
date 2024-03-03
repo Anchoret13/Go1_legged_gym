@@ -392,15 +392,6 @@ class Go1FwClock(WheeledRobot):
         # Penalize non flat base orientation
         return torch.sum(torch.square(self.projected_gravity[:, :1]), dim=1)
     
-    def _reward_tracking_contacts_shaped_force_WTW(self):
-        foot_forces = torch.norm(self.contact_forces[:, self.feet_indices, :], dim=-1)
-        desired_contact = self.desired_contact_states
-        reward = 0
-        for i in range(4):
-            reward += - (1 - desired_contact[:, i]) * (
-                        1 - torch.exp(-1 * foot_forces[:, i] ** 2 / 100.)) # NOTE: replace self.env.cfg.rewards.gait_force_sigma to 100.
-        return reward / 4
-    
     def _reward_tracking_contacts_binary(self):
         desired_contact = self.desired_contact_states
         contact_detect = self.contact_detect
