@@ -106,7 +106,7 @@ def play(args):
             moving_camera_position = moving_camera_position * 0.9 + desired_camera_position * 0.1
             camera_look_at = robot_position
             env.set_camera(desired_camera_position, camera_look_at)
-        print(env.commands[robot_index, 0].item())
+        # print(env.commands[robot_index, 0].item())
         if i < stop_state_log:
             logger.log_states(
                 {
@@ -123,9 +123,15 @@ def play(args):
                     'base_vel_y': env.base_lin_vel[robot_index, 1].item(),
                     'base_vel_z': env.base_lin_vel[robot_index, 2].item(),
                     'base_vel_yaw': env.base_ang_vel[robot_index, 2].item(),
-                    'contact_forces_z': env.contact_forces[robot_index, env.feet_indices, 2].cpu().numpy()
+                    'contact_forces_z': env.contact_forces[robot_index, env.feet_indices, 2].cpu().numpy(),
+                    'desired_contact': env.desired_contact_states[robot_index, :].cpu().numpy(),
+                    # 'desired_FR_contact': env.desired_contact_states[robot_index, 1],
+                    # 'desired_RL_contact': env.desired_contact_states[robot_index, 2],
+                    # 'desired_RR_contact': env.desired_contact_states[robot_index, 3]
+                    'actual_contact': env.contact_detect[robot_idx,:].cpu().numpy()
                 }
             )
+
         elif i==stop_state_log:
             logger.plot_states()
         if  0 < i < stop_rew_log:
