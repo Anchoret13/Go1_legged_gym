@@ -42,12 +42,18 @@ from ..base.wheeled_robot import WheeledRobot
 from .go1_fw_config import Go1FwFlatClockCfg
 
 
+def torch_rand_sigmoid(lower, upper, shape, device):
+    uniform_samples = torch.rand(*shape, device = device)
+    sigmoid_samples = torch.sigmoid((uniform_samples - 0.5) * 10) 
+    scaled_samples = (upper - lower) * sigmoid_samples + lower
+    return scaled_samples
 
 class Go1FwClock(WheeledRobot):
     cfg : Go1FwFlatClockCfg
     def __init__(self, cfg, sim_params, physics_engine, sim_device, headless):
         super().__init__(cfg, sim_params, physics_engine, sim_device, headless)
         # self.num_passive_joints = self.cfg.env.num_passive_joints
+        self.frequencies = 3.0
 
     def compute_observations(self):
         """ Computes observations to exclude passive joint
@@ -60,8 +66,10 @@ class Go1FwClock(WheeledRobot):
         self.active_default_dof_pos = self.default_dof_pos[:, dofs_to_keep]
         active_dof_vel = self.dof_vel[:, dofs_to_keep]
 
-        self.desired_contact_states = torch.zeros(self.num_envs, 4, dtype = torch.float, device = self.device, requires_grad = False)
+        
 
+        # self.desired_contact_states = torch.zeros(self.num_envs, 4, dtype = torch.float, device = self.device, requires_grad = False)
+        # self.desired_rear_contact_states = torch.zeros(self.num_envs, 2, dtype = torch.float, device = self.device, requires_grad = False)
 
         self.obs_buf = torch.cat((
             self.projected_gravity,
@@ -98,7 +106,9 @@ class Go1FwClock(WheeledRobot):
         self.right_rear_contact = torch.zeros(self.num_envs, len(self.right_idx), dtype=torch.bool, device=self.device, requires_grad=False)
         self.rear_feet_indices = torch.tensor([14, 18], device = self.device)
         self.gym.refresh_rigid_body_state_tensor(self.sim)
-
+        # tmp_foot_forces = torch.exp(torch.norm(self.contact_forces[:, self.feet_indices, :], dim=-1) **2 / 100.)
+        self.contact_detect = self.contact_forces[:, self.feet_indices, 2] > 1.
+        self.contact_detect = self.contact_detect.float()
         
 
     def _reward_masked_legs_energy(self):
@@ -132,6 +142,9 @@ class Go1FwClock(WheeledRobot):
                 self.gym.fetch_results(self.sim, True)
             self.gym.refresh_dof_state_tensor(self.sim)
         self.post_physics_step()
+        # print("-"*50)
+        # print(self.desired_contact_states)
+        # print("-"*50)
 
         # return clipped obs, clipped states (None), rewards, dones and infos
         clip_obs = self.cfg.normalization.clip_observations
@@ -220,64 +233,91 @@ class Go1FwClock(WheeledRobot):
         super().reset_idx(env_ids)
         self.gait_indices[env_ids] = 0
 
+    def _resample_commands(self, env_ids):
+        """ Randommly select commands of some environments
+
+        Args:
+            env_ids (List[int]): Environments ids for which new commands are needed
+        """
+        self.commands[env_ids, 0] = torch_rand_sigmoid(self.command_ranges["lin_vel_x"][0], self.command_ranges["lin_vel_x"][1], (len(env_ids), 1), device=self.device).squeeze(1)
+        # print("+"*50)
+        # print(self.commands[env_ids, 0])
+        # print("&*"*25)
+        self.commands[env_ids, 1] = torch_rand_float(self.command_ranges["lin_vel_y"][0], self.command_ranges["lin_vel_y"][1], (len(env_ids), 1), device=self.device).squeeze(1)
+        if self.cfg.commands.heading_command:
+            self.commands[env_ids, 3] = torch_rand_float(self.command_ranges["heading"][0], self.command_ranges["heading"][1], (len(env_ids), 1), device=self.device).squeeze(1)
+        else:
+            self.commands[env_ids, 2] = torch_rand_float(self.command_ranges["ang_vel_yaw"][0], self.command_ranges["ang_vel_yaw"][1], (len(env_ids), 1), device=self.device).squeeze(1)
+
+        # set small commands to zero
+        self.commands[env_ids, :2] *= (torch.norm(self.commands[env_ids, :2], dim=1) > 0.2).unsqueeze(1)
+
     def _post_physics_step_callback(self):
         super()._post_physics_step_callback()
         self._step_contact_targets()
 
-    def _step_contact_targets(self):
+    def sigmoid_contact_signal(self, x, kappa):
+        return 1 / (1 + torch.exp(-kappa * (x - 0.5)))
+
+    def _step_contact_targets(self, smoothing_option = "sigmoid"):
         # NOTE:THIS SHITY CODE IS FUKING HARD CODING EVERYTHING
-        frequencies = 3.0
-        phase = 0.5 # TODO: MODIFY THIS
+        frequencies = self.frequencies
+        phase = 0.5 # NOTE: 0.5 For Trotting
         offsets = 0
         bounds = 0
-        durations = 0.5 # TODO: For trotting, keep it 0.5
-        kappa = 0.7 # TODO: update this
+        durations = 0.5 # legacy variable, keep it for memorial
+        if smoothing_option == "sigmoid":
+            kappa = 40. 
+        elif smoothing_option == "normal_cdf":
+            kappa = 1.0
 
-        # von mises distribution for gait
-        smoothing_cdf_start = torch.distributions.normal.Normal(0,kappa).cdf
+            # von mises distribution for gait
+            smoothing_cdf_start = torch.distributions.normal.Normal(0,kappa).cdf
 
         self.gait_indices = torch.remainder(self.gait_indices + self.dt * frequencies, 1.0)
         
-        foot_indices = [self.gait_indices + phase + offsets + bounds,
-                        self.gait_indices + offsets,
-                        self.gait_indices + bounds,
+        # foot_indices = [self.gait_indices + phase + offsets + bounds,
+        #                 self.gait_indices + offsets,
+        #                 self.gait_indices + bounds,
+        #                 self.gait_indices + phase]
+
+        # FOR TROTTING:
+        foot_indices = [self.gait_indices + phase,
+                        self.gait_indices,
+                        self.gait_indices,
                         self.gait_indices + phase]
+
         
         self.foot_indices = torch.remainder(torch.cat([foot_indices[i].unsqueeze(1) for i in range(4)], dim=1), 1.0)
         
-        for idxs in foot_indices:
- 
-            stance_idxs = torch.remainder(idxs, 1) < durations
-            swing_idxs = torch.remainder(idxs, 1) > durations
-            
-
-            # idxs[stance_idxs] = torch.remainder(idxs[stance_idxs], 1) * (0.5 / durations[stance_idxs])
-            idxs[stance_idxs] = torch.remainder(idxs[stance_idxs], 1) # NOTE: currently hard coded duration is 0.5, so it it 1.
-            # idxs[swing_idxs] = 0.5 + (torch.remainder(idxs[swing_idxs], 1) - durations[swing_idxs]) * (
-            #             0.5 / (1 - durations[swing_idxs]))
-            idxs[swing_idxs] = 0.5 + (torch.remainder(idxs[swing_idxs], 1) - 0.5) * (
-                        0.5 / (1 - 0.5))
 
         smoothing_multiplier_FL = 1.
         smoothing_multiplier_FR = 1.
-        smoothing_multiplier_RL = (smoothing_cdf_start(torch.remainder(foot_indices[2], 1.0)) * (
-                    1 - smoothing_cdf_start(torch.remainder(foot_indices[2], 1.0) - 0.5)) +
-                                       smoothing_cdf_start(torch.remainder(foot_indices[2], 1.0) - 1) * (
-                                               1 - smoothing_cdf_start(
-                                           torch.remainder(foot_indices[2], 1.0) - 0.5 - 1)))
-        smoothing_multiplier_RR = (smoothing_cdf_start(torch.remainder(foot_indices[3], 1.0)) * (
-                    1 - smoothing_cdf_start(torch.remainder(foot_indices[3], 1.0) - 0.5)) +
-                                       smoothing_cdf_start(torch.remainder(foot_indices[3], 1.0) - 1) * (
-                                               1 - smoothing_cdf_start(
-                                           torch.remainder(foot_indices[3], 1.0) - 0.5 - 1)))
+        # smoothing_multiplier_RL = (smoothing_cdf_start(torch.remainder(foot_indices[2], 1.0)) * (
+        #             1 - smoothing_cdf_start(torch.remainder(foot_indices[2], 1.0) - 0.5)) +
+        #                                smoothing_cdf_start(torch.remainder(foot_indices[2], 1.0) - 1) * (
+        #                                        1 - smoothing_cdf_start(
+        #                                    torch.remainder(foot_indices[2], 1.0) - 0.5 - 1)))
+        # smoothing_multiplier_RR = (smoothing_cdf_start(torch.remainder(foot_indices[3], 1.0)) * (
+        #             1 - smoothing_cdf_start(torch.remainder(foot_indices[3], 1.0) - 0.5)) +
+        #                                smoothing_cdf_start(torch.remainder(foot_indices[3], 1.0) - 1) * (
+        #                                        1 - smoothing_cdf_start(
+        #                                    torch.remainder(foot_indices[3], 1.0) - 0.5 - 1)))
+        smoothing_multiplier_RL = self.sigmoid_contact_signal(foot_indices[2], kappa)
+        smoothing_multiplier_RR = self.sigmoid_contact_signal(foot_indices[3], kappa)
 
         self.desired_contact_states[:, 0] = smoothing_multiplier_FL
         self.desired_contact_states[:, 1] = smoothing_multiplier_FR
         self.desired_contact_states[:, 2] = smoothing_multiplier_RL
         self.desired_contact_states[:, 3] = smoothing_multiplier_RR
+        # print(self.desired_contact_states)
         # print("+"*50)
         # print(self.desired_contact_states)
 
+        # self.desired_rear_contact_states[:, 0] = smoothing_multiplier_RL
+        # self.desired_rear_contact_states[:, 1] = smoothing_multiplier_RR
+        self.contact_detect = self.contact_forces[:, self.feet_indices, 2] > 1
+        self.contact_detect = self.contact_detect.float()
         
     ## ADDITIONAL REWARD FUNCTION FOR WHEELED ROBOT
     def _reward_legs_energy(self):
@@ -352,8 +392,7 @@ class Go1FwClock(WheeledRobot):
         # Penalize non flat base orientation
         return torch.sum(torch.square(self.projected_gravity[:, :1]), dim=1)
     
-    def _reward_tracking_contacts_shaped_force(self):
-        # TODO: check this
+    def _reward_tracking_contacts_shaped_force_WTW(self):
         foot_forces = torch.norm(self.contact_forces[:, self.feet_indices, :], dim=-1)
         desired_contact = self.desired_contact_states
         reward = 0
@@ -362,15 +401,35 @@ class Go1FwClock(WheeledRobot):
                         1 - torch.exp(-1 * foot_forces[:, i] ** 2 / 100.)) # NOTE: replace self.env.cfg.rewards.gait_force_sigma to 100.
         return reward / 4
     
-    def _reward_tracking_contacts_shaped_vel(self):
-        # TODO: check this
-        foot_velocities = torch.norm(self.foot_velocities, dim = 2).view(self.num_envs, -1)
+    def _reward_tracking_contacts_binary(self):
         desired_contact = self.desired_contact_states
-        reward = 0
-        for i in range(4):
-            reward += - (desired_contact[:, i] * (
-                        1 - torch.exp(-1 * foot_velocities[:, i] ** 2 / 10. ))) # NOTE: replace self.env.cfg.rewards.gait_vel_sigma to 10.
-        return reward / 4
+        contact_detect = self.contact_detect
+        contact_alignment_loss = torch.sum((contact_detect * (1-desired_contact))**2)
+        non_contact_alignment_loss = torch.sum(((1 - contact_detect) * desired_contact)**2)
+        # overlap_loss = contact_alignment_loss + non_contact_alignment_loss
+        total_loss = contact_alignment_loss + non_contact_alignment_loss
+    
+        # Duration Loss: Difference in the total amount of contact time
+        # desired_duration = torch.sum(desired_contact)
+        # actual_duration = torch.sum(contact_detect)
+        # duration_loss = (desired_duration - actual_duration)
+
+        # total_loss = overlap_loss + duration_loss
+
+        normalized_loss = total_loss / contact_detect.numel()
+
+        return normalized_loss
+    
+    
+    # def _reward_tracking_contacts_shaped_vel(self):
+    #     # TODO: check this
+    #     foot_velocities = torch.norm(self.foot_velocities, dim = 2).view(self.num_envs, -1)
+    #     desired_contact = self.desired_contact_states
+    #     reward = 0
+    #     for i in range(4):
+    #         reward += - (desired_contact[:, i] * (
+    #                     1 - torch.exp(-1 * foot_velocities[:, i] ** 2 / 10. ))) # NOTE: replace self.env.cfg.rewards.gait_vel_sigma to 10.
+    #     return reward / 4
 
     def _reward_feet_clearance_cmd_linear(self):
         phases = 1 - torch.abs(1.0 - torch.clip((self.rear_feet_indices * 2.0) - 1.0, 0.0, 1.0) * 2.0)
@@ -383,7 +442,7 @@ class Go1FwClock(WheeledRobot):
         cur_footsteps_translated = self.foot_positions - self.base_pos.unsqueeze(1)
         footsteps_in_body_frame = torch.zeros(self.num_envs, 4, 3, device = self.device)
         for i in range(4):
-            footsteps_in_body_frame[:, i, :] = quat_apply_yaw(quat_conjugate(self.env.base_quat),
+            footsteps_in_body_frame[:, i, :] = quat_apply_yaw(quat_conjugate(self.base_quat),
                                                               cur_footsteps_translated[:, i, :])
         
         # nomial positions: FR, FL, RR, RL
@@ -394,7 +453,7 @@ class Go1FwClock(WheeledRobot):
         desired_xs_nom = torch.tensor([desired_stance_length / 2,  desired_stance_length / 2, -desired_stance_length / 2, -desired_stance_length / 2], device=self.device).unsqueeze(0)
 
         phase = torch.abs(1.0 - (self.foot_indices * 2.0)) * 1.0 - 0.5
-        frequencies = 3.0
+        frequencies = self.frequencies
         x_vel_des = self.commands[:, 0]
         yaw_vel_des = self.commands[:, 2]
         y_vel_des = yaw_vel_des * desired_stance_length / 2

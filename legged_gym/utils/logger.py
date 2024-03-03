@@ -139,34 +139,58 @@ class Logger:
     #     a.set(xlabel='time [s]', ylabel='Forces z [N]', title='Vertical Contact forces rollers')
     #     a.legend()
 
-
     #     plt.show()
+
+    # def _plot(self):
+    #     # THIS PLOT THE JOINT POSITION, NO LONGER NEEDED
+    #     nb_rows = 4
+    #     nb_cols = 4
+    #     fig, axs = plt.subplots(nb_rows, nb_cols)
+
+    #     axs = axs.flatten()
+    #     for key, value in self.state_log.items():
+    #         time = np.linspace(0, len(value)*self.dt, len(value))
+    #         break
+    #     log= self.state_log
+
+    #     counter = 0
+    #     for joint_idx in range(len(log['dof_pos_target'][0])):
+    #     # for joint_idx in range(14):
+    #         # if joint_idx == 3 or joint_idx == 7:
+    #         #     counter += 0
+    #         #     continue
+    #         commanded_joint_pos = []
+    #         measured_joint_pos = []
+    #         for i in range(len(time)):
+    #             commanded_joint_pos.append(log['dof_pos_target'][i][joint_idx])
+    #             measured_joint_pos.append(log['dof_pos'][i][joint_idx])
+    #         axs[joint_idx-counter].plot(time, commanded_joint_pos, color = 'red', label = "commanded")
+    #         axs[joint_idx-counter].plot(time, measured_joint_pos, color = 'blue', label = 'measured')
+    #         axs[joint_idx-counter].legend()
+    #     plt.tight_layout(rect = [0, 0.03, 1, 0.95])
+    #     plt.show()
+    
     def _plot(self):
         nb_rows = 4
-        nb_cols = 4
+        nb_cols = 1
         fig, axs = plt.subplots(nb_rows, nb_cols)
-
         axs = axs.flatten()
         for key, value in self.state_log.items():
-            time = np.linspace(0, len(value)*self.dt, len(value))
+            time = np.linspace(0, len(value) * self.dt, len(value))
             break
-        log= self.state_log
+        log = self.state_log
 
         counter = 0
-        for joint_idx in range(len(log['dof_pos_target'][0])):
-        # for joint_idx in range(14):
-            # if joint_idx == 3 or joint_idx == 7:
-            #     counter += 0
-            #     continue
-            commanded_joint_pos = []
-            measured_joint_pos = []
+        for leg in range(len(log['desired_contact'][0])):
+            desired_contact = []
+            robot_contact = []
             for i in range(len(time)):
-                commanded_joint_pos.append(log['dof_pos_target'][i][joint_idx])
-                measured_joint_pos.append(log['dof_pos'][i][joint_idx])
-            axs[joint_idx-counter].plot(time, commanded_joint_pos, color = 'red', label = "commanded")
-            axs[joint_idx-counter].plot(time, measured_joint_pos, color = 'blue', label = 'measured')
-            axs[joint_idx-counter].legend()
-        plt.tight_layout(rect = [0, 0.03, 1, 0.95])
+                desired_contact.append(log['desired_contact'][i][leg])
+                robot_contact.append(log['actual_contact'][i][leg])
+            axs[leg-counter].plot(time, desired_contact, color = 'red', label = "desired")
+            axs[leg-counter].plot(time, robot_contact, color = 'blue', label = "actual")
+            axs[leg-counter].legend()
+
         plt.show()
 
     def print_rewards(self):
@@ -175,6 +199,7 @@ class Logger:
             mean = np.sum(np.array(values)) / self.num_episodes
             print(f" - {key}: {mean}")
         print(f"Total number of episodes: {self.num_episodes}")
+
     
     def __del__(self):
         if self.plot_process is not None:
