@@ -239,10 +239,8 @@ class Go1FwClock(WheeledRobot):
         Args:
             env_ids (List[int]): Environments ids for which new commands are needed
         """
-        self.commands[env_ids, 0] = torch_rand_sigmoid(self.command_ranges["lin_vel_x"][0], self.command_ranges["lin_vel_x"][1], (len(env_ids), 1), device=self.device).squeeze(1)
-        # print("+"*50)
-        # print(self.commands[env_ids, 0])
-        # print("&*"*25)
+        # self.commands[env_ids, 0] = torch_rand_sigmoid(self.command_ranges["lin_vel_x"][0], self.command_ranges["lin_vel_x"][1], (len(env_ids), 1), device=self.device).squeeze(1)
+        self.commands[env_ids, 0] = torch_rand_float(self.command_ranges["lin_vel_x"][0], self.command_ranges["lin_vel_x"][1], (len(env_ids), 1), device=self.device).squeeze(1)
         self.commands[env_ids, 1] = torch_rand_float(self.command_ranges["lin_vel_y"][0], self.command_ranges["lin_vel_y"][1], (len(env_ids), 1), device=self.device).squeeze(1)
         if self.cfg.commands.heading_command:
             self.commands[env_ids, 3] = torch_rand_float(self.command_ranges["heading"][0], self.command_ranges["heading"][1], (len(env_ids), 1), device=self.device).squeeze(1)
@@ -259,7 +257,7 @@ class Go1FwClock(WheeledRobot):
     def sigmoid_contact_signal(self, x, kappa):
         return 1 / (1 + torch.exp(-kappa * (x - 0.5)))
 
-    def _step_contact_targets(self, smoothing_option = "sigmoid"):
+    def _step_contact_targets(self, smoothing_option = "normal_cdf"):
         # NOTE:THIS SHITY CODE IS FUKING HARD CODING EVERYTHING
         frequencies = self.frequencies
         phase = 0.5 # NOTE: 0.5 For Trotting
@@ -269,7 +267,7 @@ class Go1FwClock(WheeledRobot):
         if smoothing_option == "sigmoid":
             kappa = 40. 
         elif smoothing_option == "normal_cdf":
-            kappa = 1.0
+            kappa = 0.3
 
             # von mises distribution for gait
             smoothing_cdf_start = torch.distributions.normal.Normal(0,kappa).cdf
@@ -282,40 +280,26 @@ class Go1FwClock(WheeledRobot):
         #                 self.gait_indices + phase]
 
         # FOR TROTTING:
-        foot_indices = [self.gait_indices + phase,
-                        self.gait_indices,
-                        self.gait_indices,
-                        self.gait_indices + phase]
+        foot_indices = [self.gait_indices,
+                    torch.remainder(self.gait_indices + phase, 1.0),
+                    torch.remainder(self.gait_indices + phase, 1.0),
+                    self.gait_indices]
 
-        
         self.foot_indices = torch.remainder(torch.cat([foot_indices[i].unsqueeze(1) for i in range(4)], dim=1), 1.0)
         
 
         smoothing_multiplier_FL = 1.
         smoothing_multiplier_FR = 1.
-        # smoothing_multiplier_RL = (smoothing_cdf_start(torch.remainder(foot_indices[2], 1.0)) * (
-        #             1 - smoothing_cdf_start(torch.remainder(foot_indices[2], 1.0) - 0.5)) +
-        #                                smoothing_cdf_start(torch.remainder(foot_indices[2], 1.0) - 1) * (
-        #                                        1 - smoothing_cdf_start(
-        #                                    torch.remainder(foot_indices[2], 1.0) - 0.5 - 1)))
-        # smoothing_multiplier_RR = (smoothing_cdf_start(torch.remainder(foot_indices[3], 1.0)) * (
-        #             1 - smoothing_cdf_start(torch.remainder(foot_indices[3], 1.0) - 0.5)) +
-        #                                smoothing_cdf_start(torch.remainder(foot_indices[3], 1.0) - 1) * (
-        #                                        1 - smoothing_cdf_start(
-        #                                    torch.remainder(foot_indices[3], 1.0) - 0.5 - 1)))
-        smoothing_multiplier_RL = self.sigmoid_contact_signal(foot_indices[2], kappa)
-        smoothing_multiplier_RR = self.sigmoid_contact_signal(foot_indices[3], kappa)
+        # smoothing_multiplier_RL = self.sigmoid_contact_signal(foot_indices[2], kappa)
+        # smoothing_multiplier_RR = self.sigmoid_contact_signal(foot_indices[3], kappa)
+        smoothing_multiplier_RL = smoothing_cdf_start((foot_indices[2] - 0.5) * 4)
+        smoothing_multiplier_RR = smoothing_cdf_start((foot_indices[3] - 0.5) * 4)
 
         self.desired_contact_states[:, 0] = smoothing_multiplier_FL
         self.desired_contact_states[:, 1] = smoothing_multiplier_FR
         self.desired_contact_states[:, 2] = smoothing_multiplier_RL
         self.desired_contact_states[:, 3] = smoothing_multiplier_RR
-        # print(self.desired_contact_states)
-        # print("+"*50)
-        # print(self.desired_contact_states)
 
-        # self.desired_rear_contact_states[:, 0] = smoothing_multiplier_RL
-        # self.desired_rear_contact_states[:, 1] = smoothing_multiplier_RR
         self.contact_detect = self.contact_forces[:, self.feet_indices, 2] > 1
         self.contact_detect = self.contact_detect.float()
         

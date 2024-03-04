@@ -93,7 +93,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
     class commands(LeggedRobotCfg.commands):
         # num_commands = 1
         class ranges(LeggedRobotCfg.commands.ranges):
-            lin_vel_x = [1.0, 3.5] # min max [m/s]
+            lin_vel_x = [0.0, 3.5] # min max [m/s]
             line_vel_y = [0.0, 0.0]
             ang_vel_yaw = [0.0, 0.0]
             heading = [0.0, 0.0]
@@ -122,20 +122,20 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             tracking_lin_vel = 5.0
             # torques = -0.001
             # lin_vel_x = 0.5
-            masked_legs_energy = -1e-4
+            # masked_legs_energy = -1e-4
             # orientation = -3.0
             # collision = -1.0
             # base_height = -0.1
             # lin_vel_z = -0.5
             # action_rate = -0.01
-            roller_action_rate = -0.05
-            hip = -0.5
-            penalize_roll = -2.0
-            front_leg = -2.5
+            # roller_action_rate = -0.05
+            # hip = -0.5
+            penalize_roll = -1.0
+            # front_leg = -2.5
             front_hip = -1.
 
-            # periodic reward
-            tracking_contacts_binary = -10.0
+            # gait reward
+            tracking_contacts_binary = -5.5
             # raibert_heuristic = -0.1
 
     
