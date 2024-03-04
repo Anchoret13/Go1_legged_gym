@@ -93,7 +93,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
     class commands(LeggedRobotCfg.commands):
         # num_commands = 1
         class ranges(LeggedRobotCfg.commands.ranges):
-            lin_vel_x = [0.0, 3.5] # min max [m/s]
+            lin_vel_x = [0.0, 5.0] # min max [m/s]
             line_vel_y = [0.0, 0.0]
             ang_vel_yaw = [0.0, 0.0]
             heading = [0.0, 0.0]
@@ -120,28 +120,32 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             # add by xiaoyu
             # tracking_ang_vel = 0.5
             tracking_lin_vel = 5.0
-            # torques = -0.001
+            torques = -0.001
             # lin_vel_x = 0.5
-            # masked_legs_energy = -1e-4
+            masked_legs_energy = -1e-4
             # orientation = -3.0
             # collision = -1.0
             # base_height = -0.1
-            # lin_vel_z = -0.5
-            # action_rate = -0.01
-            # roller_action_rate = -0.05
-            # hip = -0.5
+            lin_vel_z = -0.05
+            action_rate = -0.01
+            roller_action_rate = -0.05
+            hip = -0.5
             penalize_roll = -1.0
-            # front_leg = -2.5
+            front_leg = -1.5
             front_hip = -1.
 
             # gait reward
-            tracking_contacts_binary = -5.5
+            tracking_contacts_binary = -1.0
             # raibert_heuristic = -0.1
+            tracking_rear_swing_force = 0.5
+            tracking_rear_stance_vel = 0.5
+            tracking_swing_force = 1.
+            tracking_stance_vel = 1.
 
     
     class domain_rand(LeggedRobotCfg.domain_rand):
-        randomize_friction = False
-        friction_range = [0.5, 1.5]
+        randomize_friction = True
+        friction_range = [0.75, 1.5]
         push_robots = False
         # push_interval_s = 15
         # max_push_vel_xy = 1.0

@@ -85,6 +85,7 @@ class Go1FwClock(WheeledRobot):
         # self.num_rollers = 2
         super()._init_buffers()
         self.base_pos = self.root_states[:self.num_envs, 0:3]
+        self.rear_feet_indices = torch.tensor([14, 18], device = self.device)
         
         # gait index from WTW
         self.gait_indices = torch.zeros(self.num_envs, dtype=torch.float, device=self.device,
@@ -93,6 +94,9 @@ class Go1FwClock(WheeledRobot):
         # desired_contact_state from WTW
         self.desired_contact_states = torch.zeros(self.num_envs, 4, dtype=torch.float, device=self.device,
                                                   requires_grad=False, )
+        
+        self.desired_rear_contact_states = torch.zeros(self.num_envs, 2, dtype = torch.float, device = self.device, 
+                                                       requires_grad = False)
 
 
         rigid_body_state = self.gym.acquire_rigid_body_state_tensor(self.sim)
@@ -100,11 +104,15 @@ class Go1FwClock(WheeledRobot):
         self.foot_velocities = self.rigid_body_state.view(self.num_envs, self.num_bodies, 13)[:,
                                self.feet_indices,
                                7:10]
+        self.rear_foot_velocities = self.rigid_body_state.view(self.num_envs, self.num_bodies, 13)[:,
+                               self.rear_feet_indices,
+                               7:10]
+        
         self.left_idx = torch.tensor([14], device = self.device)
         self.right_idx = torch.tensor([18], device = self.device)
         self.left_rear_contact = torch.zeros(self.num_envs, len(self.left_idx), dtype=torch.bool, device=self.device, requires_grad=False)
         self.right_rear_contact = torch.zeros(self.num_envs, len(self.right_idx), dtype=torch.bool, device=self.device, requires_grad=False)
-        self.rear_feet_indices = torch.tensor([14, 18], device = self.device)
+        
         self.gym.refresh_rigid_body_state_tensor(self.sim)
         # tmp_foot_forces = torch.exp(torch.norm(self.contact_forces[:, self.feet_indices, :], dim=-1) **2 / 100.)
         self.contact_detect = self.contact_forces[:, self.feet_indices, 2] > 1.
@@ -206,6 +214,8 @@ class Go1FwClock(WheeledRobot):
 
         self.foot_velocities = self.rigid_body_state.view(self.num_envs, self.num_bodies, 13
                                                           )[:, self.feet_indices, 7:10]
+        self.rear_foot_velocities = self.rigid_body_state.view(self.num_envs, self.num_bodies, 13
+                                                          )[:, self.rear_feet_indices, 7:10]
         self.foot_positions = self.rigid_body_state.view(self.num_envs, self.num_bodies, 13)[:, self.feet_indices,
                               0:3]
         self.rear_foot_positions = self.rigid_body_state.view(self.num_envs, self.num_bodies, 13)[:, self.rear_feet_indices,
@@ -300,6 +310,9 @@ class Go1FwClock(WheeledRobot):
         self.desired_contact_states[:, 2] = smoothing_multiplier_RL
         self.desired_contact_states[:, 3] = smoothing_multiplier_RR
 
+        self.desired_rear_contact_states[:, 0] = smoothing_multiplier_RL
+        self.desired_rear_contact_states[:, 1] = smoothing_multiplier_RR
+
         self.contact_detect = self.contact_forces[:, self.feet_indices, 2] > 1
         self.contact_detect = self.contact_detect.float()
         
@@ -383,29 +396,53 @@ class Go1FwClock(WheeledRobot):
         non_contact_alignment_loss = torch.sum(((1 - contact_detect) * desired_contact)**2)
         # overlap_loss = contact_alignment_loss + non_contact_alignment_loss
         total_loss = contact_alignment_loss + non_contact_alignment_loss
-    
-        # Duration Loss: Difference in the total amount of contact time
-        # desired_duration = torch.sum(desired_contact)
-        # actual_duration = torch.sum(contact_detect)
-        # duration_loss = (desired_duration - actual_duration)
-
-        # total_loss = overlap_loss + duration_loss
-
+        total_loss = torch.abs(total_loss)
         normalized_loss = total_loss / contact_detect.numel()
 
         return normalized_loss
     
+    # PERIODIC 1 
     
-    # def _reward_tracking_contacts_shaped_vel(self):
-    #     # TODO: check this
-    #     foot_velocities = torch.norm(self.foot_velocities, dim = 2).view(self.num_envs, -1)
-    #     desired_contact = self.desired_contact_states
-    #     reward = 0
-    #     for i in range(4):
-    #         reward += - (desired_contact[:, i] * (
-    #                     1 - torch.exp(-1 * foot_velocities[:, i] ** 2 / 10. ))) # NOTE: replace self.env.cfg.rewards.gait_vel_sigma to 10.
-    #     return reward / 4
+    def _reward_tracking_rear_swing_force(self):
+        desired_contact = self.desired_rear_contact_states
+        foot_forces = torch.norm(self.contact_forces[:, self.rear_feet_indices, :], dim = 1)
+        reward = 0
+        for i in range(2):
+            reward += - (1 - desired_contact[:, i]) * (
+                        1 - torch.exp(-1 * foot_forces[:, i] ** 2 / 100.))
+        return reward / 2
+    
+    def _reward_tracking_swing_force(self):
+        desired_contact = self.desired_contact_states
+        foot_forces = torch.norm(self.contact_forces[:, self.feet_indices, :], dim=-1)
 
+        reward = 0
+        for i in range(4):
+            reward += - (1 - desired_contact[:, i]) * (
+                        1 - torch.exp(-1 * foot_forces[:, i] ** 2 / 100.))
+        return reward / 4
+
+    # PERIODIC 2
+
+    def _reward_tracking_rear_stance_vel(self):
+        desired_contact = self.desired_rear_contact_states
+        foot_velocities = torch.norm(self.rear_foot_velocities, dim = 2).view(self.num_envs, -1)
+        reward = 0
+        for i in range(2):
+            reward += - (desired_contact[:, i] * (
+                        1 - torch.exp(-1 * foot_velocities[:, i] ** 2 / 10.)))
+        return reward / 4
+    
+    def _reward_tracking_stance_vel(self):
+        desired_contact = self.desired_contact_states
+        foot_velocities = torch.norm(self.foot_velocities, dim = 2).view(self.num_envs, -1)
+        reward = 0
+        for i in range(4):
+            reward += - (desired_contact[:, i] * (
+                        1 - torch.exp(-1 * foot_velocities[:, i] ** 2 / 10.)))
+        return reward / 4
+
+    # 
     def _reward_feet_clearance_cmd_linear(self):
         phases = 1 - torch.abs(1.0 - torch.clip((self.rear_feet_indices * 2.0) - 1.0, 0.0, 1.0) * 2.0)
         foot_height = (self.rear_foot_positions[:, :, 2]).view(self.num_envs, -1)
@@ -414,9 +451,9 @@ class Go1FwClock(WheeledRobot):
 
     def _reward_raibert_heuristic(self):
         # pass 
-        cur_footsteps_translated = self.foot_positions - self.base_pos.unsqueeze(1)
-        footsteps_in_body_frame = torch.zeros(self.num_envs, 4, 3, device = self.device)
-        for i in range(4):
+        cur_footsteps_translated = self.rear_foot_positions - self.base_pos.unsqueeze(1)
+        footsteps_in_body_frame = torch.zeros(self.num_envs, 2, 3, device = self.device)
+        for i in range(2):
             footsteps_in_body_frame[:, i, :] = quat_apply_yaw(quat_conjugate(self.base_quat),
                                                               cur_footsteps_translated[:, i, :])
         
@@ -424,9 +461,10 @@ class Go1FwClock(WheeledRobot):
         desired_stance_width = 0.3
         desired_stance_length = 0.45
 
-        desired_ys_nom = torch.tensor([desired_stance_width / 2,  -desired_stance_width / 2, desired_stance_width / 2, -desired_stance_width / 2], device=self.device).unsqueeze(0)
-        desired_xs_nom = torch.tensor([desired_stance_length / 2,  desired_stance_length / 2, -desired_stance_length / 2, -desired_stance_length / 2], device=self.device).unsqueeze(0)
+        desired_ys_nom = torch.tensor([desired_stance_width / 2, -desired_stance_width / 2], device=self.device).unsqueeze(0)
+        desired_xs_nom = torch.tensor([-desired_stance_length / 2, -desired_stance_length / 2], device=self.device).unsqueeze(0)
 
+        # raibert offsets
         phase = torch.abs(1.0 - (self.foot_indices * 2.0)) * 1.0 - 0.5
         frequencies = self.frequencies
         x_vel_des = self.commands[:, 0]
