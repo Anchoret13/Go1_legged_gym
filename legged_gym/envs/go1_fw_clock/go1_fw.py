@@ -277,7 +277,7 @@ class Go1FwClock(WheeledRobot):
         if smoothing_option == "sigmoid":
             kappa = 40. 
         elif smoothing_option == "normal_cdf":
-            kappa = 0.3
+            kappa = 0.05
 
             # von mises distribution for gait
             smoothing_cdf_start = torch.distributions.normal.Normal(0,kappa).cdf
@@ -296,14 +296,25 @@ class Go1FwClock(WheeledRobot):
                     self.gait_indices]
 
         self.foot_indices = torch.remainder(torch.cat([foot_indices[i].unsqueeze(1) for i in range(4)], dim=1), 1.0)
-        
+        self.rear_foot_indices = torch.remainder(torch.cat([foot_indices[i].unsqueeze(1) for i in range(2, 4)], dim=1), 1.0)
 
         smoothing_multiplier_FL = 1.
         smoothing_multiplier_FR = 1.
         # smoothing_multiplier_RL = self.sigmoid_contact_signal(foot_indices[2], kappa)
         # smoothing_multiplier_RR = self.sigmoid_contact_signal(foot_indices[3], kappa)
-        smoothing_multiplier_RL = smoothing_cdf_start((foot_indices[2] - 0.5) * 4)
-        smoothing_multiplier_RR = smoothing_cdf_start((foot_indices[3] - 0.5) * 4)
+        # smoothing_multiplier_RL = smoothing_cdf_start((foot_indices[2] - 0.5) * 4)
+        # smoothing_multiplier_RR = smoothing_cdf_start((foot_indices[3] - 0.5) * 4)
+        smoothing_multiplier_RL = (smoothing_cdf_start(torch.remainder(foot_indices[2], 1.0)) * (
+                    1 - smoothing_cdf_start(torch.remainder(foot_indices[2], 1.0) - 0.5)) +
+                                       smoothing_cdf_start(torch.remainder(foot_indices[2], 1.0) - 1) * (
+                                               1 - smoothing_cdf_start(
+                                           torch.remainder(foot_indices[2], 1.0) - 0.5 - 1)))
+        smoothing_multiplier_RR = (smoothing_cdf_start(torch.remainder(foot_indices[3], 1.0)) * (
+                    1 - smoothing_cdf_start(torch.remainder(foot_indices[3], 1.0) - 0.5)) +
+                                       smoothing_cdf_start(torch.remainder(foot_indices[3], 1.0) - 1) * (
+                                               1 - smoothing_cdf_start(
+                                           torch.remainder(foot_indices[3], 1.0) - 0.5 - 1)))
+
 
         self.desired_contact_states[:, 0] = smoothing_multiplier_FL
         self.desired_contact_states[:, 1] = smoothing_multiplier_FR
@@ -465,14 +476,14 @@ class Go1FwClock(WheeledRobot):
         desired_xs_nom = torch.tensor([-desired_stance_length / 2, -desired_stance_length / 2], device=self.device).unsqueeze(0)
 
         # raibert offsets
-        phase = torch.abs(1.0 - (self.foot_indices * 2.0)) * 1.0 - 0.5
+        phase = torch.abs(1.0 - (self.rear_foot_indices * 2.0)) * 1.0 - 0.5
         frequencies = self.frequencies
-        x_vel_des = self.commands[:, 0]
-        yaw_vel_des = self.commands[:, 2]
+        x_vel_des = self.commands[:, 0:1]
+        yaw_vel_des = self.commands[:, 2:3]
         y_vel_des = yaw_vel_des * desired_stance_length / 2
-        desired_ys_offset = phase * y_vel_des * (0.5 / frequencies.unsqueeze(1))
+        desired_ys_offset = phase * y_vel_des * (0.5 / frequencies)
         desired_ys_offset[:, 2:4] *= -1
-        desired_xs_offset = phase * x_vel_des * (0.5 / frequencies.unsqueeze(1))
+        desired_xs_offset = phase * x_vel_des * (0.5 / frequencies)
 
         desired_ys_nom = desired_ys_nom + desired_ys_offset
         desired_xs_nom = desired_xs_nom + desired_xs_offset
