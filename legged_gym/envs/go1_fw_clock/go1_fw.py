@@ -48,12 +48,18 @@ def torch_rand_sigmoid(lower, upper, shape, device):
     scaled_samples = (upper - lower) * sigmoid_samples + lower
     return scaled_samples
 
+def frequency_ac_vel(cmd_vel):
+    stride_length = 0.7 # NOTE: adjust this
+    frequency = cmd_vel / stride_length
+    return frequency
+
+
 class Go1FwClock(WheeledRobot):
     cfg : Go1FwFlatClockCfg
     def __init__(self, cfg, sim_params, physics_engine, sim_device, headless):
         super().__init__(cfg, sim_params, physics_engine, sim_device, headless)
         # self.num_passive_joints = self.cfg.env.num_passive_joints
-        self.frequencies = 3.0
+        self.frequencies = 4.0
 
     def compute_observations(self):
         """ Computes observations to exclude passive joint
@@ -262,6 +268,7 @@ class Go1FwClock(WheeledRobot):
 
     def _post_physics_step_callback(self):
         super()._post_physics_step_callback()
+        self.frequencies = frequency_ac_vel(self.commands[:, 0])
         self._step_contact_targets()
 
     def sigmoid_contact_signal(self, x, kappa):
@@ -481,9 +488,9 @@ class Go1FwClock(WheeledRobot):
         x_vel_des = self.commands[:, 0:1]
         yaw_vel_des = self.commands[:, 2:3]
         y_vel_des = yaw_vel_des * desired_stance_length / 2
-        desired_ys_offset = phase * y_vel_des * (0.5 / frequencies)
+        desired_ys_offset = phase * y_vel_des * (0.5 / frequencies.unsqueeze(1))
         desired_ys_offset[:, 2:4] *= -1
-        desired_xs_offset = phase * x_vel_des * (0.5 / frequencies)
+        desired_xs_offset = phase * x_vel_des * (0.5 / frequencies.unsqueeze(1))
 
         desired_ys_nom = desired_ys_nom + desired_ys_offset
         desired_xs_nom = desired_xs_nom + desired_xs_offset
