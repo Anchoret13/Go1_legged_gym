@@ -501,3 +501,7 @@ class Go1FwClock(WheeledRobot):
         err_raibert_heuristic = torch.abs(desired_footsteps_body_frame - footsteps_in_body_frame[:, :, 0:2])
         reward = torch.sum(torch.square(err_raibert_heuristic), dim=(1, 2))
         return reward
+    
+    # TODO: reward for periodic GRF
+    def _reward_periodic_GRF(self):
+        pass
