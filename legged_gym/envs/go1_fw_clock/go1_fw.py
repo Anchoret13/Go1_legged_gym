@@ -121,7 +121,9 @@ class Go1FwClock(WheeledRobot):
         
         self.gym.refresh_rigid_body_state_tensor(self.sim)
         # tmp_foot_forces = torch.exp(torch.norm(self.contact_forces[:, self.feet_indices, :], dim=-1) **2 / 100.)
-        self.contact_detect = self.contact_forces[:, self.feet_indices, 2] > 1.
+        # ***************   modified
+        # self.contact_detect = self.contact_forces[:, self.feet_indices, 2] > 1.
+        self.contact_detect = self.contact_forces[:, self.feet_indices, 2] > 0.1
         self.contact_detect = self.contact_detect.float()
         
 

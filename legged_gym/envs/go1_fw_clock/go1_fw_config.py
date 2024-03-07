@@ -78,7 +78,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
         decimation = 4
 
     class asset( LeggedRobotCfg.asset ):
-        file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/go1_fw/urdf/go1_fw3.urdf'
+        file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/go1_fw/urdf/go1_fw3_contact.urdf'
         name = "go1"
         foot_name = "foot"
         roller_name = "roller"
