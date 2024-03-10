@@ -41,34 +41,34 @@ from typing import Tuple, Dict
 from ..base.wheeled_robot import WheeledRobot
 from .go1_fw_config import Go1FwFlatClockCfg
 
+def sigmoid(x, k, lower, upper):
+    midpoint = (lower + upper) / 2.0
+    scale = k / (upper - lower)
+    return 1 / (1 + torch.exp(-scale * (x - midpoint)))
 
-def torch_rand_sigmoid(lower, upper, shape, device):
-    uniform_samples = torch.rand(*shape, device = device)
-    sigmoid_samples = torch.sigmoid((uniform_samples - 0.5) * 10) 
-    scaled_samples = (upper - lower) * sigmoid_samples + lower
-    return scaled_samples
+# def torch_rand_sigmoid(lower, upper, shape, device):
+#     uniform_samples = torch.rand(*shape, device = device)
+#     sigmoid_samples = torch.sigmoid((uniform_samples - 0.5) * 10) 
+#     scaled_samples = (upper - lower) * sigmoid_samples + lower
+#     return scaled_samples
 
 def frequency_ac_vel(cmd_vel):
     stride_length = 0.6 # NOTE: adjust this
     frequency = cmd_vel / stride_length
     return frequency
 
-def adaptive_sample_cmd(cmd_vel, total_iteration):
-    pass
-
-
-class Go1CountWrapper:
-    def __init__(self, env) -> None:
-        self.env = env
-        self.episode_count = 0
-
-    def __getattr__(self, name):
-        return getattr(self.env, name)
+def adaptive_sample_vel_cmd(min_vel, max_vel, total_iteration, current_step, n_samples = 1000):
+    #  NOTE: STUPID HARD CODING Method
+    # compute k with total_iteration, k_range
+    # num_steps_per_env = 24, so consider 24 steps as one iteration.
+    current_iteration = current_step // 24
+    k_min = -10
+    k_max = 3
+    k = k_min + current_iteration(current_iteration * (k_max - k_min) /  total_iteration)
+    values = np.linspace(min_vel, max_vel, n_samples)
+    probs = sigmoid(values, k, min_vel, max_vel)
     
-    def reset(self, **kwargs):
-        self.episode_count += 1
-        return self.env.reset(**kwargs)
-    
+
 class Go1FwClock(WheeledRobot):
     cfg : Go1FwFlatClockCfg
     def __init__(self, cfg, sim_params, physics_engine, sim_device, headless):
@@ -86,8 +86,6 @@ class Go1FwClock(WheeledRobot):
         self.active_dof_pos = self.dof_pos[:, dofs_to_keep]
         self.active_default_dof_pos = self.default_dof_pos[:, dofs_to_keep]
         active_dof_vel = self.dof_vel[:, dofs_to_keep]
-
-        
 
         # self.desired_contact_states = torch.zeros(self.num_envs, 4, dtype = torch.float, device = self.device, requires_grad = False)
         # self.desired_rear_contact_states = torch.zeros(self.num_envs, 2, dtype = torch.float, device = self.device, requires_grad = False)

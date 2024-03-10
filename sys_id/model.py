@@ -86,7 +86,7 @@ class Block(nn.Module):
         return x
 
 @dataclass
-class GPTConfig:
+class sys_id_config:
     block_size = 1024
     vocab_size = 50304
     n_layer: int = 12
@@ -110,4 +110,10 @@ class sys_id(nn.Module):
             ln_f = LayerNorm(config.n_embd, bias=config.bias),
         ))
 
+        self.lm_head = nn.Linear(config.n_embd, config.vocab_size, bias = False)
+        self.transformer.wte.weight = self.lm_head.weight
+
         
+    def forward(self, idx, targets = None):
+        device = idx.device
+        b, t = idx.size()

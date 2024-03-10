@@ -71,12 +71,8 @@ def play(args):
     logger = Logger(env.dt)
     robot_index = 0 # which robot is used for logging
     joint_index = 1 # which joint is used for logging
-<<<<<<< HEAD
     start_state_log = 100 # ignore starting
     stop_state_log = 600 # number of steps before plotting states
-=======
-    stop_state_log = 500 # number of steps before plotting states
->>>>>>> 4f07453e2cd1ab6830ccd6fa5102303552e4713c
     stop_rew_log = env.max_episode_length + 1 # number of steps before print average episode rewards
     # camera_position = np.array(env_cfg.viewer.pos, dtype=np.float64)
     camera_position = np.array([-1., -1.5, 0.8], dtype = np.float64)
@@ -131,9 +127,6 @@ def play(args):
                     'base_vel_yaw': env.base_ang_vel[robot_index, 2].item(),
                     'contact_forces_z': env.contact_forces[robot_index, env.feet_indices, 2].cpu().numpy(),
                     'desired_contact': env.desired_contact_states[robot_index, :].cpu().numpy(),
-                    # 'desired_FR_contact': env.desired_contact_states[robot_index, 1],
-                    # 'desired_RL_contact': env.desired_contact_states[robot_index, 2],
-                    # 'desired_RR_contact': env.desired_contact_states[robot_index, 3]
                     'actual_contact': env.contact_detect[robot_idx,:].cpu().numpy()
                 }
             )
