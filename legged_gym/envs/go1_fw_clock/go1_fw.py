@@ -49,11 +49,26 @@ def torch_rand_sigmoid(lower, upper, shape, device):
     return scaled_samples
 
 def frequency_ac_vel(cmd_vel):
-    stride_length = 0.7 # NOTE: adjust this
+    stride_length = 0.6 # NOTE: adjust this
     frequency = cmd_vel / stride_length
     return frequency
 
+def adaptive_sample_cmd(cmd_vel, total_iteration):
+    pass
 
+
+class Go1CountWrapper:
+    def __init__(self, env) -> None:
+        self.env = env
+        self.episode_count = 0
+
+    def __getattr__(self, name):
+        return getattr(self.env, name)
+    
+    def reset(self, **kwargs):
+        self.episode_count += 1
+        return self.env.reset(**kwargs)
+    
 class Go1FwClock(WheeledRobot):
     cfg : Go1FwFlatClockCfg
     def __init__(self, cfg, sim_params, physics_engine, sim_device, headless):
