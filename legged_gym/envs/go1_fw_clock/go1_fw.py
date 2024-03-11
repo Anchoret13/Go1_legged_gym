@@ -57,20 +57,26 @@ def frequency_ac_vel(cmd_vel):
     frequency = cmd_vel / stride_length
     return frequency
 
-def adaptive_sample_vel_cmd(min_vel, max_vel, current_step, env_ids, device, total_iterations = 10000, n_samples = 1000, steps_per_iteration = 24):
+def adaptive_sample_vel_cmd(min_vel, max_vel, current_step, env_ids, device, total_iterations = 20000, n_samples = 1000, steps_per_iteration = 24):
     #  NOTE: STUPID HARD CODING Method
     # compute k with total_iteration, k_range
     # num_steps_per_env = 24, so consider 24 steps as one iteration.
+    if len(env_ids) == 0:
+        env_ids = torch.tensor([0])
     current_iteration = current_step // steps_per_iteration
     k_min = -10
-    k_max = 3
-    k = k_min + current_iteration(current_iteration * (k_max - k_min) /  total_iterations)
+    k_max = 1
+    if current_iteration < (total_iterations * 0.7):
+        k = k_min + (current_iteration * (k_max - k_min) /  (total_iterations * 0.7))
+    else:
+        k = k_max
     values = torch.linspace(min_vel, max_vel, n_samples)
     probs = sigmoid(values, k, min_vel, max_vel)
     probs /= probs.sum()
-    sampled_indices = torch.multinomial(probs, num_samples=len(env_ids))
+    sampled_indices = torch.multinomial(probs, num_samples=len(env_ids), replacement=True)
     sampled_velocities = values[sampled_indices]
     commands = torch.zeros_like(env_ids, dtype = torch.float, device = device)
+
     for i, env_id in enumerate(env_ids):
         commands[i] = sampled_velocities[i]
     return commands
@@ -279,7 +285,8 @@ class Go1FwClock(WheeledRobot):
             env_ids (List[int]): Environments ids for which new commands are needed
         """
         # self.commands[env_ids, 0] = torch_rand_float(self.command_ranges["lin_vel_x"][0], self.command_ranges["lin_vel_x"][1], (len(env_ids), 1), device=self.device).squeeze(1)
-        self.commands[env_ids, 0]  = adaptive_sample_vel_cmd(self.command_ranges["lin_vel_x"][0], self.command_ranges["lin_vel_x"][1], self.current_step, self.device, env_ids, total_iterations=10000, steps_per_iteration=24, n_samples=1000)
+        # adaptive_sample_vel_cmd(min_vel, max_vel, current_step, env_ids, device, total_iterations = 10000, n_samples = 1000, steps_per_iteration = 24):
+        self.commands[env_ids, 0]  = adaptive_sample_vel_cmd(self.command_ranges["lin_vel_x"][0], self.command_ranges["lin_vel_x"][1], self.current_step, env_ids, self.device)
         self.commands[env_ids, 1] = torch_rand_float(self.command_ranges["lin_vel_y"][0], self.command_ranges["lin_vel_y"][1], (len(env_ids), 1), device=self.device).squeeze(1)
         if self.cfg.commands.heading_command:
             self.commands[env_ids, 3] = torch_rand_float(self.command_ranges["heading"][0], self.command_ranges["heading"][1], (len(env_ids), 1), device=self.device).squeeze(1)
