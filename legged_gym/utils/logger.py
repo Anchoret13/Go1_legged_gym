@@ -169,16 +169,47 @@ class Logger:
     #         axs[joint_idx-counter].legend()
     #     plt.tight_layout(rect = [0, 0.03, 1, 0.95])
     #     plt.show()
-    
+
+    # def _plot(self):
+    #     nb_rows = 4
+    #     nb_cols = 1
+
+
+    #     plt.figure()
+    #     fig, axs = plt.subplots(nb_rows, nb_cols)
+    #     axs = axs.flatten()
+    #     for key, value in self.state_log.items():
+    #         time = np.linspace(0, len(value) * self.dt, len(value))
+    #         break
+    #     log = self.state_log
+
+    #     counter = 0
+    #     for leg in range(len(log['desired_contact'][0])):
+    #         desired_contact = []
+    #         robot_contact = []
+    #         for i in range(len(time)):
+    #             desired_contact.append(log['desired_contact'][i][leg])
+    #             robot_contact.append(log['actual_contact'][i][leg])
+    #         axs[leg - counter].plot(time, desired_contact, color='red', label="desired")
+    #         axs[leg - counter].plot(time, robot_contact, color='blue', label="actual")
+    #         axs[leg - counter].legend()
+
+    #     # Show the current figure
+    #     plt.show()   
+
     def _plot(self):
-        nb_rows = 4
-        nb_cols = 1
-        fig, axs = plt.subplots(nb_rows, nb_cols)
-        axs = axs.flatten()
         for key, value in self.state_log.items():
             time = np.linspace(0, len(value) * self.dt, len(value))
             break
         log = self.state_log
+
+        # first plot:
+        # contact
+        nb_rows = 4
+        nb_cols = 1
+
+        fig1, axs1 = plt.subplots(nb_rows, nb_cols, num=1)
+
 
         counter = 0
         for leg in range(len(log['desired_contact'][0])):
@@ -187,11 +218,34 @@ class Logger:
             for i in range(len(time)):
                 desired_contact.append(log['desired_contact'][i][leg])
                 robot_contact.append(log['actual_contact'][i][leg])
-            axs[leg-counter].plot(time, desired_contact, color = 'red', label = "desired")
-            axs[leg-counter].plot(time, robot_contact, color = 'blue', label = "actual")
-            axs[leg-counter].legend()
+            axs1[leg - counter].plot(time, desired_contact, color='red', label="desired")
+            axs1[leg - counter].plot(time, robot_contact, color='blue', label="actual")
+            axs1[leg - counter].legend()
 
+        # second plot:
+        # roller pos
+        num_roller = 2
+        fig2, axs2 = plt.subplots(num_roller, 1, num=2)
+        if log["roller_angle"]:
+            angle = np.array(log["roller_angle"])
+            for i in range(angle.shape[1]):
+                if i == 0:
+                    axs2[i].plot(time, (angle[:, i] + 2 * np.pi) % (2 * np.pi), color='blue', label='roller FL')
+                    axs2[i].set_title(' FL wheel: q vs t')
+                    axs2[i].set_xlabel('t')
+                    axs2[i].set_ylabel('q')
+                if i == 1:
+                    axs2[i].plot(time, (angle[:, i] + 2 * np.pi) % (2 * np.pi), color='blue', label='roller FR')
+                    axs2[i].set_title(' FR wheel: q vs t')
+                    axs2[i].set_xlabel('t')
+                    axs2[i].set_ylabel('q')
+
+
+        # Show the new figure
+        plt.tight_layout()
         plt.show()
+
+
 
     def print_rewards(self):
         print("Average rewards per second:")
