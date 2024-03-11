@@ -71,7 +71,8 @@ def play(args):
     logger = Logger(env.dt)
     robot_index = 0 # which robot is used for logging
     joint_index = 1 # which joint is used for logging
-    stop_state_log = 500 # number of steps before plotting states
+    start_state_log = 100 # ignore starting
+    stop_state_log = 600 # number of steps before plotting states
     stop_rew_log = env.max_episode_length + 1 # number of steps before print average episode rewards
     # camera_position = np.array(env_cfg.viewer.pos, dtype=np.float64)
     camera_position = np.array([-1., -1.5, 0.8], dtype = np.float64)
@@ -107,7 +108,8 @@ def play(args):
             camera_look_at = robot_position
             env.set_camera(desired_camera_position, camera_look_at)
         # print(env.commands[robot_index, 0].item())
-        if i < stop_state_log:
+        # print(env.commands[robot_index, 2].item())
+        if i < stop_state_log and i > start_state_log:
             logger.log_states(
                 {
                     # 'dof_pos_target': actions[robot_index, joint_index].item() * env.cfg.control.action_scale,
@@ -126,9 +128,6 @@ def play(args):
                     'contact_forces_z': env.contact_forces[robot_index, env.feet_indices, 2].cpu().numpy(),
                     'roller_angle': env.dof_pos[robot_index, env.dof_roller_ids].cpu().numpy(),  # add for debug by xiaoyu
                     'desired_contact': env.desired_contact_states[robot_index, :].cpu().numpy(),
-                    # 'desired_FR_contact': env.desired_contact_states[robot_index, 1],
-                    # 'desired_RL_contact': env.desired_contact_states[robot_index, 2],
-                    # 'desired_RR_contact': env.desired_contact_states[robot_index, 3]
                     'actual_contact': env.contact_detect[robot_idx,:].cpu().numpy()
                 }
             )

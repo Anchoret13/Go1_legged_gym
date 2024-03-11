@@ -41,18 +41,45 @@ from typing import Tuple, Dict
 from ..base.wheeled_robot import WheeledRobot
 from .go1_fw_config import Go1FwFlatClockCfg
 
+def sigmoid(x, k, lower, upper):
+    midpoint = (lower + upper) / 2.0
+    scale = k / (upper - lower)
+    return 1 / (1 + torch.exp(-scale * (x - midpoint)))
 
-def torch_rand_sigmoid(lower, upper, shape, device):
-    uniform_samples = torch.rand(*shape, device = device)
-    sigmoid_samples = torch.sigmoid((uniform_samples - 0.5) * 10) 
-    scaled_samples = (upper - lower) * sigmoid_samples + lower
-    return scaled_samples
+# def torch_rand_sigmoid(lower, upper, shape, device):
+#     uniform_samples = torch.rand(*shape, device = device)
+#     sigmoid_samples = torch.sigmoid((uniform_samples - 0.5) * 10) 
+#     scaled_samples = (upper - lower) * sigmoid_samples + lower
+#     return scaled_samples
 
 def frequency_ac_vel(cmd_vel):
-    stride_length = 0.7 # NOTE: adjust this
+    stride_length = 0.6 # NOTE: adjust this
     frequency = cmd_vel / stride_length
     return frequency
 
+def adaptive_sample_vel_cmd(min_vel, max_vel, current_step, env_ids, device, total_iterations = 20000, n_samples = 1000, steps_per_iteration = 24):
+    #  NOTE: STUPID HARD CODING Method
+    # compute k with total_iteration, k_range
+    # num_steps_per_env = 24, so consider 24 steps as one iteration.
+    if len(env_ids) == 0:
+        env_ids = torch.tensor([0])
+    current_iteration = current_step // steps_per_iteration
+    k_min = -10
+    k_max = 1
+    if current_iteration < (total_iterations * 0.7):
+        k = k_min + (current_iteration * (k_max - k_min) /  (total_iterations * 0.7))
+    else:
+        k = k_max
+    values = torch.linspace(min_vel, max_vel, n_samples)
+    probs = sigmoid(values, k, min_vel, max_vel)
+    probs /= probs.sum()
+    sampled_indices = torch.multinomial(probs, num_samples=len(env_ids), replacement=True)
+    sampled_velocities = values[sampled_indices]
+    commands = torch.zeros_like(env_ids, dtype = torch.float, device = device)
+
+    for i, env_id in enumerate(env_ids):
+        commands[i] = sampled_velocities[i]
+    return commands
 
 class Go1FwClock(WheeledRobot):
     cfg : Go1FwFlatClockCfg
@@ -60,6 +87,7 @@ class Go1FwClock(WheeledRobot):
         super().__init__(cfg, sim_params, physics_engine, sim_device, headless)
         # self.num_passive_joints = self.cfg.env.num_passive_joints
         self.frequencies = 4.0
+        self.current_step = 0
 
     def compute_observations(self):
         """ Computes observations to exclude passive joint
@@ -71,8 +99,6 @@ class Go1FwClock(WheeledRobot):
         self.active_dof_pos = self.dof_pos[:, dofs_to_keep]
         self.active_default_dof_pos = self.default_dof_pos[:, dofs_to_keep]
         active_dof_vel = self.dof_vel[:, dofs_to_keep]
-
-        
 
         # self.desired_contact_states = torch.zeros(self.num_envs, 4, dtype = torch.float, device = self.device, requires_grad = False)
         # self.desired_rear_contact_states = torch.zeros(self.num_envs, 2, dtype = torch.float, device = self.device, requires_grad = False)
@@ -91,6 +117,7 @@ class Go1FwClock(WheeledRobot):
         # self.num_rollers = 2
         super()._init_buffers()
         self.base_pos = self.root_states[:self.num_envs, 0:3]
+        self.wheel_indices = torch.tensor([5, 10], device = self.device)
         self.rear_feet_indices = torch.tensor([14, 18], device = self.device)
         
         # gait index from WTW
@@ -119,12 +146,17 @@ class Go1FwClock(WheeledRobot):
         self.left_rear_contact = torch.zeros(self.num_envs, len(self.left_idx), dtype=torch.bool, device=self.device, requires_grad=False)
         self.right_rear_contact = torch.zeros(self.num_envs, len(self.right_idx), dtype=torch.bool, device=self.device, requires_grad=False)
         
+        self.last_wheel_contacts = torch.zeros(self.num_envs, len(self.wheel_indices), dtype=torch.bool, device=self.device, requires_grad=False)
+
         self.gym.refresh_rigid_body_state_tensor(self.sim)
         # tmp_foot_forces = torch.exp(torch.norm(self.contact_forces[:, self.feet_indices, :], dim=-1) **2 / 100.)
         # ***************   modified
         # self.contact_detect = self.contact_forces[:, self.feet_indices, 2] > 1.
         self.contact_detect = self.contact_forces[:, self.feet_indices, 2] > 0.1
         self.contact_detect = self.contact_detect.float()
+
+        self.wheel_air_time = torch.zeros(self.num_envs, self.wheel_indices.shape[0], dtype=torch.float, device=self.device, requires_grad=False)
+        self.rear_leg_air_time = torch.zeros(self.num_envs, self.rear_feet_indices.shape[0], dtype=torch.float, device=self.device, requires_grad=False)
         
 
     def _reward_masked_legs_energy(self):
@@ -137,6 +169,7 @@ class Go1FwClock(WheeledRobot):
         return torch.sum(torch.square(masked_torques * masked_dof_vel), dim=1)
 
     def step(self, actions):
+        self.current_step += 1
         clip_actions = self.cfg.normalization.clip_actions
         self.actions = torch.clip(actions, -clip_actions, clip_actions).to(self.device)
         # self.actions
@@ -174,7 +207,6 @@ class Go1FwClock(WheeledRobot):
         self.rear_foot_positions = self.rigid_body_state.view(self.num_envs, self.num_bodies, 13)[:, self.rear_feet_indices,
                                0:3]
         return self.obs_buf, self.privileged_obs_buf, self.rew_buf, self.reset_buf, self.extras
-    
 
 
     def _create_envs(self):
@@ -257,8 +289,9 @@ class Go1FwClock(WheeledRobot):
         Args:
             env_ids (List[int]): Environments ids for which new commands are needed
         """
-        # self.commands[env_ids, 0] = torch_rand_sigmoid(self.command_ranges["lin_vel_x"][0], self.command_ranges["lin_vel_x"][1], (len(env_ids), 1), device=self.device).squeeze(1)
-        self.commands[env_ids, 0] = torch_rand_float(self.command_ranges["lin_vel_x"][0], self.command_ranges["lin_vel_x"][1], (len(env_ids), 1), device=self.device).squeeze(1)
+        # self.commands[env_ids, 0] = torch_rand_float(self.command_ranges["lin_vel_x"][0], self.command_ranges["lin_vel_x"][1], (len(env_ids), 1), device=self.device).squeeze(1)
+        # adaptive_sample_vel_cmd(min_vel, max_vel, current_step, env_ids, device, total_iterations = 10000, n_samples = 1000, steps_per_iteration = 24):
+        self.commands[env_ids, 0]  = adaptive_sample_vel_cmd(self.command_ranges["lin_vel_x"][0], self.command_ranges["lin_vel_x"][1], self.current_step, env_ids, self.device)
         self.commands[env_ids, 1] = torch_rand_float(self.command_ranges["lin_vel_y"][0], self.command_ranges["lin_vel_y"][1], (len(env_ids), 1), device=self.device).squeeze(1)
         if self.cfg.commands.heading_command:
             self.commands[env_ids, 3] = torch_rand_float(self.command_ranges["heading"][0], self.command_ranges["heading"][1], (len(env_ids), 1), device=self.device).squeeze(1)
@@ -505,3 +538,15 @@ class Go1FwClock(WheeledRobot):
     # TODO: reward for periodic GRF
     def _reward_periodic_GRF(self):
         pass
+
+    # NOTE: TRYING TO BE BRUTAL
+    def _reward_wheel_air_time(self):
+        contact = self.contact_forces[:, self.wheel_indices, 2] > 1.
+        contact_filt = torch.logical_or(contact, self.last_wheel_contacts)
+        self.last_wheel_contacts = contact
+        first_contact = (self.wheel_air_time > 0.) * contact_filt
+        self.wheel_air_time += self.dt
+        rew_airTime = torch.sum((self.wheel_air_time - 0.5) * first_contact, dim=1) # reward only on first contact with the ground
+        rew_airTime *= torch.norm(self.commands[:, :2], dim=1) > 0.1 #no reward for zero command
+        self.wheel_air_time *= ~contact_filt
+        return rew_airTime

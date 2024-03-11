@@ -46,25 +46,50 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             'FR_hip_joint': -0.1 ,  # [rad]
             'RR_hip_joint': -0.1,   # [rad]
 
-            'FL_thigh_joint': 0.7,     # [rad]
+            'FL_thigh_joint': 0.8,     # [rad]
             'RL_thigh_joint': 1.,   # [rad]
-            'FR_thigh_joint': 0.7,     # [rad]
+            'FR_thigh_joint': 0.8,     # [rad]
             'RR_thigh_joint': 1.,   # [rad]
 
-            'FL_calf_joint': -1.4,   # [rad]
+            'FL_calf_joint': -1.7,   # [rad]
             'RL_calf_joint': -1.5,    # [rad]
-            'FR_calf_joint': -1.4,  # [rad]
+            'FR_calf_joint': -1.7,  # [rad]
             'RR_calf_joint': -1.5,    # [rad]
 
             'FL_roller_foot_joint': 0,
             'FR_roller_foot_joint': 0
         }
-
+    
+    # FOR PLANE:
     class terrain( LeggedRobotCfg.terrain) :
         mesh_type = 'plane'
         curriculum = True
         measure_heights = True
         selected = True
+        
+    # class terrain( LeggedRobotCfg.terrain):
+    #     mesh_type = 'trimesh'
+        # horizontal_scale  = 0.1
+        # vertical_scale = 0.001
+        # border_size = 0
+        # curriculum = True
+        # static_friction = 1.0
+        # dynamic_friction = 1.0
+        # restitution = 0.0
+        # TODO: terrain noise magnitude
+        # TODO: terrain smoothness
+        # measure_heights = True
+        # measured_points_x = [-0.8, -0.7, -0.6, -0.5, -0.4, -0.3, -0.2, -0.1, 0., 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
+        # measured_points_y = [-0.5, -0.4, -0.3, -0.2, -0.1, 0., 0.1, 0.2, 0.3, 0.4, 0.5]
+        # selected = False
+        # terrain_length = 20.
+        # terrain_width = 20.
+        # num_cols = 10
+        # num_rows = 10
+        # # NOTE: terrain_proportions: [smooth slope, rough slope, stairs up, stairs down, discrete]
+        # terrain_proportions = [0.4, 0.4, 0.0, 0.0, 0.2]
+        # # trimesh  
+        # slope_treshold = 0.
 
     class control( LeggedRobotCfg.control ):
         # PD Drive parameters:
@@ -78,7 +103,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
         decimation = 4
 
     class asset( LeggedRobotCfg.asset ):
-        file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/go1_fw/urdf/go1_fw3_contact.urdf'
+        file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/go1_fw/urdf/go1_fw3.urdf'
         name = "go1"
         foot_name = "foot"
         roller_name = "roller"
@@ -93,12 +118,12 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
     class commands(LeggedRobotCfg.commands):
         # num_commands = 1
         class ranges(LeggedRobotCfg.commands.ranges):
-            lin_vel_x = [0.5, 4.0] # min max [m/s]
+            lin_vel_x = [0.5, 3.0] # min max [m/s]
             line_vel_y = [0.0, 0.0]
-            ang_vel_yaw = [0.0, 0.0]
+            # ang_vel_yaw = [-0.0,-0.0]
             heading = [0.0, 0.0]
             # lin_vel_y = [-0.5, 0.5]   # min max [m/s]
-            # ang_vel_yaw = [-0.5, 0.5]    # min max [rad/s]
+            ang_vel_yaw = [-0.6, 0.]    # min max [rad/s]
             # heading = [-3.14/4, 3.14/4]
 
     class rewards( LeggedRobotCfg.rewards ):
@@ -116,35 +141,40 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             # dof_pos_limits = -0.4
             # torque_limits = -0.01
             # dof_vel_limits = -10.0
+            wheel_air_time = -2.
 
             # add by xiaoyu
             # tracking_ang_vel = 0.5
-            tracking_lin_vel = 4.0
+            tracking_lin_vel = 3.5
+            tracking_ang_vel = 0.5
             torques = -0.001
             # lin_vel_x = 0.5
             masked_legs_energy = -1e-4
             # orientation = -3.0
-            # collision = -1.0
+            collision = -1.0
             # base_height = -0.1
-            lin_vel_z = -0.05
+            lin_vel_z = -0.1
             action_rate = -0.01
             roller_action_rate = -0.05
             hip = -0.5
-            penalize_roll = -1.0
-            front_leg = -1.5
-            front_hip = -1.
+            penalize_roll = -0.5
+            front_leg = -0.5
+            front_hip = -1.0
+
+            # alive:
+            # alive = 0.1
 
             # gait reward
-            # tracking_contacts_binary = -1.5
+            tracking_contacts_binary = -0.1
             raibert_heuristic = -0.1
             # tracking_rear_swing_force = 1.
             # tracking_rear_stance_vel = 1.
-            tracking_swing_force = 1.
-            tracking_stance_vel = 1.
+            tracking_swing_force = 1.0
+            tracking_stance_vel = 1.0
 
     
     class domain_rand(LeggedRobotCfg.domain_rand):
-        randomize_friction = True
+        randomize_friction = False
         friction_range = [0.75, 1.5]
         push_robots = False
         # push_interval_s = 15
@@ -158,6 +188,6 @@ class Go1FwFlatClockCfgPPO( LeggedRobotCfgPPO ):
         entropy_coef = 0.01
     class runner( LeggedRobotCfgPPO.runner ):
         run_name = ''
-        experiment_name = 'roller_skating_gait_cond'
+        experiment_name = 'roller_skating_gait_cond_xyz'
 
   
