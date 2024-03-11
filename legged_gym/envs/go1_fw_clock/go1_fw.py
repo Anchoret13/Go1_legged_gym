@@ -117,6 +117,7 @@ class Go1FwClock(WheeledRobot):
         # self.num_rollers = 2
         super()._init_buffers()
         self.base_pos = self.root_states[:self.num_envs, 0:3]
+        self.wheel_indices = torch.tensor([5, 10], device = self.device)
         self.rear_feet_indices = torch.tensor([14, 18], device = self.device)
         
         # gait index from WTW
@@ -145,12 +146,17 @@ class Go1FwClock(WheeledRobot):
         self.left_rear_contact = torch.zeros(self.num_envs, len(self.left_idx), dtype=torch.bool, device=self.device, requires_grad=False)
         self.right_rear_contact = torch.zeros(self.num_envs, len(self.right_idx), dtype=torch.bool, device=self.device, requires_grad=False)
         
+        self.last_wheel_contacts = torch.zeros(self.num_envs, len(self.wheel_indices), dtype=torch.bool, device=self.device, requires_grad=False)
+
         self.gym.refresh_rigid_body_state_tensor(self.sim)
         # tmp_foot_forces = torch.exp(torch.norm(self.contact_forces[:, self.feet_indices, :], dim=-1) **2 / 100.)
         # ***************   modified
         # self.contact_detect = self.contact_forces[:, self.feet_indices, 2] > 1.
         self.contact_detect = self.contact_forces[:, self.feet_indices, 2] > 0.1
         self.contact_detect = self.contact_detect.float()
+
+        self.wheel_air_time = torch.zeros(self.num_envs, self.wheel_indices.shape[0], dtype=torch.float, device=self.device, requires_grad=False)
+        self.rear_leg_air_time = torch.zeros(self.num_envs, self.rear_feet_indices.shape[0], dtype=torch.float, device=self.device, requires_grad=False)
         
 
     def _reward_masked_legs_energy(self):
@@ -201,7 +207,6 @@ class Go1FwClock(WheeledRobot):
         self.rear_foot_positions = self.rigid_body_state.view(self.num_envs, self.num_bodies, 13)[:, self.rear_feet_indices,
                                0:3]
         return self.obs_buf, self.privileged_obs_buf, self.rew_buf, self.reset_buf, self.extras
-    
 
 
     def _create_envs(self):
@@ -533,3 +538,15 @@ class Go1FwClock(WheeledRobot):
     # TODO: reward for periodic GRF
     def _reward_periodic_GRF(self):
         pass
+
+    # NOTE: TRYING TO BE BRUTAL
+    def _reward_wheel_air_time(self):
+        contact = self.contact_forces[:, self.wheel_indices, 2] > 1.
+        contact_filt = torch.logical_or(contact, self.last_wheel_contacts)
+        self.last_wheel_contacts = contact
+        first_contact = (self.wheel_air_time > 0.) * contact_filt
+        self.wheel_air_time += self.dt
+        rew_airTime = torch.sum((self.wheel_air_time - 0.5) * first_contact, dim=1) # reward only on first contact with the ground
+        rew_airTime *= torch.norm(self.commands[:, :2], dim=1) > 0.1 #no reward for zero command
+        self.wheel_air_time *= ~contact_filt
+        return rew_airTime

@@ -141,6 +141,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             # dof_pos_limits = -0.4
             # torque_limits = -0.01
             # dof_vel_limits = -10.0
+            wheel_air_time = -2.
 
             # add by xiaoyu
             # tracking_ang_vel = 0.5
