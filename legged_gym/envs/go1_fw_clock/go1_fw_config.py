@@ -103,7 +103,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
         decimation = 4
 
     class asset( LeggedRobotCfg.asset ):
-        file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/go1_fw/urdf/go1_fw3.urdf'
+        file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/go1_fw/urdf/go1_fw3_contact.urdf'
         name = "go1"
         foot_name = "foot"
         roller_name = "roller"
@@ -123,7 +123,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             # ang_vel_yaw = [-0.0,-0.0]
             heading = [0.0, 0.0]
             # lin_vel_y = [-0.5, 0.5]   # min max [m/s]
-            ang_vel_yaw = [-0.6, 0.]    # min max [rad/s]
+            ang_vel_yaw = [-0.0, 0.]    # min max [rad/s]
             # heading = [-3.14/4, 3.14/4]
 
     class rewards( LeggedRobotCfg.rewards ):
@@ -141,31 +141,31 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             # dof_pos_limits = -0.4
             # torque_limits = -0.01
             # dof_vel_limits = -10.0
-            wheel_air_time = -2.
+            # wheel_air_time = -2.                # commented 
 
             # add by xiaoyu
             # tracking_ang_vel = 0.5
-            tracking_lin_vel = 3.5
-            tracking_ang_vel = 0.5
+            tracking_lin_vel = 4.0             # was 3.5
+            # tracking_ang_vel = 0.5             # commented
             torques = -0.001
             # lin_vel_x = 0.5
             masked_legs_energy = -1e-4
             # orientation = -3.0
-            collision = -1.0
+            # collision = -1.0               # commented   
             # base_height = -0.1
-            lin_vel_z = -0.1
+            lin_vel_z = -0.05                 # was -0.1
             action_rate = -0.01
             roller_action_rate = -0.05
             hip = -0.5
-            penalize_roll = -0.5
-            front_leg = -0.5
+            penalize_roll = -1.0           # was -0.5
+            front_leg = -1.5               # was -0.5
             front_hip = -1.0
 
             # alive:
             # alive = 0.1
 
             # gait reward
-            tracking_contacts_binary = -0.1
+            # tracking_contacts_binary = -0.1           # comment for contact
             raibert_heuristic = -0.1
             # tracking_rear_swing_force = 1.
             # tracking_rear_stance_vel = 1.
