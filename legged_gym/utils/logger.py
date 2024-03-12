@@ -209,8 +209,6 @@ class Logger:
         nb_cols = 1
 
         fig1, axs1 = plt.subplots(nb_rows, nb_cols, num=1)
-
-
         counter = 0
         for leg in range(len(log['desired_contact'][0])):
             desired_contact = []
@@ -219,7 +217,7 @@ class Logger:
                 desired_contact.append(log['desired_contact'][i][leg])
                 robot_contact.append(log['actual_contact'][i][leg])
             axs1[leg - counter].plot(time, desired_contact, color='red', label="desired")
-            axs1[leg - counter].plot(time, robot_contact, color='blue', label="actual")
+            axs1[leg - counter].plot(time, robot_contact, color='blue', label="actual", linestyle='dashed')
             axs1[leg - counter].legend()
 
         # second plot:
