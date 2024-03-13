@@ -118,12 +118,12 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
     class commands(LeggedRobotCfg.commands):
         # num_commands = 1
         class ranges(LeggedRobotCfg.commands.ranges):
-            lin_vel_x = [0.5, 3.0] # min max [m/s]
-            line_vel_y = [0.0, 0.0]
+            lin_vel_x = [0.5, 4.5] # min max [m/s] # March 12 update: higher speed, worked for [0.5, 3.0]
+            line_vel_y = [0.0, 0.0] 
             # ang_vel_yaw = [-0.0,-0.0]
             heading = [0.0, 0.0]
             # lin_vel_y = [-0.5, 0.5]   # min max [m/s]
-            ang_vel_yaw = [-0.0, 0.]    # min max [rad/s]
+            ang_vel_yaw = [-1.0, 1.0]    # min max [rad/s] # March 12 update: check yaw velocity
             # heading = [-3.14/4, 3.14/4]
 
     class rewards( LeggedRobotCfg.rewards ):
@@ -146,7 +146,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             # add by xiaoyu
             # tracking_ang_vel = 0.5
             tracking_lin_vel = 4.0             # was 3.5
-            # tracking_ang_vel = 0.5             # commented
+            tracking_ang_vel = 0.5             # added back
             torques = -0.001
             # lin_vel_x = 0.5
             masked_legs_energy = -1e-4
@@ -171,6 +171,9 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             # tracking_rear_stance_vel = 1.
             tracking_swing_force = 1.0
             tracking_stance_vel = 1.0
+
+            # extra gait mod:
+            # rear_feet_air_time = 2.  # JUST FUCKING FORGET ABOUT IT SHITTY REWARD ITEMS
 
     
     class domain_rand(LeggedRobotCfg.domain_rand):
