@@ -203,8 +203,9 @@ class Logger:
             break
         log = self.state_log
 
-        # first plot:
-        # contact
+        #***********************************
+        #    plot 1 :    contact
+        #*********************************** 
         nb_rows = 4
         nb_cols = 1
 
@@ -220,23 +221,48 @@ class Logger:
             axs1[leg - counter].plot(time, robot_contact, color='blue', label="actual", linestyle='dashed')
             axs1[leg - counter].legend()
 
-        # second plot:
-        # roller pos
+
+        #***********************************
+        #    plot 2 :    roller pos
+        #*********************************** 
         num_roller = 2
         fig2, axs2 = plt.subplots(num_roller, 1, num=2)
         if log["roller_angle"]:
             angle = np.array(log["roller_angle"])
             for i in range(angle.shape[1]):
                 if i == 0:
-                    axs2[i].plot(time, (angle[:, i] + 2 * np.pi) % (2 * np.pi), color='blue', label='roller FL')
+                    axs2[i].plot(time, (angle[:, i] + 2 * np.pi) % (2 * np.pi), color='blue', label="roller FL")
                     axs2[i].set_title(' FL wheel: q vs t')
                     axs2[i].set_xlabel('t')
                     axs2[i].set_ylabel('q')
                 if i == 1:
-                    axs2[i].plot(time, (angle[:, i] + 2 * np.pi) % (2 * np.pi), color='blue', label='roller FR')
+                    axs2[i].plot(time, (angle[:, i] + 2 * np.pi) % (2 * np.pi), color='blue', label="roller FR")
                     axs2[i].set_title(' FR wheel: q vs t')
                     axs2[i].set_xlabel('t')
                     axs2[i].set_ylabel('q')
+
+
+        #***********************************
+        #    plot 3 :    base state
+        #***********************************                 
+        base_vel_plot_num = 3
+        fig3, axs3 = plt.subplots(base_vel_plot_num, 1, num=3)
+
+        axs3[0].plot(time, log["base_vel_x"], color='blue', label="base_vel_x")
+        axs3[0].plot(time, log["command_x"], color='red', label="command_x", linestyle='dashed')
+
+        axs3[1].plot(time, log["base_vel_y"], color='blue', label="base_vel_y")
+        axs3[1].plot(time, log["command_y"], color='red', label="command_y", linestyle='dashed')
+
+        axs3[2].plot(time, log["base_vel_yaw"], color='blue', label="base_vel_yaw")
+        axs3[2].plot(time, log["command_yaw"], color='red', label="command_yaw", linestyle='dashed')
+
+        # axs3[3].plot(time, np.array(log["base_vel_z"]), color='blue', label='base_vel_z')
+        # axs3[3].set_ylabel('base_vel_z')
+
+        for i in range(base_vel_plot_num):
+            axs3[i].set_ylabel('v')
+            axs3[i].set_xlabel('t')
 
 
         # Show the new figure

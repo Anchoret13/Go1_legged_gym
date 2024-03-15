@@ -118,13 +118,14 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
     class commands(LeggedRobotCfg.commands):
         # num_commands = 1
         class ranges(LeggedRobotCfg.commands.ranges):
-            lin_vel_x = [0.5, 3.0] # min max [m/s]
-            line_vel_y = [0.0, 0.0]
-            # ang_vel_yaw = [-0.0,-0.0]
             heading = [0.0, 0.0]
-            # lin_vel_y = [-0.5, 0.5]   # min max [m/s]
-            ang_vel_yaw = [-0.0, 0.]    # min max [rad/s]
-            # heading = [-3.14/4, 3.14/4]
+            lin_vel_x = [0.5, 3.0] # min max [m/s]
+            # old range 3/15
+            # lin_vel_y = [0.0, 0.0]
+            # ang_vel_yaw = [-0.0, 0.]    # min max [rad/s]
+            ang_vel_yaw = [-0.5, 0.5]
+            lin_vel_y = [0.0, 0.0]
+
 
     class rewards( LeggedRobotCfg.rewards ):
         soft_dof_pos_limit = 0.01
@@ -135,16 +136,12 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
         # add by xiaoyu 
         # max_contact_force = 300
         class scales:
-            # legs_energy = -1e-4
-            # tracking_lin_vel = 5.0
-            # tracking_lin_vel_x = 2.5
             # dof_pos_limits = -0.4
             # torque_limits = -0.01
             # dof_vel_limits = -10.0
             # wheel_air_time = -2.                # commented 
 
             # add by xiaoyu
-            # tracking_ang_vel = 0.5
             tracking_lin_vel = 4.0             # was 3.5
             # tracking_ang_vel = 0.5             # commented
             torques = -0.001
@@ -172,6 +169,12 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             tracking_swing_force = 1.0
             tracking_stance_vel = 1.0
 
+
+            #***********************************
+            #    testing 3/15
+            #***********************************  
+            tracking_ang_vel = 0.5   
+
     
     class domain_rand(LeggedRobotCfg.domain_rand):
         randomize_friction = False
@@ -188,6 +191,6 @@ class Go1FwFlatClockCfgPPO( LeggedRobotCfgPPO ):
         entropy_coef = 0.01
     class runner( LeggedRobotCfgPPO.runner ):
         run_name = ''
-        experiment_name = 'roller_skating_gait_cond_xyz'
+        experiment_name = 'roller_skating_gait_cond'
 
   
