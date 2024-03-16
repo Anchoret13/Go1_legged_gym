@@ -124,7 +124,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             # lin_vel_y = [0.0, 0.0]
             # ang_vel_yaw = [-0.0, 0.]    # min max [rad/s]
             ang_vel_yaw = [-0.5, 0.5]
-            lin_vel_y = [0.0, 0.0]
+            lin_vel_y = [-0.25, 0.25]
 
 
     class rewards( LeggedRobotCfg.rewards ):
@@ -133,8 +133,11 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
         base_height_target = 0.30
 
         only_positive_rewards = False
-        # add by xiaoyu 
+
+        # add by xiaoyu 3/16
         # max_contact_force = 300
+
+
         class scales:
             # dof_pos_limits = -0.4
             # torque_limits = -0.01
@@ -142,20 +145,20 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             # wheel_air_time = -2.                # commented 
 
             # add by xiaoyu
-            tracking_lin_vel = 4.0             # was 3.5
-            # tracking_ang_vel = 0.5             # commented
+            # tracking_lin_vel = 4.0                # was 3.5
+            # tracking_ang_vel = 0.5              # commented
             torques = -0.001
             # lin_vel_x = 0.5
             masked_legs_energy = -1e-4
             # orientation = -3.0
-            # collision = -1.0               # commented   
+            # collision = -1.0                    # commented   
             # base_height = -0.1
-            lin_vel_z = -0.05                 # was -0.1
+            lin_vel_z = -0.05                     # was -0.1
             action_rate = -0.01
             roller_action_rate = -0.05
-            hip = -0.5
-            penalize_roll = -1.0           # was -0.5
-            front_leg = -1.5               # was -0.5
+            hip = -0.9
+            # penalize_roll = -1.0                  # was -0.5
+            front_leg = -1.5                      # was -0.5
             front_hip = -1.0
 
             # alive:
@@ -173,7 +176,9 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             #***********************************
             #    testing 3/15
             #***********************************  
-            tracking_ang_vel = 0.5   
+            tracking_ang_vel = 0.9
+            lin_vel_x = 2.0
+            orientation = -0.9
 
     
     class domain_rand(LeggedRobotCfg.domain_rand):
@@ -192,5 +197,35 @@ class Go1FwFlatClockCfgPPO( LeggedRobotCfgPPO ):
     class runner( LeggedRobotCfgPPO.runner ):
         run_name = ''
         experiment_name = 'roller_skating_gait_cond'
+
+
+
+'''
+Reward notes:
+3/16:
+1. fast; base stable
+            torques = -0.001
+            masked_legs_energy = -1e-4
+            lin_vel_z = -0.05                     # was -0.1
+            action_rate = -0.01
+            roller_action_rate = -0.05
+            hip = -0.5
+            penalize_roll = -1.0                  # was -0.5
+            front_leg = -1.5                      # was -0.5
+            front_hip = -1.0
+            raibert_heuristic = -0.1
+            tracking_swing_force = 1.0
+            tracking_stance_vel = 1.0
+
+
+            #***********************************
+            #    testing 3/15
+            #***********************************  
+            tracking_ang_vel = 0.5
+            lin_vel_x = 3.0
+            orientation = -0.5
+
+
+'''
 
   

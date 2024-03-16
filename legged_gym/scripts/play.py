@@ -41,6 +41,14 @@ from moviepy.editor import ImageSequenceClip
 
 ENV_NUM = 1
 
+'''
+cmd_type:
+- 'default':
+- 'f' : forward only
+- 'r' : turn only
+- 'fr'
+'''
+CMD_TYPE = None
 
 def play(args):
     env_cfg, train_cfg = task_registry.get_cfgs(name=args.task)

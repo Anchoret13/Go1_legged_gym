@@ -378,7 +378,7 @@ class Go1FwClock(WheeledRobot):
 
     def _reward_lin_vel_x(self):
         return self.root_states[:, 7]
-    
+
     def _reward_lin_vel_y_abs(self):
         return torch.abs(self.root_states[:, 8])
     
