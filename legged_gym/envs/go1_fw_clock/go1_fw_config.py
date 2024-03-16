@@ -176,7 +176,8 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             #    testing 3/15
             #***********************************  
             tracking_ang_vel = 1.0
-            lin_vel_x = 2.0
+            # lin_vel_x = 1.0
+            tracking_lin_vel_x = 1.0
             orientation = -1.0
             # extra gait mod:
             # rear_feet_air_time = 2.  # JUST FUCKING FORGET ABOUT IT SHITTY REWARD ITEMS
@@ -230,3 +231,8 @@ Reward notes:
 '''
 
   
+'''
+Reward Note: 
+3/16:
+1. fast, base stable
+'''
