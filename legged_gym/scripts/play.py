@@ -117,8 +117,8 @@ def play(args):
             moving_camera_position = moving_camera_position * 0.9 + desired_camera_position * 0.1
             camera_look_at = robot_position
             env.set_camera(desired_camera_position, camera_look_at)
-        # print(env.commands[robot_index, 0].item())
-        # print(env.commands[robot_index, 2].item())
+        print(env.commands[robot_index, 0].item())
+        print(env.commands[robot_index, 2].item())
         if i < stop_state_log and i > start_state_log:
             logger.log_states(
                 {

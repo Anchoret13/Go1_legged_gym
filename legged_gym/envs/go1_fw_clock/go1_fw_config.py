@@ -179,6 +179,8 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             tracking_ang_vel = 0.9
             lin_vel_x = 2.0
             orientation = -0.9
+            # extra gait mod:
+            # rear_feet_air_time = 2.  # JUST FUCKING FORGET ABOUT IT SHITTY REWARD ITEMS
 
     
     class domain_rand(LeggedRobotCfg.domain_rand):

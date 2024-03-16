@@ -57,7 +57,7 @@ def frequency_ac_vel(cmd_vel):
     frequency = cmd_vel / stride_length
     return frequency
 
-def adaptive_sample_vel_cmd(min_vel, max_vel, current_step, env_ids, device, total_iterations = 20000, n_samples = 1000, steps_per_iteration = 24):
+def adaptive_sample_vel_cmd(min_vel, max_vel, current_step, env_ids, device, total_iterations = 40000, n_samples = 1000, steps_per_iteration = 24):
     #  NOTE: STUPID HARD CODING Method
     # compute k with total_iteration, k_range
     # num_steps_per_env = 24, so consider 24 steps as one iteration.
@@ -86,7 +86,7 @@ class Go1FwClock(WheeledRobot):
     def __init__(self, cfg, sim_params, physics_engine, sim_device, headless):
         super().__init__(cfg, sim_params, physics_engine, sim_device, headless)
         # self.num_passive_joints = self.cfg.env.num_passive_joints
-        self.frequencies = 4.0
+        self.frequencies = 3.0
         self.current_step = 0
 
     def compute_observations(self):
@@ -147,7 +147,7 @@ class Go1FwClock(WheeledRobot):
         self.right_rear_contact = torch.zeros(self.num_envs, len(self.right_idx), dtype=torch.bool, device=self.device, requires_grad=False)
         
         self.last_wheel_contacts = torch.zeros(self.num_envs, len(self.wheel_indices), dtype=torch.bool, device=self.device, requires_grad=False)
-
+        self.last_rear_feet_contacts = torch.zeros(self.num_envs, len(self.rear_feet_indices), dtype=torch.bool, device=self.device, requires_grad=False)
         self.gym.refresh_rigid_body_state_tensor(self.sim)
         # tmp_foot_forces = torch.exp(torch.norm(self.contact_forces[:, self.feet_indices, :], dim=-1) **2 / 100.)
         # ***************   modified
@@ -156,7 +156,7 @@ class Go1FwClock(WheeledRobot):
         self.contact_detect = self.contact_detect.float()
 
         self.wheel_air_time = torch.zeros(self.num_envs, self.wheel_indices.shape[0], dtype=torch.float, device=self.device, requires_grad=False)
-        self.rear_leg_air_time = torch.zeros(self.num_envs, self.rear_feet_indices.shape[0], dtype=torch.float, device=self.device, requires_grad=False)
+        self.rear_feet_air_time = torch.zeros(self.num_envs, self.rear_feet_indices.shape[0], dtype=torch.float, device=self.device, requires_grad=False)
         
 
     def _reward_masked_legs_energy(self):
@@ -303,7 +303,8 @@ class Go1FwClock(WheeledRobot):
 
     def _post_physics_step_callback(self):
         super()._post_physics_step_callback()
-        self.frequencies = frequency_ac_vel(self.commands[:, 0])
+        # self.frequencies = frequency_ac_vel(self.commands[:, 0])
+        self.frequencies = 3.0 # NOTE: to use adaptive frequency, use above
         self._step_contact_targets()
 
     def sigmoid_contact_signal(self, x, kappa):
@@ -523,9 +524,11 @@ class Go1FwClock(WheeledRobot):
         x_vel_des = self.commands[:, 0:1]
         yaw_vel_des = self.commands[:, 2:3]
         y_vel_des = yaw_vel_des * desired_stance_length / 2
-        desired_ys_offset = phase * y_vel_des * (0.5 / frequencies.unsqueeze(1))
+        # desired_ys_offset = phase * y_vel_des * (0.5 / frequencies.unsqueeze(1))
+        desired_ys_offset = phase * y_vel_des * (0.5 / frequencies) # NOTE: for fixed frequency
         desired_ys_offset[:, 2:4] *= -1
-        desired_xs_offset = phase * x_vel_des * (0.5 / frequencies.unsqueeze(1))
+        # desired_xs_offset = phase * x_vel_des * (0.5 / frequencies.unsqueeze(1))
+        desired_xs_offset = phase * x_vel_des * (0.5 / frequencies)
 
         desired_ys_nom = desired_ys_nom + desired_ys_offset
         desired_xs_nom = desired_xs_nom + desired_xs_offset
@@ -549,4 +552,15 @@ class Go1FwClock(WheeledRobot):
         rew_airTime = torch.sum((self.wheel_air_time - 0.5) * first_contact, dim=1) # reward only on first contact with the ground
         rew_airTime *= torch.norm(self.commands[:, :2], dim=1) > 0.1 #no reward for zero command
         self.wheel_air_time *= ~contact_filt
+        return rew_airTime
+    
+    def _reward_rear_feet_air_time(self):
+        contact =  self.contact_forces[:, self.rear_feet_indices, 2] > 1.
+        contact_filt = torch.logical_or(contact, self.last_rear_feet_contacts)
+        self.last_rear_feet_contacts = contact
+        first_contact = (self.rear_feet_air_time > 0.) * contact_filt
+        self.rear_feet_air_time += self.dt
+        rew_airTime = torch.sum((self.rear_feet_air_time - 0.5) * first_contact, dim=1) # reward only on first contact with the ground
+        rew_airTime *= torch.norm(self.commands[:, :2], dim=1) > 0.1 #no reward for zero command
+        self.rear_feet_air_time *= ~contact_filt
         return rew_airTime
