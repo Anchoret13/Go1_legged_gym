@@ -235,11 +235,13 @@ class Logger:
                     axs2[i].set_title(' FL wheel: q vs t')
                     axs2[i].set_xlabel('t')
                     axs2[i].set_ylabel('q')
+                    axs2[i].legend()
                 if i == 1:
                     axs2[i].plot(time, (angle[:, i] + 2 * np.pi) % (2 * np.pi), color='blue', label="roller FR")
                     axs2[i].set_title(' FR wheel: q vs t')
                     axs2[i].set_xlabel('t')
                     axs2[i].set_ylabel('q')
+                    axs2[i].legend()
 
 
         #***********************************
@@ -263,6 +265,8 @@ class Logger:
         for i in range(base_vel_plot_num):
             axs3[i].set_ylabel('v')
             axs3[i].set_xlabel('t')
+            axs3[i].legend()
+        
 
 
         # Show the new figure

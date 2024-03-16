@@ -121,10 +121,9 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             heading = [0.0, 0.0]
             lin_vel_x = [0.5, 3.0] # min max [m/s]
             # old range 3/15
-            # lin_vel_y = [0.0, 0.0]
+            lin_vel_y = [0.0, 0.0]
             # ang_vel_yaw = [-0.0, 0.]    # min max [rad/s]
             ang_vel_yaw = [-0.5, 0.5]
-            lin_vel_y = [-0.25, 0.25]
 
 
     class rewards( LeggedRobotCfg.rewards ):
@@ -156,7 +155,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             lin_vel_z = -0.05                     # was -0.1
             action_rate = -0.01
             roller_action_rate = -0.05
-            hip = -0.9
+            hip = -1.0
             # penalize_roll = -1.0                  # was -0.5
             front_leg = -1.5                      # was -0.5
             front_hip = -1.0
@@ -176,9 +175,9 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             #***********************************
             #    testing 3/15
             #***********************************  
-            tracking_ang_vel = 0.9
+            tracking_ang_vel = 1.0
             lin_vel_x = 2.0
-            orientation = -0.9
+            orientation = -1.0
             # extra gait mod:
             # rear_feet_air_time = 2.  # JUST FUCKING FORGET ABOUT IT SHITTY REWARD ITEMS
 
@@ -208,12 +207,12 @@ Reward notes:
 1. fast; base stable
             torques = -0.001
             masked_legs_energy = -1e-4
-            lin_vel_z = -0.05                     # was -0.1
+            lin_vel_z = -0.05                    
             action_rate = -0.01
             roller_action_rate = -0.05
             hip = -0.5
-            penalize_roll = -1.0                  # was -0.5
-            front_leg = -1.5                      # was -0.5
+            penalize_roll = -1.0                 
+            front_leg = -1.5                      
             front_hip = -1.0
             raibert_heuristic = -0.1
             tracking_swing_force = 1.0
