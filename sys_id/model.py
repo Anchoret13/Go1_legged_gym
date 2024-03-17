@@ -1,119 +1,110 @@
-import math
-import inspect
-from dataclasses import dataclass
-
-import torch
 import torch.nn as nn
-from torch.nn import functional as F
+import torchkit.pytorch_utils as ptu
+import transformers
+from .trajectory_gpt2 import GPT2Model
+import torch
+import numpy as np
 
-class LayerNorm(nn.Module):
-    def __init__(self, ndim, bias):
+class SinePositionalEncoding(nn.Module):
+    def __init__(self, max_len, hidden_size) -> None:
         super().__init__()
-        self.weight = nn.Parameter(torch.ones(ndim))
-        self.bias = nn.Parameter(torch.zeros(ndim)) if bias else None
+        # Create matrix of [max_len, d] representing the positional encoding for max_len inputs
+        pe = np.zeros((max_len, hidden_size))
+        position = np.arange(0, max_len, dtype=np.float32)[:, None]
+        div_term = np.exp(
+            np.arange(0, hidden_size, 2) * (-np.log(10000.0) / hidden_size)
+        )
+        pe[:, 0::2] = np.sin(position * div_term)
+        pe[:, 1::2] = np.cos(position * div_term)
+        self.pe = ptu.from_numpy(pe)  # (max_len, d)
 
-    def forward(self, input):
-        return F.layer_norm(input, self.weight.shape, self.weight, self.bias, 1e-5)
+    def forward(self, timestep):
+        return self.pe[timestep]
 
-class CausalSelfAttention(nn.Module):
 
-    def __init__(self, config):
+class LearnedPositionalEncoding(nn.Module):
+    def __init__(self, max_len, hidden_size) -> None:
         super().__init__()
-        assert config.n_embd % config.n_head == 0
-        self.c_attn = nn.Linear(config.n_embd, 3 * config.n_embd, bias = config.bias)
-        self.c_proj = nn.Linear(config.n_embd, config.n_embd, bias=config.bias)
-        self.attn_dropout = nn.Dropout(config.dropout)
-        self.resid_dropout = nn.Dropout(config.dropout)
-        self.n_head = config.n_head
-        self.n_embd = config.n_embd
-        self.dropout = config.dropout
+        self.pe = nn.Embedding(max_len, hidden_size)
 
-        self.flash = hasattr(torch.nn.functional, 'scaled_dot_product_attention')
-        if not self.flash:
-            self.register_buffer("bias", torch.tril(torch.ones(config.block_size, config.block_size)).view(
-                1, 1, config.block_size, config.block_size
-            ))
+    def forward(self, timestep):
+        # (T,)
+        return self.pe(timestep)
 
-    def forward(self, x):
-        q, k, v = self.c_attn(x).split(self.n_embd, dim = 2)
-        k = k.view(B, T, self.n_head, C // self.n_head).transpose(1, 2) # (B, nh, T, hs)
-        q = q.view(B, T, self.n_head, C // self.n_head).transpose(1, 2) # (B, nh, T, hs)
-        v = v.view(B, T, self.n_head, C // self.n_head).transpose(1, 2) # (B, nh, T, hs)
+class GPT2(nn.Module):
+    name = "gpt"
 
-        if self.flash:
-            y = torch.nn.functional.scaled_dot_product_attention(
-                q, k, v, attn_mask = None, dropout_p = self.dropout if self.training else 0, is_causal = True
-            )
+    def __init__(
+        self,
+        input_size,
+        hidden_size,
+        n_layer,
+        n_head,
+        pdrop,
+        max_seq_length,
+        position_encoding,
+        **kwargs
+    ):
+        super().__init__()
+        config = transformers.GPT2Config(
+            vocab_size=1,  # doesn't matter, we don't use word embeddings
+            n_layer=n_layer,
+            n_head=n_head,
+            n_embd=hidden_size,
+            attn_pdrop=pdrop,
+            resid_pdrop=pdrop,
+            embd_pdrop=pdrop,
+            # Maximum length sequence the transformer will see; default 1024 might be not long
+            n_positions=max_seq_length + 2,
+        )  # needs to be divisible by n_head
+
+        self.transformer = GPT2Model(config)
+
+        if position_encoding == "sine":
+            Encoding = SinePositionalEncoding
         else:
-            # manual implementation of attention
-            att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(k.size(-1)))
-            att = att.masked_fill(self.bias[:,:,:T,:T] == 0, float('-inf'))
-            att = F.softmax(att, dim=-1)
-            att = self.attn_dropout(att)
-            y = att @ v # (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
-        y = y.transpose(1, 2).contiguous().view(B, T, C) # re-assemble all head outputs side by side
+            Encoding = LearnedPositionalEncoding
+        self.embed_timestep = Encoding(max_seq_length + 2, hidden_size)
 
-        # output projection
-        y = self.resid_dropout(self.c_proj(y))
-        return y
+        assert input_size == hidden_size
+        self.hidden_size = hidden_size
+        self.max_history_length = max_seq_length - 1
+        print({k: v.shape for k, v in self.transformer.named_parameters()})
 
-class MLP(nn.Module):
-    def __init__(self, config):
-        super().__init__()
-        self.c_fc    = nn.Linear(config.n_embd, 4 * config.n_embd, bias=config.bias)
-        self.gelu    = nn.GELU()
-        self.c_proj  = nn.Linear(4 * config.n_embd, config.n_embd, bias=config.bias)
-        self.dropout = nn.Dropout(config.dropout)
+    def forward(self, input_embeds, h_0):
+        if h_0 is None:
+            length = input_embeds.shape[0]
+            timesteps = ptu.arange(0, length)
+            pkv = None
+            output, fullout = self._forward(input_embeds, timesteps, pkv)
+            h = fullout["past_key_values"], None, None
+            
 
-    def forward(self, x):
-        x = self.c_fc(x)
-        x = self.gelu(x)
-        x = self.c_proj(x)
-        x = self.dropout(x)
-        return x
-    
-class Block(nn.Module):
-    def __init__(self, config):
-        super().__init__()
-        self.ln_1 = LayerNorm(config.n_embd, bias=config.bias)
-        self.attn = CausalSelfAttention(config)
-        self.ln_2 = LayerNorm(config.n_embd, bias=config.bias)
-        self.mlp = MLP(config)
+    def _forward(self, input_embeds, timesteps, pkv):
+        """
+        input_embeds: (T, B, hidden_size)
+        timesteps: (T,)
+        pkv: past_key_values
+        """
+        length = timesteps.shape[0]
+        pe = self.embed_timestep(timesteps).view(
+            length, 1, self.hidden_size
+        )
+        input_embeds_pe = input_embeds + pe
+        input_embeds_pe = torch.swapaxes(input_embeds_pe, 0, 1)
+        out = self.transformer(
+            input_embeds = input_embeds_pe, output_attentions = False, past_key_values = pkv
+        )
+        last_hidden_state = torch.swapaxes(
+            out["last_hidden_state"], 0, 1
+        )
 
-    def forward(self, x):
-        x = x + self.attn(self.ln_1(x))
-        x = x + self.mlp(self.ln_2(x))
-        return x
+        return last_hidden_state, out
 
-@dataclass
-class sys_id_config:
-    block_size = 1024
-    vocab_size = 50304
-    n_layer: int = 12
-    n_head: int = 12
-    n_embd: int = 768
-    dropout: float = 0.0
-    bias: bool = True
-
-class sys_id(nn.Module):
-    def __init__(self, config):
-        super().__init__()
-        assert config.vocab_size is not None
-        assert config.block_size is not None
-        self.config = config
-
-        self.transformer = nn.ModuleDict(dict(
-            wte = nn.Embedding(config.vocab_size, config.n_embd),
-            wpe = nn.Embecding(config.block_size, config.n_embd),
-            drop = nn.Dropout(config.dropout),
-            h = nn.ModuleList([Block(config) for _ in range(config.n_layer)]),
-            ln_f = LayerNorm(config.n_embd, bias=config.bias),
-        ))
-
-        self.lm_head = nn.Linear(config.n_embd, config.vocab_size, bias = False)
-        self.transformer.wte.weight = self.lm_head.weight
-
-        
-    def forward(self, idx, targets = None):
-        device = idx.device
-        b, t = idx.size()
+    def get_zero_internal_state(self, batch_size = None):
+        if batch_size is None:
+            pkv = None
+            initial_timestep = ptu.arange(0,1)
+            return (pkv, initial_timestep, ptu.zeros((0, 1, self.hidden_size)).float())
+        else:  # training, not used
+            return None

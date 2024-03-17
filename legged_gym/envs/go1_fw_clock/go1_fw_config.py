@@ -119,7 +119,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
         # num_commands = 1
         class ranges(LeggedRobotCfg.commands.ranges):
             heading = [0.0, 0.0]
-            lin_vel_x = [0.5, 3.0] # min max [m/s]
+            lin_vel_x = [0.5, 4.0] # min max [m/s]
             # old range 3/15
             lin_vel_y = [0.0, 0.0]
             # ang_vel_yaw = [-0.0, 0.]    # min max [rad/s]
@@ -231,8 +231,3 @@ Reward notes:
 '''
 
   
-'''
-Reward Note: 
-3/16:
-1. fast, base stable
-'''
