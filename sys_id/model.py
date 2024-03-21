@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torchkit.pytorch_utils as ptu
 import transformers
-from .trajectory_gpt2 import GPT2Model
+from trajectory_gpt2 import GPT2Model
 import torch
 import numpy as np
 
@@ -30,6 +30,7 @@ class LearnedPositionalEncoding(nn.Module):
     def forward(self, timestep):
         # (T,)
         return self.pe(timestep)
+
 
 class GPT2(nn.Module):
     name = "gpt"
@@ -72,13 +73,43 @@ class GPT2(nn.Module):
         print({k: v.shape for k, v in self.transformer.named_parameters()})
 
     def forward(self, input_embeds, h_0):
-        if h_0 is None:
+        """
+        input_embeds:
+            training -- (max_seq_length, B, input_dim)
+            eval -- (1, 1, input_dim)
+        """
+        if h_0 is None:  # training: entire sequence as input
             length = input_embeds.shape[0]
             timesteps = ptu.arange(0, length)
             pkv = None
-            output, fullout = self._forward(input_embeds, timesteps, pkv)
-            h = fullout["past_key_values"], None, None
-            
+            output, full_out = self._forward(input_embeds, timesteps, pkv)
+            h = full_out["past_key_values"], None, None
+
+        else:  # inference/testing: one time step at a time
+            pkv, timesteps, past_embeds = h_0
+            history_length = past_embeds.shape[0]
+            if history_length > self.max_history_length:  # confirmed this is correct
+                pkv = None
+                timesteps = ptu.arange(
+                    0, self.max_history_length + 1
+                )  # match the training
+                cur_input_embed = input_embeds
+
+                input_embeds = torch.cat(
+                    (past_embeds[-self.max_history_length :], cur_input_embed), dim=0
+                )
+
+            output, full_out = self._forward(input_embeds, timesteps, pkv)
+            output = output[[-1]]  # (1, 1, hidden_size)
+            past_embeds = (
+                input_embeds
+                if input_embeds.shape[0] > 1
+                else torch.cat((past_embeds, input_embeds), dim=0)
+            )
+            h = full_out["past_key_values"], timesteps + 1, past_embeds
+            # print(history_length, self.max_history_length, past_embeds.shape)
+
+        return output, h
 
     def _forward(self, input_embeds, timesteps, pkv):
         """
@@ -89,22 +120,22 @@ class GPT2(nn.Module):
         length = timesteps.shape[0]
         pe = self.embed_timestep(timesteps).view(
             length, 1, self.hidden_size
-        )
+        )  # (T, 1, hidden_size)
         input_embeds_pe = input_embeds + pe
-        input_embeds_pe = torch.swapaxes(input_embeds_pe, 0, 1)
+        input_embeds_pe = torch.swapaxes(input_embeds_pe, 0, 1)  # (B, T, hidden_size)
         out = self.transformer(
-            input_embeds = input_embeds_pe, output_attentions = False, past_key_values = pkv
+            inputs_embeds=input_embeds_pe, output_attentions=False, past_key_values=pkv
         )
         last_hidden_state = torch.swapaxes(
             out["last_hidden_state"], 0, 1
-        )
+        )  # (T, B, hidden_size)
 
         return last_hidden_state, out
 
-    def get_zero_internal_state(self, batch_size = None):
-        if batch_size is None:
+    def get_zero_internal_state(self, batch_size=None):
+        if batch_size is None:  # inference, batch_size=1
             pkv = None
-            initial_timestep = ptu.arange(0,1)
+            initial_timestep = ptu.arange(0, 1)
             return (pkv, initial_timestep, ptu.zeros((0, 1, self.hidden_size)).float())
         else:  # training, not used
             return None

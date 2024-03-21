@@ -36,7 +36,7 @@ class Go1FlatCfg( LeggedRobotCfg ):
         observe_vel = False
 
     class terrain (LeggedRobotCfg.terrain):
-        mesh_type = 'trimesh'
+        mesh_type = 'plane'
         # static_friction = 10.0
         # dynamic_friction = 1.0
         measure_heights = False
@@ -94,17 +94,17 @@ class Go1FlatCfg( LeggedRobotCfg ):
     class rewards( LeggedRobotCfg.rewards ):
         soft_dof_pos_limit = 0.9
         base_height_target = 0.34
-        class scales( LeggedRobotCfg.rewards.scales ):
-            torques = -0.0001
-            # tracking_lin_vel = 5.0
-            # tracking_ang_vel = 0.5
-            tracking_lin_vel_x = 5.0
-            dof_pos_limits = -15.0
-            action_rate = -0.5
-            orientation = - 1.0
-            base_height = -30.
-            lin_vel_z = -0.3
-            # feet_air_time = 1.0
+        class scales:
+            torques = -0.001
+            lin_vel_z = -0.05                     # was -0.1
+            action_rate = -0.01
+            raibert_heuristic = -0.1
+            tracking_swing_force = 1.0
+            tracking_stance_vel = 1.0
+            tracking_ang_vel = 1.0
+            # lin_vel_x = 1.0
+            tracking_lin_vel_x = 2.5
+            orientation = -0.5
             
             
     class domain_rand( LeggedRobotCfg.domain_rand):

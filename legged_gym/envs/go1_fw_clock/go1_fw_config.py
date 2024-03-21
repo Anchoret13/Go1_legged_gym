@@ -118,8 +118,8 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
     class commands(LeggedRobotCfg.commands):
         # num_commands = 1
         class ranges(LeggedRobotCfg.commands.ranges):
-            heading = [0.0, 0.0]
-            lin_vel_x = [0.5, 4.0] # min max [m/s]
+            heading = [-3.14, 3.14]
+            lin_vel_x = [0.5, 3.5] # min max [m/s]
             # old range 3/15
             lin_vel_y = [0.0, 0.0]
             # ang_vel_yaw = [-0.0, 0.]    # min max [rad/s]
@@ -156,7 +156,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             action_rate = -0.01
             roller_action_rate = -0.05
             hip = -1.0
-            # penalize_roll = -1.0                  # was -0.5
+            penalize_roll = -0.5                  # was -0.5
             front_leg = -1.5                      # was -0.5
             front_hip = -1.0
 
@@ -166,8 +166,8 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             # gait reward
             # tracking_contacts_binary = -0.1           # comment for contact
             raibert_heuristic = -0.1
-            # tracking_rear_swing_force = 1.
-            # tracking_rear_stance_vel = 1.
+            tracking_rear_swing_force = 0.5
+            tracking_rear_stance_vel = 0.5
             tracking_swing_force = 1.0
             tracking_stance_vel = 1.0
 
@@ -176,10 +176,10 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             #    testing 3/15
             #***********************************  
             tracking_ang_vel = 1.0
-            # lin_vel_x = 1.0
-            tracking_lin_vel_x = 1.0
-            orientation = -1.0
-            # extra gait mod:
+            lin_vel_x = 1.0
+            tracking_lin_vel_x = 2.5
+            orientation = -0.5
+            # extra gait mod
             # rear_feet_air_time = 2.  # JUST FUCKING FORGET ABOUT IT SHITTY REWARD ITEMS
 
     
@@ -191,7 +191,8 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
         # max_push_vel_xy = 1.0
         randomize_base_mass = False
         # added_mass_range = [-1, 3]
-        
+        hip_friction_sim = False
+        hip_action_noise = 0.1
 
 class Go1FwFlatClockCfgPPO( LeggedRobotCfgPPO ):
     class algorithm( LeggedRobotCfgPPO.algorithm ):
@@ -199,11 +200,13 @@ class Go1FwFlatClockCfgPPO( LeggedRobotCfgPPO ):
     class runner( LeggedRobotCfgPPO.runner ):
         run_name = ''
         experiment_name = 'roller_skating_gait_cond'
+        
 
 
 
 '''
 Reward notes:
+
 3/16:
 1. fast; base stable
             torques = -0.001

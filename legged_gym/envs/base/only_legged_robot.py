@@ -93,6 +93,9 @@ class OnlyLeggedRobot(BaseTask):
             if self.device == 'cpu':
                 self.gym.fetch_results(self.sim, True)
             self.gym.refresh_dof_state_tensor(self.sim)
+        self.foot_positions = self.rigid_body_state.view(self.num_envs, self.num_bodies, 13)[:, self.feet_indices,
+                               0:3]
+        
         self.post_physics_step()
 
         # return clipped obs, clipped states (None), rewards, dones and infos
@@ -333,6 +336,68 @@ class OnlyLeggedRobot(BaseTask):
             self.measured_heights = self._get_heights()
         if self.cfg.domain_rand.push_robots and  (self.common_step_counter % self.cfg.domain_rand.push_interval == 0):
             self._push_robots()
+        
+        self.frequencies = 3.0
+        self._step_contact_targets()
+
+    def _step_contact_targets(self, smoothing_option = "normal_cdf"):
+        # NOTE:THIS SHITY CODE IS FUKING HARD CODING EVERYTHING
+        frequencies = self.frequencies
+        phase = 0.5 # NOTE: 0.5 For Trotting
+        offsets = 0
+        bounds = 0
+        durations = 0.5 # legacy variable, keep it for memorial
+        if smoothing_option == "sigmoid":
+            kappa = 40. 
+        elif smoothing_option == "normal_cdf":
+            kappa = 0.05
+
+            # von mises distribution for gait
+            smoothing_cdf_start = torch.distributions.normal.Normal(0,kappa).cdf
+
+        self.gait_indices = torch.remainder(self.gait_indices + self.dt * frequencies, 1.0)
+        
+        # FOR TROTTING:
+        foot_indices = [self.gait_indices,
+                    torch.remainder(self.gait_indices + phase, 1.0),
+                    torch.remainder(self.gait_indices + phase, 1.0),
+                    self.gait_indices]
+
+        self.foot_indices = torch.remainder(torch.cat([foot_indices[i].unsqueeze(1) for i in range(4)], dim=1), 1.0)
+        # self.rear_foot_indices = torch.remainder(torch.cat([foot_indices[i].unsqueeze(1) for i in range(2, 4)], dim=1), 1.0)
+
+        # smoothing_multiplier_FL = 1.
+        # smoothing_multiplier_FR = 1.
+        smoothing_multiplier_FL = (smoothing_cdf_start(torch.remainder(foot_indices[0], 1.0)) * (
+                    1 - smoothing_cdf_start(torch.remainder(foot_indices[0], 1.0) - 0.5)) +
+                                       smoothing_cdf_start(torch.remainder(foot_indices[0], 1.0) - 1) * (
+                                               1 - smoothing_cdf_start(
+                                           torch.remainder(foot_indices[0], 1.0) - 0.5 - 1)))
+        smoothing_multiplier_FR = (smoothing_cdf_start(torch.remainder(foot_indices[1], 1.0)) * (
+                    1 - smoothing_cdf_start(torch.remainder(foot_indices[1], 1.0) - 0.5)) +
+                                       smoothing_cdf_start(torch.remainder(foot_indices[1], 1.0) - 1) * (
+                                               1 - smoothing_cdf_start(
+                                           torch.remainder(foot_indices[1], 1.0) - 0.5 - 1)))
+        smoothing_multiplier_RL = (smoothing_cdf_start(torch.remainder(foot_indices[2], 1.0)) * (
+                    1 - smoothing_cdf_start(torch.remainder(foot_indices[2], 1.0) - 0.5)) +
+                                       smoothing_cdf_start(torch.remainder(foot_indices[2], 1.0) - 1) * (
+                                               1 - smoothing_cdf_start(
+                                           torch.remainder(foot_indices[2], 1.0) - 0.5 - 1)))
+        smoothing_multiplier_RR = (smoothing_cdf_start(torch.remainder(foot_indices[3], 1.0)) * (
+                    1 - smoothing_cdf_start(torch.remainder(foot_indices[3], 1.0) - 0.5)) +
+                                       smoothing_cdf_start(torch.remainder(foot_indices[3], 1.0) - 1) * (
+                                               1 - smoothing_cdf_start(
+                                           torch.remainder(foot_indices[3], 1.0) - 0.5 - 1)))
+
+
+        self.desired_contact_states[:, 0] = smoothing_multiplier_FL
+        self.desired_contact_states[:, 1] = smoothing_multiplier_FR
+        self.desired_contact_states[:, 2] = smoothing_multiplier_RL
+        self.desired_contact_states[:, 3] = smoothing_multiplier_RR
+
+
+        self.contact_detect = self.contact_forces[:, self.feet_indices, 2] > 1
+        self.contact_detect = self.contact_detect.float()
 
     def _resample_commands(self, env_ids):
         """ Randommly select commands of some environments
@@ -952,6 +1017,56 @@ class OnlyLeggedRobot(BaseTask):
         return torch.sum(torch.square(self.projected_gravity[:2] - desired_projected_gravity[:, :2]), dim=1)
 
     
-    #------------ kinematics constrains as rewards ----------------
-    def _reward_skating_kinematics_constraints(self):
-        return 0
+    def _reward_tracking_stance_vel(self):
+        desired_contact = self.desired_contact_states
+        foot_velocities = torch.norm(self.foot_velocities, dim = 2).view(self.num_envs, -1)
+        reward = 0
+        for i in range(4):
+            reward += - (desired_contact[:, i] * (
+                        1 - torch.exp(-1 * =[:, i] ** 2 / 10.)))
+        return reward / 4
+    
+    def _reward_tracking_swing_force(self):
+        desired_contact = self.desired_contact_states
+        foot_forces = torch.norm(self.contact_forces[:, self.feet_indices, :], dim=-1)
+
+        reward = 0
+        for i in range(4):
+            reward += - (1 - desired_contact[:, i]) * (
+                        1 - torch.exp(-1 * foot_forces[:, i] ** 2 / 100.))
+        return reward / 4
+    
+    def _reward_raibert_heuristic(self):
+        # pass 
+        cur_footsteps_translated = self.foot_positions - self.base_pos.unsqueeze(1)
+        footsteps_in_body_frame = torch.zeros(self.num_envs, 4, 3, device = self.device)
+        for i in range(2):
+            footsteps_in_body_frame[:, i, :] = quat_apply_yaw(quat_conjugate(self.base_quat),
+                                                              cur_footsteps_translated[:, i, :])
+        
+        # nomial positions: FR, FL, RR, RL
+        desired_stance_width = 0.3
+        desired_stance_length = 0.45
+
+        desired_ys_nom = torch.tensor([desired_stance_width / 2,  -desired_stance_width / 2, desired_stance_width / 2, -desired_stance_width / 2], device=self.device).unsqueeze(0)
+        desired_xs_nom = torch.tensor([desired_stance_length / 2,  desired_stance_length / 2, -desired_stance_length / 2, -desired_stance_length / 2], device=self.device).unsqueeze(0)
+
+        # raibert offsets
+        phase = torch.abs(1.0 - (self.foot_indices * 2.0)) * 1.0 - 0.5
+        frequencies = self.frequencies
+        x_vel_des = self.commands[:, 0:1]
+        yaw_vel_des = self.commands[:, 2:3]
+        y_vel_des = yaw_vel_des * desired_stance_length / 2
+        # desired_ys_offset = phase * y_vel_des * (0.5 / frequencies.unsqueeze(1))
+        desired_ys_offset = phase * y_vel_des * (0.5 / frequencies) # NOTE: for fixed frequency
+        desired_ys_offset[:, 2:4] *= -1
+        # desired_xs_offset = phase * x_vel_des * (0.5 / frequencies.unsqueeze(1))
+        desired_xs_offset = phase * x_vel_des * (0.5 / frequencies)
+
+        desired_ys_nom = desired_ys_nom + desired_ys_offset
+        desired_xs_nom = desired_xs_nom + desired_xs_offset
+
+        desired_footsteps_body_frame = torch.cat((desired_xs_nom.unsqueeze(2), desired_ys_nom.unsqueeze(2)), dim=2)
+        err_raibert_heuristic = torch.abs(desired_footsteps_body_frame - footsteps_in_body_frame[:, :, 0:2])
+        reward = torch.sum(torch.square(err_raibert_heuristic), dim=(1, 2))
+        return reward

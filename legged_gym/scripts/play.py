@@ -136,7 +136,7 @@ def play(args):
                     'base_vel_z': env.base_lin_vel[robot_index, 2].item(),
                     'base_vel_yaw': env.base_ang_vel[robot_index, 2].item(),
                     'contact_forces_z': env.contact_forces[robot_index, env.feet_indices, 2].cpu().numpy(),
-                    'roller_angle': env.dof_pos[robot_index, env.dof_roller_ids].cpu().numpy(),  # add for debug by xiaoyu
+                    # 'roller_angle': env.dof_pos[robot_index, env.dof_roller_ids].cpu().numpy(),  # add for debug by xiaoyu
                     'desired_contact': env.desired_contact_states[robot_index, :].cpu().numpy(),
                     'actual_contact': env.contact_detect[robot_idx,:].cpu().numpy()
                 }

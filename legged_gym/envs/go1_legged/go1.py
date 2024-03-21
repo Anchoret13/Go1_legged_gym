@@ -72,3 +72,54 @@ class Go1_Flat(OnlyLeggedRobot):
             self.dof_vel * self.obs_scales.dof_vel,
             torch.clip(self.actions, -1, 1)
         ), dim = -1)
+
+    def _init_buffers(self):
+        super()._init_buffers()
+        self.base_pos = self.root_states[:self.num_envs, 0:3]
+        self.gait_indices = torch.zeros(self.num_envs, dtype=torch.float, device=self.device,
+                                        requires_grad=False)
+        self.desired_contact_states = torch.zeros(self.num_envs, 4, dtype=torch.float, device=self.device,
+                                                  requires_grad=False, )
+        rigid_body_state = self.gym.acquire_rigid_body_state_tensor(self.sim)
+        self.rigid_body_state = gymtorch.wrap_tensor(rigid_body_state)[:self.num_envs * self.num_bodies, :]
+        self.foot_velocities = self.rigid_body_state.view(self.num_envs, self.num_bodies, 13)[:,
+                               self.feet_indices,
+                               7:10]
+        
+    def post_physics_step(self):
+        self.gym.refresh_actor_root_state_tensor(self.sim)
+        self.gym.refresh_net_contact_force_tensor(self.sim)
+        self.gym.refresh_rigid_body_state_tensor(self.sim)
+
+        self.episode_length_buf += 1
+        self.common_step_counter += 1
+
+        # prepare quantities
+        self.base_pos[:] = self.root_states[:self.num_envs, 0:3]
+        self.base_quat[:] = self.root_states[:, 3:7]
+        self.base_lin_vel[:] = quat_rotate_inverse(self.base_quat, self.root_states[:, 7:10])
+        self.base_ang_vel[:] = quat_rotate_inverse(self.base_quat, self.root_states[:, 10:13])
+        self.projected_gravity[:] = quat_rotate_inverse(self.base_quat, self.gravity_vec)
+
+        self.foot_velocities = self.rigid_body_state.view(self.num_envs, self.num_bodies, 13
+                                                          )[:, self.feet_indices, 7:10]
+        self.foot_positions = self.rigid_body_state.view(self.num_envs, self.num_bodies, 13)[:, self.feet_indices,
+                              0:3]
+        self._post_physics_step_callback()
+        
+        # compute observations, rewards, resets, ...
+        self.check_termination()
+        self.compute_reward()
+        env_ids = self.reset_buf.nonzero(as_tuple=False).flatten()
+        self.reset_idx(env_ids)
+        self.compute_observations() 
+        
+        # self.last_last_actions[:] = self.last_actions[:]
+        self.last_actions[:] = self.actions[:]
+        # self.last_last_joint_pos_target[:] = self.last_joint_pos_target[:]
+        # self.last_joint_pos_target[:] = self.joint_pos_target[:]
+        self.last_dof_vel[:] = self.dof_vel[:]
+        self.last_root_vel[:] = self.root_states[:, 7:13]
+
+        if self.viewer and self.enable_viewer_sync and self.debug_viz:
+            self._draw_debug_vis()
