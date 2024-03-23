@@ -52,9 +52,9 @@ def test_env(args):
             action[0] = 2
             action[3] = 0
         obs, _, rew, done, info = env.step(actions)
-        print(obs)
-        print(actions)
-    print("Done")
+    #     print(obs)
+    #     print(actions)
+    # print("Done")
 
 if __name__ == '__main__':
     args = get_args()

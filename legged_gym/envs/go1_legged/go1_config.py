@@ -48,10 +48,10 @@ class Go1FlatCfg( LeggedRobotCfg ):
         resampling_time = 10. # time before command are changed[s]
         heading_command = False # if true: compute ang vel command from heading error
         class ranges:
-            lin_vel_x = [-0.3, 2.5] # min max [m/s]
+            lin_vel_x = [-0.5, 2.5] # min max [m/s]
             lin_vel_y = [-0.0, 0.0]   # min max [m/s]
-            ang_vel_yaw = [-0.0, 0.0]    # min max [rad/s]
-            heading = [0, 0]
+            ang_vel_yaw = [-0.5, 0.5]    # min max [rad/s]
+            heading = [-3.14, 3.14]
 
     class init_state( LeggedRobotCfg.init_state ):
         pos = [0.0, 0.0, 0.34] # x,y,z [m]
@@ -94,18 +94,38 @@ class Go1FlatCfg( LeggedRobotCfg ):
     class rewards( LeggedRobotCfg.rewards ):
         soft_dof_pos_limit = 0.9
         base_height_target = 0.34
+        only_positive_rewards = False
         class scales:
-            torques = -0.001
-            lin_vel_z = -0.05                     # was -0.1
-            action_rate = -0.01
-            raibert_heuristic = -0.1
-            tracking_swing_force = 1.0
-            tracking_stance_vel = 1.0
-            tracking_ang_vel = 1.0
-            # lin_vel_x = 1.0
-            tracking_lin_vel_x = 2.5
-            orientation = -0.5
+            # torques = -0.001
+            # lin_vel_z = -0.05                     # was -0.1
+            # action_rate = -0.01
+            # raibert_heuristic = -0.1
+            # tracking_swing_force = 1.0
+            # tracking_stance_vel = 1.0
+            # tracking_ang_vel = 1.0
+            # # lin_vel_x = 1.0
+            # tracking_lin_vel_x = 1.0
+            # orientation = -0.5
             
+
+            """
+            NOTE: new reward test 3/22
+            """
+            torques = -0.00001
+            tracking_lin_vel = 0.8
+            tracking_ang_vel = 0.5
+            lin_vel_z = -0.02
+            ang_vel_xy = -0.01
+            action_rate = -0.01
+            dof_pos_limits = -10.0
+            orientation = -5 
+            base_height = -30.
+            dof_acc = -2.5e-7
+            collision = -1.
+            tracking_swing_force = 0.9 
+            tracking_stance_vel = 0.9 
+            raibert_heuristic = -1.
+
             
     class domain_rand( LeggedRobotCfg.domain_rand):
         randomize_friction = True

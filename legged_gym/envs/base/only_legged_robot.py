@@ -1023,7 +1023,7 @@ class OnlyLeggedRobot(BaseTask):
         reward = 0
         for i in range(4):
             reward += - (desired_contact[:, i] * (
-                        1 - torch.exp(-1 * =[:, i] ** 2 / 10.)))
+                        1 - torch.exp(-1 * foot_velocities[:, i] ** 2 / 10.)))
         return reward / 4
     
     def _reward_tracking_swing_force(self):

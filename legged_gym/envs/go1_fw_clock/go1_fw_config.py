@@ -127,9 +127,10 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
 
 
     class rewards( LeggedRobotCfg.rewards ):
-        soft_dof_pos_limit = 0.01
-        self_dof_vel_limit = 0.01
-        base_height_target = 0.30
+        # soft_dof_pos_limit = 0.01 # NOTE: trying fully following wtw setting
+        soft_dof_pos_limit = 0.9
+        # self_dof_vel_limit = 0.01
+        base_height_target = 0.34
 
         only_positive_rewards = False
 
@@ -146,41 +147,71 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             # add by xiaoyu
             # tracking_lin_vel = 4.0                # was 3.5
             # tracking_ang_vel = 0.5              # commented
-            torques = -0.001
+            
             # lin_vel_x = 0.5
-            masked_legs_energy = -1e-4
+            
             # orientation = -3.0
             # collision = -1.0                    # commented   
             # base_height = -0.1
-            lin_vel_z = -0.05                     # was -0.1
-            action_rate = -0.01
-            roller_action_rate = -0.05
-            hip = -1.0
-            penalize_roll = -0.5                  # was -0.5
-            front_leg = -1.5                      # was -0.5
-            front_hip = -1.0
+            # lin_vel_z = -0.05                     # was -0.1
+            # action_rate = -0.01
+            # roller_action_rate = -0.05
+            # hip = -1.0
+            # penalize_roll = -0.5                  # was -0.5
+            # front_leg = -1.5                      # was -0.5
+            # front_hip = -1.0
 
             # alive:
             # alive = 0.1
 
             # gait reward
             # tracking_contacts_binary = -0.1           # comment for contact
-            raibert_heuristic = -0.1
-            tracking_rear_swing_force = 0.5
-            tracking_rear_stance_vel = 0.5
-            tracking_swing_force = 1.0
-            tracking_stance_vel = 1.0
+            # raibert_heuristic = -0.1
+            # tracking_rear_swing_force = 0.5
+            # tracking_rear_stance_vel = 0.5
+            # tracking_swing_force = 1.0
+            # tracking_stance_vel = 1.0
 
 
             #***********************************
             #    testing 3/15
             #***********************************  
-            tracking_ang_vel = 1.0
+            # torques = -0.001
+            # masked_legs_energy = -1e-4
+            # tracking_ang_vel = 1.0
+            # lin_vel_x = 1.0
+            # tracking_lin_vel_x = 2.5
+            # orientation = -0.5
+            # lin_vel_z = -0.05
+            # action_rate = -0.01
+            # roller_action_rate = -0.05
+            # hip = -1.0
+            # penalize_roll = -0.5                  # was -0.5
+            # front_leg = -1.5                      # was -0.5
+            # front_hip = -1.0
+            # raibert_heuristic = -0.1
+            # tracking_rear_swing_force = 0.5
+            # tracking_rear_stance_vel = 0.5
+            # tracking_swing_force = 1.0
+            # tracking_stance_vel = 1.0
+
+            #***********************************
+            #    testing 3/22
+            #*********************************** 
+            torques = -0.00001
+            masked_legs_energy = -1e-4
+            tracking_lin_vel_x = 1.0
+            tracking_ang_vel = 0.5
             lin_vel_x = 1.0
-            tracking_lin_vel_x = 2.5
-            orientation = -0.5
-            # extra gait mod
-            # rear_feet_air_time = 2.  # JUST FUCKING FORGET ABOUT IT SHITTY REWARD ITEMS
+            lin_vel_z = -2.0
+            ang_vel_xy = -0.05
+            orientation = -5.
+            action_rate = -0.01
+            roller_action_rate = -0.05
+            hip = -1.0
+            penalize_roll = -0.5
+            front_leg = -1.5
+            front_hip = -1.0
 
     
     class domain_rand(LeggedRobotCfg.domain_rand):
