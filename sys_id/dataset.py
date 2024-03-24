@@ -65,3 +65,39 @@ class WheeledTrajWindowed(Dataset):
         target_seq_tensor = torch.tensor(target_seq, dtype=torch.float) 
         
         return input_seq_tensor, target_seq_tensor
+
+class WheeledTracjSAS(Dataset):
+    # This returns the transitions
+    def __init__(self, directory, window_size):
+        self.file_paths = sorted(
+            [os.path.join(directory, filename) for filename in os.listdir(directory) if filename.endswith('.pkl')],
+            key=lambda x: int(re.search(r'traj_(\d+).pkl', x).group(1))
+        )
+        self.window_size = window_size
+
+    def __len__(self):
+        # Each file is considered one sample for simplicity; adjust as needed for windowing
+        return len(self.file_paths)
+    
+    def __getitem__(self, idx):
+        obs, act = load_trajectory(self.file_paths[idx])
+        
+        # Initialize lists to hold the formatted inputs and targets
+        input_seq = []
+        target_seq = []
+
+        # Start from the first timestep, and ensure there is a next observation to predict
+        for i in range(1, len(obs) - 1):
+            # Previous observation and action, and current observation
+            input_features = np.concatenate([obs[i-1], act[i-1], obs[i]])
+            input_seq.append(input_features)
+            
+            # Next observation as target
+            target_obs = obs[i + 1]
+            target_seq.append(target_obs)
+        
+        # Convert lists to tensors
+        input_seq_tensor = torch.tensor(input_seq, dtype=torch.float)
+        target_seq_tensor = torch.tensor(target_seq, dtype=torch.float)
+        
+        return input_seq_tensor, target_seq_tensor

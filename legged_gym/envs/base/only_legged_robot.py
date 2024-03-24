@@ -1070,3 +1070,21 @@ class OnlyLeggedRobot(BaseTask):
         err_raibert_heuristic = torch.abs(desired_footsteps_body_frame - footsteps_in_body_frame[:, :, 0:2])
         reward = torch.sum(torch.square(err_raibert_heuristic), dim=(1, 2))
         return reward
+    
+    # OTHER WTW GAIT REWARD
+    def _reward_body_height_tracking(self):
+        pass
+
+    def _reward_body_pitch_tracking(self):
+        pass
+
+    def _reward_footswing_height_tracking(self):
+        pass
+
+    # OTHER WTW AUXILIARY REWARD
+    def _reward_roll_pitch_velocity(self):
+        pass
+
+    def _reward_foot_slip(self):
+        # NOTE: only for rear legs
+        pass
