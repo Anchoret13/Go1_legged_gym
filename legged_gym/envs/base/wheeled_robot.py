@@ -736,7 +736,6 @@ class WheeledRobot(BaseTask):
         self.rear_feet_indices = torch.zeros(2, dtype=torch.long, device=self.device, requires_grad=False)
         for i in range(len(feet_names)):
             self.feet_indices[i] = self.gym.find_actor_rigid_body_handle(self.envs[0], self.actor_handles[0], feet_names[i])
-        # edited by Yunfu, stupidly hardcode the index
         self.rear_feet_indices[0] = 14
         self.rear_feet_indices[1] = 18
         self.penalised_contact_indices = torch.zeros(len(penalized_contact_names), dtype=torch.long, device=self.device, requires_grad=False)

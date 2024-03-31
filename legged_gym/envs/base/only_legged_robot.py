@@ -1009,9 +1009,6 @@ class OnlyLeggedRobot(BaseTask):
                                           torch.tensor([0, 1, 0], device=self.device, dtype=torch.float))
 
         desired_base_quat = quat_mul(quat_roll, quat_pitch)
-        print("+"*50)
-        print(self.base_quat)
-        print(desired_base_quat)
         desired_projected_gravity = quat_rotate_inverse(desired_base_quat, self.gravity_vec)
 
         return torch.sum(torch.square(self.projected_gravity[:2] - desired_projected_gravity[:, :2]), dim=1)
@@ -1023,7 +1020,7 @@ class OnlyLeggedRobot(BaseTask):
         reward = 0
         for i in range(4):
             reward += - (desired_contact[:, i] * (
-                        1 - torch.exp(-1 * foot_velocities[:, i] ** 2 / 10.)))
+                        1 - torch.exp(-1 * foot_velocities[:, i] ** 2 / 0.5)))
         return reward / 4
     
     def _reward_tracking_swing_force(self):
@@ -1033,7 +1030,7 @@ class OnlyLeggedRobot(BaseTask):
         reward = 0
         for i in range(4):
             reward += - (1 - desired_contact[:, i]) * (
-                        1 - torch.exp(-1 * foot_forces[:, i] ** 2 / 100.))
+                        1 - torch.exp(-1 * foot_forces[:, i] ** 2 / 50.))
         return reward / 4
     
     def _reward_raibert_heuristic(self):
@@ -1045,8 +1042,8 @@ class OnlyLeggedRobot(BaseTask):
                                                               cur_footsteps_translated[:, i, :])
         
         # nomial positions: FR, FL, RR, RL
-        desired_stance_width = 0.3
-        desired_stance_length = 0.45
+        desired_stance_width = 0.3 # TODO: CHECK THIS?
+        desired_stance_length = 0.45 # TODO: CHECK THIS?
 
         desired_ys_nom = torch.tensor([desired_stance_width / 2,  -desired_stance_width / 2, desired_stance_width / 2, -desired_stance_width / 2], device=self.device).unsqueeze(0)
         desired_xs_nom = torch.tensor([desired_stance_length / 2,  desired_stance_length / 2, -desired_stance_length / 2, -desired_stance_length / 2], device=self.device).unsqueeze(0)
@@ -1072,19 +1069,19 @@ class OnlyLeggedRobot(BaseTask):
         return reward
     
     # OTHER WTW GAIT REWARD
-    def _reward_body_height_tracking(self):
-        pass
+    # def _reward_body_height_tracking(self):
+    #     pass
 
-    def _reward_body_pitch_tracking(self):
-        pass
+    # def _reward_body_pitch_tracking(self):
+    #     pass
 
-    def _reward_footswing_height_tracking(self):
-        pass
+    # def _reward_footswing_height_tracking(self):
+    #     pass
 
-    # OTHER WTW AUXILIARY REWARD
-    def _reward_roll_pitch_velocity(self):
-        pass
+    # # OTHER WTW AUXILIARY REWARD
+    # def _reward_roll_pitch_velocity(self):
+    #     pass
 
-    def _reward_foot_slip(self):
-        # NOTE: only for rear legs
-        pass
+    # def _reward_foot_slip(self):
+    #     # NOTE: only for rear legs
+    #     pass

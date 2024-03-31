@@ -111,27 +111,27 @@ class Go1FlatCfg( LeggedRobotCfg ):
             """
             NOTE: new reward test 3/22
             """
-            torques = -0.00001
-            tracking_lin_vel_x = 1.5
+            torques = -0.0001
+            tracking_lin_vel_x = 1.0
             lin_vel_x = 0.5
             tracking_ang_vel = 0.5
-            lin_vel_z = -0.02
-            ang_vel_xy = -0.01
-            action_rate = -0.01
-            dof_pos_limits = -10.0
-            orientation = -5 
-            # base_height = -30.
-            dof_acc = -2.5e-7
-            collision = -1.
+            lin_vel_z = -1.0
+            orientation = -1. 
+            base_height = -3.
+            # dof_acc = -2.5e-7
+            # collision = -1.
+            action_rate = -0.1
             """
             NOTE: 3/23 with this reward, the robot will not learn that gait pattern, two foot on the air
             tracking_swing_force = 0.9 
             tracking_stance_vel = 0.9
             raibert_heuristic = -1.
             """
-            tracking_swing_force = 4.0 
-            tracking_stance_vel = 4.0
-            raibert_heuristic = -10.
+            # tracking_swing_force = 3.0
+            # tracking_stance_vel = 3.0
+            raibert_heuristic = -1.
+            # alive = 1.5
+            # feet_air_time = 3.0
             
     class domain_rand( LeggedRobotCfg.domain_rand):
         randomize_friction = True

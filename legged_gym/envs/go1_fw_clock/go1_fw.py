@@ -57,7 +57,7 @@ def frequency_ac_vel(cmd_vel):
     frequency = cmd_vel / stride_length
     return frequency
 
-def adaptive_sample_vel_cmd(min_vel, max_vel, current_step, env_ids, device, total_iterations = 20000, n_samples = 1000, steps_per_iteration = 24):
+def adaptive_sample_vel_cmd(min_vel, max_vel, current_step, env_ids, device, total_iterations = 40000, n_samples = 1000, steps_per_iteration = 24):
     #  NOTE: STUPID HARD CODING Method
     # compute k with total_iteration, k_range
     # num_steps_per_env = 24, so consider 24 steps as one iteration.
@@ -181,13 +181,6 @@ class Go1FwClock(WheeledRobot):
         modified_actions[:, 7] = 0  
         modified_actions[:, 8:] = self.actions[:, 6:] 
         modified_actions = modified_actions.to(self.device)
-
-        # Update 0319: Adding noise for front leg hip joints
-        if self.cfg.domain_rand.hip_friction_sim:
-            front_left_hip_noise, front_right_hip_noise = self._apply_random_hip()
-            for action in modified_actions:
-                action[0] += front_left_hip_noise
-                action[3] += front_right_hip_noise
          
 
         self.render()
@@ -349,18 +342,18 @@ class Go1FwClock(WheeledRobot):
         self.foot_indices = torch.remainder(torch.cat([foot_indices[i].unsqueeze(1) for i in range(4)], dim=1), 1.0)
         self.rear_foot_indices = torch.remainder(torch.cat([foot_indices[i].unsqueeze(1) for i in range(2, 4)], dim=1), 1.0)
 
-        # smoothing_multiplier_FL = 1.
-        # smoothing_multiplier_FR = 1.
-        smoothing_multiplier_FL = (smoothing_cdf_start(torch.remainder(foot_indices[0], 1.0)) * (
-                    1 - smoothing_cdf_start(torch.remainder(foot_indices[0], 1.0) - 0.5)) +
-                                       smoothing_cdf_start(torch.remainder(foot_indices[0], 1.0) - 1) * (
-                                               1 - smoothing_cdf_start(
-                                           torch.remainder(foot_indices[0], 1.0) - 0.5 - 1)))
-        smoothing_multiplier_FR = (smoothing_cdf_start(torch.remainder(foot_indices[1], 1.0)) * (
-                    1 - smoothing_cdf_start(torch.remainder(foot_indices[1], 1.0) - 0.5)) +
-                                       smoothing_cdf_start(torch.remainder(foot_indices[1], 1.0) - 1) * (
-                                               1 - smoothing_cdf_start(
-                                           torch.remainder(foot_indices[1], 1.0) - 0.5 - 1)))
+        smoothing_multiplier_FL = 1.
+        smoothing_multiplier_FR = 1.
+        # smoothing_multiplier_FL = (smoothing_cdf_start(torch.remainder(foot_indices[0], 1.0)) * (
+        #             1 - smoothing_cdf_start(torch.remainder(foot_indices[0], 1.0) - 0.5)) +
+        #                                smoothing_cdf_start(torch.remainder(foot_indices[0], 1.0) - 1) * (
+        #                                        1 - smoothing_cdf_start(
+        #                                    torch.remainder(foot_indices[0], 1.0) - 0.5 - 1)))
+        # smoothing_multiplier_FR = (smoothing_cdf_start(torch.remainder(foot_indices[1], 1.0)) * (
+        #             1 - smoothing_cdf_start(torch.remainder(foot_indices[1], 1.0) - 0.5)) +
+        #                                smoothing_cdf_start(torch.remainder(foot_indices[1], 1.0) - 1) * (
+        #                                        1 - smoothing_cdf_start(
+        #                                    torch.remainder(foot_indices[1], 1.0) - 0.5 - 1)))
         smoothing_multiplier_RL = (smoothing_cdf_start(torch.remainder(foot_indices[2], 1.0)) * (
                     1 - smoothing_cdf_start(torch.remainder(foot_indices[2], 1.0) - 0.5)) +
                                        smoothing_cdf_start(torch.remainder(foot_indices[2], 1.0) - 1) * (
@@ -579,7 +572,6 @@ class Go1FwClock(WheeledRobot):
         self.rear_feet_air_time *= ~contact_filt
         return rew_airTime
     
-
     def _apply_random_hip(self):
         # currently the noise is fixed for slippery terrain
         # if self.cfg.domain_rand.hip_friction_sim:

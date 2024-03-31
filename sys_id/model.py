@@ -70,7 +70,8 @@ class GPT2(nn.Module):
         assert input_size == hidden_size
         self.hidden_size = hidden_size
         self.max_history_length = max_seq_length - 1
-        print({k: v.shape for k, v in self.transformer.named_parameters()})
+        # print({k: v.shape for k, v in self.transformer.named_parameters()})
+        self.obs_decoder = nn.Linear(hidden_size, 42)
 
     def forward(self, input_embeds, h_0):
         """
@@ -108,8 +109,9 @@ class GPT2(nn.Module):
             )
             h = full_out["past_key_values"], timesteps + 1, past_embeds
             # print(history_length, self.max_history_length, past_embeds.shape)
+        predicted_obs = self.obs_decoder(output.squeeze(0))
 
-        return output, h
+        return predicted_obs, h
 
     def _forward(self, input_embeds, timesteps, pkv):
         """
@@ -120,7 +122,7 @@ class GPT2(nn.Module):
         length = timesteps.shape[0]
         pe = self.embed_timestep(timesteps).view(
             length, 1, self.hidden_size
-        )  # (T, 1, hidden_size)
+        ).to(input_embeds.device)  # (T, 1, hidden_size)
         input_embeds_pe = input_embeds + pe
         input_embeds_pe = torch.swapaxes(input_embeds_pe, 0, 1)  # (B, T, hidden_size)
         out = self.transformer(
