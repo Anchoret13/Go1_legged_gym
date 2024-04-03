@@ -33,10 +33,9 @@ from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobot
 class Go1FwFlatClockCfg( LeggedRobotCfg ):
     class env( LeggedRobotCfg.env):
         num_envs = 4096
-        # num_observations = 54 # 241 when consider the terrain 
-        # num_actions = 14
         num_actions = 12
-        num_observations = 42 # 241 when consider the terrain 
+        num_observations = 42  
+        num_privileged_obs = 45
     class init_state( LeggedRobotCfg.init_state ):
         pos = [0.0, 0.0, 0.3] # x,y,z [m]
 
@@ -46,9 +45,9 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             'FR_hip_joint': -0.1 ,  # [rad]
             'RR_hip_joint': -0.1,   # [rad]
 
-            'FL_thigh_joint': 0.8,     # [rad]
+            'FL_thigh_joint': 0.65,     # [rad]
             'RL_thigh_joint': 1.,   # [rad]
-            'FR_thigh_joint': 0.8,     # [rad]
+            'FR_thigh_joint': 0.65,     # [rad]
             'RR_thigh_joint': 1.,   # [rad]
 
             'FL_calf_joint': -1.7,   # [rad]
@@ -222,7 +221,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             masked_legs_energy = -1e-3
             tracking_ang_vel = 1.0
             lin_vel_x = 1.0
-            tracking_lin_vel_x = 2.5
+            tracking_lin_vel_x = 3.5
             orientation = -0.5
             lin_vel_z = -0.05
             action_rate = -0.01
@@ -233,10 +232,11 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             front_hip = -1.0
             raibert_heuristic = -1.0
             rear_feet_air_time = 3.0
+            penalize_slow_x_vel = 1.0
 
     
     class domain_rand(LeggedRobotCfg.domain_rand):
-        randomize_friction = False
+        randomize_friction = True
         friction_range = [0.75, 1.5]
         push_robots = False
         # push_interval_s = 15
@@ -252,7 +252,7 @@ class Go1FwFlatClockCfgPPO( LeggedRobotCfgPPO ):
         entropy_coef = 0.01
     class runner( LeggedRobotCfgPPO.runner ):
         run_name = ''
-        experiment_name = 'roller_skating_gait_cond'
+        experiment_name = 'roller_skating_asac'
         
 
 

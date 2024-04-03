@@ -48,9 +48,9 @@ def test_env(args):
     env, _ = task_registry.make_env(name=args.task, args=args, env_cfg=env_cfg)
     for i in range(int(1000*env.max_episode_length)):
         actions = 0.*torch.ones(env.num_envs, env.num_actions, device=env.device)
-        for action in actions:
-            action[0] = 2
-            action[3] = 0
+        # for action in actions:
+        #     action[0] = 0
+        #     action[3] = 0
         obs, _, rew, done, info = env.step(actions)
     #     print(obs)
     #     print(actions)

@@ -57,7 +57,7 @@ def frequency_ac_vel(cmd_vel):
     frequency = cmd_vel / stride_length
     return frequency
 
-def adaptive_sample_vel_cmd(min_vel, max_vel, current_step, env_ids, device, total_iterations = 40000, n_samples = 1000, steps_per_iteration = 24):
+def adaptive_sample_vel_cmd(min_vel, max_vel, current_step, env_ids, device, total_iterations = 60000, n_samples = 1000, steps_per_iteration = 24):
     #  NOTE: STUPID HARD CODING Method
     # compute k with total_iteration, k_range
     # num_steps_per_env = 24, so consider 24 steps as one iteration.
@@ -66,8 +66,8 @@ def adaptive_sample_vel_cmd(min_vel, max_vel, current_step, env_ids, device, tot
     current_iteration = current_step // steps_per_iteration
     k_min = -10
     k_max = 1
-    if current_iteration < (total_iterations * 0.7):
-        k = k_min + (current_iteration * (k_max - k_min) /  (total_iterations * 0.7))
+    if current_iteration < (total_iterations * 0.5):
+        k = k_min + (current_iteration * (k_max - k_min) /  (total_iterations * 0.5))
     else:
         k = k_max
     values = torch.linspace(min_vel, max_vel, n_samples)
@@ -111,6 +111,16 @@ class Go1FwClock(WheeledRobot):
             torch.clip(self.actions, -1, 1)
         ), dim = -1)
 
+        # privileged observation
+        roller_dofs = torch.tensor([False, False, False, True,  False, False, False, True, False, False,
+        False, False, False, False])
+        self.roller_obs = self.dof_pos[:, roller_dofs]
+        friction_coeff = self.friction_coeffs[:,0].to(self.device)
+        # TO BE ADDED: TERRAIN INFO
+        self.privileged_obs_buf = torch.cat((self.obs_buf,
+                                             self.roller_obs,
+                                             friction_coeff), dim = -1)
+        # print(self.privileged_obs_buf.shape)
 
     def _init_buffers(self):
         # # add for wheel robot 
@@ -157,7 +167,7 @@ class Go1FwClock(WheeledRobot):
 
         self.wheel_air_time = torch.zeros(self.num_envs, self.wheel_indices.shape[0], dtype=torch.float, device=self.device, requires_grad=False)
         self.rear_feet_air_time = torch.zeros(self.num_envs, self.rear_feet_indices.shape[0], dtype=torch.float, device=self.device, requires_grad=False)
-        
+        self.friction_coeffs = torch.zeros(self.num_envs, 1, 1, dtype=torch.float, device=self.device, requires_grad=False)
 
     def _reward_masked_legs_energy(self):
         mask = torch.ones(self.torques.size(-1), device=self.torques.device, dtype=torch.bool)
@@ -545,9 +555,6 @@ class Go1FwClock(WheeledRobot):
         reward = torch.sum(torch.square(err_raibert_heuristic), dim=(1, 2))
         return reward
     
-    # TODO: reward for periodic GRF
-    def _reward_periodic_GRF(self):
-        pass
 
     # NOTE: TRYING TO BE BRUTAL
     def _reward_wheel_air_time(self):
@@ -572,9 +579,45 @@ class Go1FwClock(WheeledRobot):
         self.rear_feet_air_time *= ~contact_filt
         return rew_airTime
     
-    def _apply_random_hip(self):
-        # currently the noise is fixed for slippery terrain
-        # if self.cfg.domain_rand.hip_friction_sim:
-        left_action_noise = self.cfg.domain_rand.hip_action_noise
-        right_action_noiise = -self.cfg.domain_rand.hip_action_noise
-        return left_action_noise, right_action_noiise
+    def _reward_penalize_slow_x_vel(self):
+        # penalize not moving forward
+        if torch.any(torch.abs(self.base_lin_vel[:, 0]) < 0.5):
+            return -1.
+        else:
+            return 0.
+        
+    def _reward_rear_feet_clearance(self):
+        feet_positions = self.rigid_body_state[:, self.rear_feet_indices, 0:3]
+        base_position = self.root_states[:, 0:3].unsqueeze(1)
+        local_feet_positions = feet_positions - base_position
+        tensor_shape = local_feet_positions.shape
+        # Transform from [batch, num_feet, 3] to [batch x num_feet, 3].
+        local_feet_positions = local_feet_positions.reshape(-1, 3)
+        quat = self.base_quat.repeat(1, 4).reshape(-1, 4)
+        local_feet_positions = quat_rotate_inverse(
+            quat, local_feet_positions).reshape(tensor_shape)
+      
+        # We assume that the local feet positions are negative in the base frame
+        # The clearance reward is larger when the swing legs are higher.
+        rew_clearance = (
+            local_feet_positions[:, :, 2] + self.cfg.rewards.base_height_target - 0.04)
+        rew_clearance = torch.clip(rew_clearance, max=0.075)
+
+        # Only apply to swing legs. TODO(tingnan): extract this to a common api.
+        # contact_filt is a [batch, 4] array. A foot is on the ground only if the
+        # contact force exceed 10 N in the z-direction.
+        contact = self.contact_forces[:, self.feet_indices,
+                                      2] > 2.0  # Newton
+        contact_filt = torch.logical_or(contact, self.last_contacts)
+        self.last_contacts = contact
+        rew_clearance *= ~contact_filt
+        rew_clearance = torch.sum(rew_clearance, dim=1)
+        rew_clearance *= torch.norm(
+            self.commands[:, :3], dim=-1) > 0.1  # no reward for zero command
+
+        return rew_clearance
+
+
+    # NOTE: simulate front hip joint noise
+    def _apply_curriculum_noise(self):
+        pass
