@@ -120,7 +120,7 @@ class Go1FwClock(WheeledRobot):
         self.privileged_obs_buf = torch.cat((self.obs_buf,
                                              self.roller_obs,
                                              friction_coeff), dim = -1)
-        # print(self.privileged_obs_buf.shape)
+        # print(self.privileged_obs_buf)
 
     def _init_buffers(self):
         # # add for wheel robot 
@@ -167,7 +167,6 @@ class Go1FwClock(WheeledRobot):
 
         self.wheel_air_time = torch.zeros(self.num_envs, self.wheel_indices.shape[0], dtype=torch.float, device=self.device, requires_grad=False)
         self.rear_feet_air_time = torch.zeros(self.num_envs, self.rear_feet_indices.shape[0], dtype=torch.float, device=self.device, requires_grad=False)
-        self.friction_coeffs = torch.zeros(self.num_envs, 1, 1, dtype=torch.float, device=self.device, requires_grad=False)
 
     def _reward_masked_legs_energy(self):
         mask = torch.ones(self.torques.size(-1), device=self.torques.device, dtype=torch.bool)
@@ -191,7 +190,6 @@ class Go1FwClock(WheeledRobot):
         modified_actions[:, 7] = 0  
         modified_actions[:, 8:] = self.actions[:, 6:] 
         modified_actions = modified_actions.to(self.device)
-         
 
         self.render()
         for _ in range(self.cfg.control.decimation):

@@ -53,7 +53,7 @@ def test_env(args):
         #     action[3] = 0
         obs, _, rew, done, info = env.step(actions)
     #     print(obs)
-    #     print(actions)
+        # print(env.privileged_obs)
     # print("Done")
 
 if __name__ == '__main__':
