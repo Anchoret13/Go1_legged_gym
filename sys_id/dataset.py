@@ -102,3 +102,22 @@ class WheeledTracjSAS(Dataset):
         
         return input_seq_tensor, target_seq_tensor
     
+def load_phyprops(traj_path):
+    with open(traj_path, 'rb') as file:
+        data = pkl.load(file)
+    obs = data['obs']
+    act = data['act']
+
+    return obs, act
+    
+class PhysProps(Dataset):
+    def __init__(self, directory, window_size):
+        self.file_paths = sorted(
+            [os.path.join(directory, filename) for filename in os.listdir(directory) if filename.endswith('.pkl')],
+            key = lambda x: int(re.search(r'traj_(\d+).pkl', x).group(1))
+        )
+        self.window_size = window_size
+
+    def __len__(self):
+        return len(self.file_paths)
+    
