@@ -26,9 +26,11 @@ def collect_trajectory(args, traj_num):
     env, _ = task_registry.make_env(name=args.task, args=args, env_cfg=env_cfg)
     
     obs = env.get_observations()
+    
+
     # load policy
     train_cfg.runner.resume = True
-    args.load_run = "/home/well/Desktop/Skating/legged_gym/logs/roller_skating_gait_cond_xyz/Mar10_14-52-43_"
+    args.load_run = "/home/dyf/Desktop/WELL/Go1/logs/roller_skating_asac/asym"
     ppo_runner, train_cfg = task_registry.make_alg_runner(env=env, name=args.task, args=args, train_cfg=train_cfg)
     policy = ppo_runner.get_inference_policy(device=env.device)
     dataset_dir = os.path.join(LEGGED_GYM_ROOT_DIR, 'dataset', 'wheeled_flat')
@@ -40,6 +42,11 @@ def collect_trajectory(args, traj_num):
         for j in range(int(env.max_episode_length)):
             actions = policy(obs.detach())
             obs, _, rews, dones, infos = env.step(actions.detach())
+            priv_obs = env.get_privileged_observations()
+            roller_obs = priv_obs[:, 42:44]
+            friction_coeff = priv_obs[:, 44]
+            print(roller_obs)
+            print(friction_coeff)
             traj_obs.append(obs[0].cpu().detach().numpy().tolist())
             traj_act.append(actions[0].cpu().detach().numpy().tolist())
         single_trajectory["obs"] = traj_obs
