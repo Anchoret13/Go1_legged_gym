@@ -45,14 +45,14 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             'FR_hip_joint': -0.1 ,  # [rad]
             'RR_hip_joint': -0.1,   # [rad]
 
-            'FL_thigh_joint': 0.65,     # [rad]
+            'FL_thigh_joint': 0.6,     # [rad]
             'RL_thigh_joint': 1.,   # [rad]
-            'FR_thigh_joint': 0.65,     # [rad]
+            'FR_thigh_joint': 0.6,     # [rad]
             'RR_thigh_joint': 1.,   # [rad]
 
-            'FL_calf_joint': -1.7,   # [rad]
+            'FL_calf_joint': -1.6,   # [rad]
             'RL_calf_joint': -1.5,    # [rad]
-            'FR_calf_joint': -1.7,  # [rad]
+            'FR_calf_joint': -1.6,  # [rad]
             'RR_calf_joint': -1.5,    # [rad]
 
             'FL_roller_foot_joint': 0,
@@ -118,7 +118,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
         # num_commands = 1
         class ranges(LeggedRobotCfg.commands.ranges):
             heading = [-3.14, 3.14]
-            lin_vel_x = [0.5, 4.0] # min max [m/s]
+            lin_vel_x = [0.5, 1.5] # min max [m/s]
             # old range 3/15
             lin_vel_y = [0.0, 0.0]
             # ang_vel_yaw = [-0.0, 0.]    # min max [rad/s]
