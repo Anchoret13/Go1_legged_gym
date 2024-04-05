@@ -101,3 +101,4 @@ class WheeledTracjSAS(Dataset):
         target_seq_tensor = torch.tensor(target_seq, dtype=torch.float)
         
         return input_seq_tensor, target_seq_tensor
+    
