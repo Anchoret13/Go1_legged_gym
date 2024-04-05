@@ -511,13 +511,6 @@ class Go1FwClock(WheeledRobot):
                         1 - torch.exp(-1 * foot_velocities[:, i] ** 2 / 10.)))
         return reward / 4
 
-    # 
-    def _reward_feet_clearance_cmd_linear(self):
-        phases = 1 - torch.abs(1.0 - torch.clip((self.rear_feet_indices * 2.0) - 1.0, 0.0, 1.0) * 2.0)
-        foot_height = (self.rear_foot_positions[:, :, 2]).view(self.num_envs, -1)
-        target_height = phases + 0.02
-        rew_foot_clearance = torch.square(target_height - foot_height) * (1 - self.desired_contact_states)
-
     def _reward_raibert_heuristic(self):
         # pass 
         cur_footsteps_translated = self.rear_foot_positions - self.base_pos.unsqueeze(1)
@@ -584,37 +577,13 @@ class Go1FwClock(WheeledRobot):
         else:
             return 0.
         
-    def _reward_rear_feet_clearance(self):
-        feet_positions = self.rigid_body_state[:, self.rear_feet_indices, 0:3]
-        base_position = self.root_states[:, 0:3].unsqueeze(1)
-        local_feet_positions = feet_positions - base_position
-        tensor_shape = local_feet_positions.shape
-        # Transform from [batch, num_feet, 3] to [batch x num_feet, 3].
-        local_feet_positions = local_feet_positions.reshape(-1, 3)
-        quat = self.base_quat.repeat(1, 4).reshape(-1, 4)
-        local_feet_positions = quat_rotate_inverse(
-            quat, local_feet_positions).reshape(tensor_shape)
-      
-        # We assume that the local feet positions are negative in the base frame
-        # The clearance reward is larger when the swing legs are higher.
-        rew_clearance = (
-            local_feet_positions[:, :, 2] + self.cfg.rewards.base_height_target - 0.04)
-        rew_clearance = torch.clip(rew_clearance, max=0.075)
-
-        # Only apply to swing legs. TODO(tingnan): extract this to a common api.
-        # contact_filt is a [batch, 4] array. A foot is on the ground only if the
-        # contact force exceed 10 N in the z-direction.
-        contact = self.contact_forces[:, self.feet_indices,
-                                      2] > 2.0  # Newton
-        contact_filt = torch.logical_or(contact, self.last_contacts)
-        self.last_contacts = contact
-        rew_clearance *= ~contact_filt
-        rew_clearance = torch.sum(rew_clearance, dim=1)
-        rew_clearance *= torch.norm(
-            self.commands[:, :3], dim=-1) > 0.1  # no reward for zero command
-
-        return rew_clearance
-
+    def _reward_feet_clearance(self):
+        # only rear feet
+        phases = 1 - torch.abs(1.0 - torch.clip((self.rear_foot_indices * 2.0) - 1.0, 0.0, 1.0) * 2.0)
+        foot_height = (self.rear_foot_positions[:, :, 2]).view(self.num_envs, -1)
+        target_height = 0.02 * phases + 0.02 # currently target height is 0.02
+        rew_foot_clearance = torch.square(target_height - foot_height) * (1 - self.desired_rear_contact_states)
+        return torch.sum(rew_foot_clearance, dim=1)
 
     # NOTE: simulate front hip joint noise
     def _apply_curriculum_noise(self):
