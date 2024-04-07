@@ -107,8 +107,8 @@ def load_phyprops(traj_path):
         data = pkl.load(file)
     obs = data['obs']
     act = data['act']
-
-    return obs, act
+    phys_props = data['physprops']
+    return obs, act, phys_props
     
 class PhysProps(Dataset):
     def __init__(self, directory, window_size):
@@ -121,3 +121,21 @@ class PhysProps(Dataset):
     def __len__(self):
         return len(self.file_paths)
     
+    def __getitem__(self, idx):
+        obs, act, phys_props = load_phyprops(self.file_paths[idx])
+        input_seq = []
+        target_seq = []
+        
+        for i in range(len(obs) - self.window_size):
+            window_obs = np.array(obs[i:i+self.window_size]).flatten()
+            window_act = np.array(act[i:i+self.window_size]).flatten()
+            window_input = np.concatenate([window_obs, window_act])
+            phyprop = np.array(phys_props[i+self.window_size]).flatten()
+
+            input_seq.append(window_input)
+            target_seq.append(phyprop)
+
+        input_seq_tensor = torch.tensor(input_seq, dtype = torch.float)
+        target_seq_tensor = torch.tensor(target_seq, dtype = torch.float) 
+
+        return input_seq_tensor, target_seq_tensor

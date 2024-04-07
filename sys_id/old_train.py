@@ -9,51 +9,77 @@ from torch.utils.data import Dataset, DataLoader
 import transformers
 from torch.nn import MSELoss
 from torch.utils.tensorboard import SummaryWriter
-from datetime import datetime
 
 # from sys_id.trajectory_gpt2 import GPT2Model
-from sys_id.dataset import load_phyprops, PhysProps, WheeledTrajWindowed
+from sys_id.dataset import load_trajectory, WheeledTraj, WheeledTrajWindowed
 from model import GPT2
 
-def save_checkpoint(state, epoch, filename):
-    file = filename.format(epoch = epoch)
-    torch.save(state, file)
+def test_script():
+    input_size = 270 # obs 42 act 12 
+    hidden_size = 270
+    n_layer = 2
+    n_head = 3
+    pdrop = 0.1
+    max_seq_length = 1000
+    position_encoding = "sine"
+    traj_transformer = GPT2(input_size, hidden_size, n_layer, n_head, pdrop, max_seq_length, position_encoding)
+
+    test_path = "../dataset/example_dataset"
+    dataset = WheeledTrajWindowed(test_path, window_size=5)
+    data_loader = DataLoader(dataset, batch_size = 10, shuffle = False)
+    for obs, act in data_loader:
+        observation = obs
+        print("OBSERVATION SHAPE")
+        print(observation.shape)
+
+    traj_transformer.eval()
+    with torch.no_grad():
+        dummy_output = traj_transformer(observation, None)
+    
+    print(dummy_output)
+
+def save_checkpoint(state, filename):
+    torch.save(state, filename)
 
 def train(
         model_params,
         train_params,
         window_size,
-        dataset_folder_path = "../dataset/wheeled_flat"
+        dataset_folder_path = "../dataset/example_dataset"
 ):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    dataset = PhysProps(dataset_folder_path, window_size= window_size)
+    dataset = WheeledTrajWindowed(dataset_folder_path, window_size=window_size)
     data_loader = DataLoader(dataset, batch_size = train_params['batch_size'], shuffle = False)
-    input_size = (42 + 12) * window_size
-    hidden_size = (42 + 12) * window_size
+    input_size = (42+12) * window_size
+    hidden_size = (42+12) * window_size
     model_params['input_size'] = input_size
-    model_params['hidden_size'] = hidden_size
+    model_params["hidden_size"] = hidden_size
     model = GPT2(**model_params).to(device)
     loss_fn = MSELoss()
-    optimizer = Adam(model.parameters(), lr = train_params['learning_rate'])
-    base_log_dir = "./logs"
-    date_time_folder = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    checkpoint_dir = os.path.join(base_log_dir, date_time_folder)
-    writer = SummaryWriter(log_dir = checkpoint_dir)
+    optimizer = Adam(model.parameters(), lr=train_params['learning_rate'])
+    
+    writer = SummaryWriter(log_dir = "./logs")
+    # Training loop
     num_epochs = train_params['epochs']
+    model.train()  
     
     for epoch in range(num_epochs):
         total_loss = 0
+
         for inputs, targets in data_loader:
             inputs, targets = inputs.to(device), targets.to(device)
+
             optimizer.zero_grad()
 
-            predictions, _ = model(inputs, None)
+            predictions, _ = model(inputs, None) 
             loss = loss_fn(predictions, targets)
+            # Backward pass and optimize
             loss.backward()
             optimizer.step()
 
             total_loss += loss.item()
-        
+
+        # Calculate average loss for the epoch
         avg_loss = total_loss / len(data_loader)
         print(f"Epoch {epoch+1}/{num_epochs}, Loss: {avg_loss}")
         writer.add_scalar("Training_Loss", avg_loss, epoch)
@@ -64,22 +90,23 @@ def train(
                 'epoch': epoch + 1,
                 'state_dict': model.state_dict(),
                 'optimizer': optimizer.state_dict(),
-            }, epoch = epoch + 1, filename=os.path.join(writer.log_dir, "checkpoint_epoch_{epoch}.pth"))
-    
-    writer.close()
+            }, epoch, filename=os.path.join(writer.log_dir, "checkpoint_epoch_{}.pth.tar"))
 
+    writer.close()
+    
 if __name__ == "__main__":
-    tmp_model_params = {
+    test_model_params = {
         "n_layer": 2,
         "n_head": 3,
         "pdrop": 0.1,
         "max_seq_length": 1000,
-        'position_encoding': 'sine',
-        "output_size": 3
+        'position_encoding': 'sine'
     }
     test_train_params = {
         'epochs': 10000,
-        'batch_size': 1,
+        'batch_size': 5,
         'learning_rate': 0.001
     }
-    train(tmp_model_params, test_train_params, window_size=10)
+
+    train(test_model_params, test_train_params, window_size = 20)
+    # test_script()

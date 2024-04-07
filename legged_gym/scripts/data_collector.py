@@ -19,7 +19,7 @@ def collect_trajectory(args, traj_num):
     env_cfg.terrain.num_cols = 1
     env_cfg.terrain.curriculum = False
     env_cfg.noise.add_noise = False
-    env_cfg.domain_rand.randomize_friction = False
+    env_cfg.domain_rand.randomize_friction = True
     env_cfg.domain_rand.push_robots = False
     
     # prepare environment
@@ -33,24 +33,24 @@ def collect_trajectory(args, traj_num):
     args.load_run = "/home/dyf/Desktop/WELL/Go1/logs/roller_skating_asac/asym"
     ppo_runner, train_cfg = task_registry.make_alg_runner(env=env, name=args.task, args=args, train_cfg=train_cfg)
     policy = ppo_runner.get_inference_policy(device=env.device)
-    dataset_dir = os.path.join(LEGGED_GYM_ROOT_DIR, 'dataset', 'wheeled_flat')
+    dataset_dir = os.path.join(LEGGED_GYM_ROOT_DIR, 'dataset', 'eval_model', 'wheeled_flat')
     os.makedirs(dataset_dir, exist_ok=True)
     for i in range(traj_num):
         single_trajectory = {}
         traj_obs = []
         traj_act = []
+        physical_props = []
         for j in range(int(env.max_episode_length)):
             actions = policy(obs.detach())
             obs, _, rews, dones, infos = env.step(actions.detach())
             priv_obs = env.get_privileged_observations()
-            roller_obs = priv_obs[:, 42:44]
-            friction_coeff = priv_obs[:, 44]
-            print(roller_obs)
-            print(friction_coeff)
+            phys_props = priv_obs[:, 42:]
             traj_obs.append(obs[0].cpu().detach().numpy().tolist())
             traj_act.append(actions[0].cpu().detach().numpy().tolist())
+            physical_props.append(phys_props[0].cpu().detach().numpy().tolist())
         single_trajectory["obs"] = traj_obs
         single_trajectory["act"] = traj_act
+        single_trajectory['physprops'] = physical_props
         file_path = os.path.join(dataset_dir, f'traj_{i:04d}.pkl') 
         with open(file_path, "wb") as f:
             pkl.dump(single_trajectory, f)
@@ -59,4 +59,4 @@ def collect_trajectory(args, traj_num):
 
 if __name__ == "__main__":
     args = get_args()
-    collect_trajectory(args, 10)
+    collect_trajectory(args, 1)

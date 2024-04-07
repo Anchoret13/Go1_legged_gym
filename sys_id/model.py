@@ -44,6 +44,7 @@ class GPT2(nn.Module):
         pdrop,
         max_seq_length,
         position_encoding,
+        output_size = 42,
         **kwargs
     ):
         super().__init__()
@@ -71,7 +72,7 @@ class GPT2(nn.Module):
         self.hidden_size = hidden_size
         self.max_history_length = max_seq_length - 1
         # print({k: v.shape for k, v in self.transformer.named_parameters()})
-        self.obs_decoder = nn.Linear(hidden_size, 42)
+        self.obs_decoder = nn.Linear(hidden_size, output_size)
 
     def forward(self, input_embeds, h_0):
         """

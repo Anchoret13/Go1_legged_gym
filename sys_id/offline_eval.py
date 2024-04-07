@@ -6,53 +6,51 @@ import pickle
 import math
 import time
 
-from sys_id.dataset import load_trajectory, WheeledTrajWindowed
+from sys_id.dataset import load_trajectory, WheeledTrajWindowed, PhysProps
 from model import GPT2
 
-def load_checkpoint(model, checkpoint_path, device):
-    checkpoint = torch.load(checkpoint_path, map_location = device)
+def evaluate(model_params, eval_params):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = GPT2(**model_params).to(device)
+    optimizer = torch.optim.Adam(model.parameters())
+
+    checkpoint = torch.load(eval_params['checkpoint_path'], map_location=device)
     model.load_state_dict(checkpoint['state_dict'])
 
-def evaluate(
-        model_params,
-        test_path, 
-        test_params
-):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    dataset = WheeledTrajWindowed(test_path, test_params['window_size'])
-    test_loader = DataLoader(dataset, test_params['batch_size'], shuffle = True)
-    input_size = (42 + 12) * test_params['window_size']
-    hidden_size = (42 + 12) * test_params['window_size']
-    model_params['input_size'] = input_size
-    model_params["hidden_size"] = hidden_size
-    model = GPT2(**model_params).to(device)
-
-    checkpoint_path = test_params['checkpoint_path']
-    load_checkpoint(model, checkpoint_path, device)
+    dataset = PhysProps(eval_params['dataset_folder_path'], window_size=eval_params['window_size'])
+    data_loader = DataLoader(dataset, batch_size=eval_params['batch_size'], shuffle=False)
 
     model.eval()
-
-    loss_fn = MSELoss()
     total_loss = 0
+    loss_fn = torch.nn.MSELoss()
 
-    with torch.no_grad():
-        for inputs, targets in test_loader:
+    with torch.no_grad():  # Evaluation, no gradient needed
+        for inputs, targets in data_loader:
             inputs, targets = inputs.to(device), targets.to(device)
             predictions, _ = model(inputs, None)
             loss = loss_fn(predictions, targets)
-            
             total_loss += loss.item()
-    avg_loss = total_loss / len(test_loader)
+    
+    avg_loss = total_loss / len(data_loader)
+    print(f"Average Loss: {avg_loss}")
+    return avg_loss
+
 
 if __name__ == "__main__":
-    eval_model_params = {
+    eval_params = {
+         'checkpoint_path': 'path/to/your/checkpoint.pth', 
+        'dataset_folder_path': '../dataset/wheeled_flat', 
+        'window_size': 10,
+        'batch_size': 1, 
+    }
+
+    model_params = {
         "n_layer": 2,
         "n_head": 3,
         "pdrop": 0.1,
         "max_seq_length": 1000,
-        'position_encoding': 'sine'
-    }
-    test_eval_params = {
-        'batch_size' : 1,
-        'checkpoint_path': "./log"
+        'position_encoding': 'sine',
+        "output_size": 3,
+        "input_size": (42 + 12) * eval_params['window_size'], 
+        "hidden_size": (42 + 12) * eval_params['window_size'], 
     }
