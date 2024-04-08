@@ -110,7 +110,9 @@ class GPT2(nn.Module):
             )
             h = full_out["past_key_values"], timesteps + 1, past_embeds
             # print(history_length, self.max_history_length, past_embeds.shape)
-        predicted_obs = self.obs_decoder(output.squeeze(0))
+        predicted_obs = self.obs_decoder(output).squeeze()
+        if predicted_obs.dim() > 1:
+            predicted_obs = predicted_obs[-1]
 
         return predicted_obs, h
 

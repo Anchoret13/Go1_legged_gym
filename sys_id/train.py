@@ -43,7 +43,9 @@ def train(
     
     for epoch in range(num_epochs):
         total_loss = 0
-        for inputs, targets in data_loader:
+        for i, (inputs, targets) in enumerate(data_loader):
+            print(f"Batch {i}")
+            targets = targets.squeeze()
             inputs, targets = inputs.to(device), targets.to(device)
             optimizer.zero_grad()
 
@@ -79,7 +81,7 @@ if __name__ == "__main__":
     }
     test_train_params = {
         'epochs': 10000,
-        'batch_size': 1,
+        'batch_size': 100,
         'learning_rate': 0.001
     }
     train(tmp_model_params, test_train_params, window_size=10)

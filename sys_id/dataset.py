@@ -117,25 +117,46 @@ class PhysProps(Dataset):
             key = lambda x: int(re.search(r'traj_(\d+).pkl', x).group(1))
         )
         self.window_size = window_size
+        self.segments = []
+        for file_path in self.file_paths:
+            obs, act, phys_props = load_phyprops(file_path)
+            for i in range(len(obs) - window_size):
+                self.segments.append((file_path, i))
 
     def __len__(self):
-        return len(self.file_paths)
+        return len(self.segments)
     
-    def __getitem__(self, idx):
-        obs, act, phys_props = load_phyprops(self.file_paths[idx])
-        input_seq = []
-        target_seq = []
+    # def __getitem__(self, idx):
+    #     # NOTE: old version, takes whole trajectory as input
+    #     obs, act, phys_props = load_phyprops(self.file_paths[idx])
+    #     input_seq = []
+    #     target_seq = []
         
-        for i in range(len(obs) - self.window_size):
-            window_obs = np.array(obs[i:i+self.window_size]).flatten()
-            window_act = np.array(act[i:i+self.window_size]).flatten()
-            window_input = np.concatenate([window_obs, window_act])
-            phyprop = np.array(phys_props[i+self.window_size]).flatten()
+    #     for i in range(len(obs) - self.window_size):
+    #         window_obs = np.array(obs[i:i+self.window_size]).flatten()
+    #         window_act = np.array(act[i:i+self.window_size]).flatten()
+    #         window_input = np.concatenate([window_obs, window_act])
+    #         phyprop = np.array(phys_props[i+self.window_size]).flatten()
 
-            input_seq.append(window_input)
-            target_seq.append(phyprop)
+    #         input_seq.append(window_input)
+    #         target_seq.append(phyprop)
 
-        input_seq_tensor = torch.tensor(input_seq, dtype = torch.float)
-        target_seq_tensor = torch.tensor(target_seq, dtype = torch.float) 
+    #     input_seq_tensor = torch.tensor(input_seq, dtype = torch.float)
+    #     target_seq_tensor = torch.tensor(target_seq, dtype = torch.float) 
+
+    #     return input_seq_tensor, target_seq_tensor
+
+    def __getitem__(self, idx):
+        file_path, start_idx = self.segments[idx]
+        obs, act, phys_props = load_phyprops(file_path)
+        window_obs = np.array(obs[start_idx:start_idx+self.window_size]).flatten()
+        window_act = np.array(act[start_idx:start_idx+self.window_size]).flatten()
+        window_input = np.concatenate([window_obs, window_act])
+        target_phyprop = np.array(phys_props[start_idx+self.window_size]).flatten()
+
+        input_seq_tensor = torch.tensor(window_input, dtype=torch.float)
+        target_seq_tensor = torch.tensor(target_phyprop, dtype=torch.float)
+        input_seq_tensor = input_seq_tensor
+        target_seq_tensor = target_seq_tensor.squeeze()
 
         return input_seq_tensor, target_seq_tensor
