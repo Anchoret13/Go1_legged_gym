@@ -215,12 +215,12 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             # rear_feet_air_time = 3.0
 
             #***********************************
-            #    testing 3/29
+            #    testing 4/5
             #*********************************** 
             torques = -0.001
-            masked_legs_energy = -1e-3
+            masked_legs_energy = -5e-3
             tracking_ang_vel = 1.0
-            lin_vel_x = 1.0
+            # lin_vel_x = 1.0
             tracking_lin_vel_x = 3.5
             orientation = -0.1
             lin_vel_z = -0.05
@@ -228,12 +228,12 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             roller_action_rate = -0.05
             hip = -1.0
             penalize_roll = -0.5                  # was -0.5
-            front_leg = -1.5                      # was -0.5
+            front_leg = -3.5                      # was -0.5
             front_hip = -1.0
-            raibert_heuristic = -1.0
-            rear_feet_air_time = 3.5
-            penalize_slow_x_vel = 1.0
-            feet_clearance = -1.0
+            raibert_heuristic = -2.0
+            rear_feet_air_time = 4.5
+            # penalize_slow_x_vel = 1.0
+            # feet_clearance = -1.0
 
     
     class domain_rand(LeggedRobotCfg.domain_rand):
