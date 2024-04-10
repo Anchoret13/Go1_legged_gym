@@ -60,7 +60,7 @@ def train(
         print(f"Epoch {epoch+1}/{num_epochs}, Loss: {avg_loss}")
         writer.add_scalar("Training_Loss", avg_loss, epoch)
 
-        if (epoch + 1) % 500 == 0:
+        if (epoch + 1) % 20 == 0:
             print(f"Saving periodic checkpoint at epoch {epoch+1}...")
             save_checkpoint({
                 'epoch': epoch + 1,
@@ -80,8 +80,8 @@ if __name__ == "__main__":
         "output_size": 3
     }
     test_train_params = {
-        'epochs': 10000,
+        'epochs': 1000,
         'batch_size': 100,
         'learning_rate': 0.001
     }
-    train(tmp_model_params, test_train_params, window_size=10)
+    train(tmp_model_params, test_train_params, window_size=50)
