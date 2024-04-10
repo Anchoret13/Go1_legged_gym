@@ -710,14 +710,14 @@ class WheeledRobot(BaseTask):
             # *********************** changed by xiaoyu ************************************
             #  this code change for passvie joint
             # 
-            for i in self.dof_roller_ids:
+            for j in self.dof_roller_ids:
                 # roller_index = self.dof_name_to_id[each_roller_name]
-                dof_props ["driveMode"][i] = gymapi.DOF_MODE_NONE
-                dof_props ["stiffness"][i] = 0.0
-                dof_props ["damping"][i] = 0.0
-                dof_props ["effort"][i] = 0.0
-                dof_props ["velocity"][i] = 100000000.0
-                dof_props ["friction"][i] = 0.0
+                dof_props ["driveMode"][j] = gymapi.DOF_MODE_NONE
+                dof_props ["stiffness"][j] = 0.0
+                dof_props ["damping"][j] = 0.0
+                dof_props ["effort"][j] = 0.0
+                dof_props ["velocity"][j] = 100000000.0
+                dof_props ["friction"][j] = 0.0
             # 
             #  
             # # *****************************************************************************

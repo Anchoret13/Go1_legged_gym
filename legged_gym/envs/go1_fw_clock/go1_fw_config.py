@@ -231,9 +231,10 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             front_leg = -3.5                      # was -0.5
             front_hip = -1.0
             raibert_heuristic = -2.0
-            rear_feet_air_time = 4.5
+            rear_feet_air_time = 3.5
             # penalize_slow_x_vel = 1.0
-            # feet_clearance = -1.0
+            feet_clearance = -1.0
+            tracking_contacts_binary = -0.1  
 
     
     class domain_rand(LeggedRobotCfg.domain_rand):
