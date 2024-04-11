@@ -10,6 +10,7 @@ import transformers
 from torch.nn import MSELoss
 from torch.utils.tensorboard import SummaryWriter
 from datetime import datetime
+from tqdm import tqdm
 
 # from sys_id.trajectory_gpt2 import GPT2Model
 from sys_id.dataset import load_phyprops, PhysProps, WheeledTrajWindowed
@@ -43,8 +44,7 @@ def train(
     
     for epoch in range(num_epochs):
         total_loss = 0
-        for i, (inputs, targets) in enumerate(data_loader):
-            print(f"Batch {i}")
+        for i, (inputs, targets) in enumerate(tqdm(data_loader, desc=f"Epoch {epoch+1}/{num_epochs}")):
             targets = targets.squeeze()
             inputs, targets = inputs.to(device), targets.to(device)
             optimizer.zero_grad()

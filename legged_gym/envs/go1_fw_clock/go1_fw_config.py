@@ -94,7 +94,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
         # PD Drive parameters:
         control_type = 'P'
         gaits_type = 'fix_f'
-        stiffness = {'hip_joint': 20.0, 'thigh_joint': 20.0, 'calf_joint': 20.0, 'roller': 0.0}  # [N*m/rad]
+        stiffness = {'hip_joint': 30.0, 'thigh_joint': 20.0, 'calf_joint': 20.0, 'roller': 0.0}  # [N*m/rad]
         damping = {'hip_joint': 0.5, 'thigh_joint': 0.5, 'calf_joint': 0.5, 'roller': 0.0}     # [N*m*s/rad]
         # action scale: target angle = actionScale * action + defaultAngle
         action_scale = 0.25
@@ -222,10 +222,10 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             tracking_ang_vel = 1.0
             # lin_vel_x = 1.0
             tracking_lin_vel_x = 3.5
-            orientation = -0.1
+            orientation = -0.5
             lin_vel_z = -0.05
             action_rate = -0.01
-            roller_action_rate = -0.05
+            roller_action_rate = -0.5
             hip = -1.0
             penalize_roll = -0.5                  # was -0.5
             front_leg = -3.5                      # was -0.5
@@ -234,7 +234,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             rear_feet_air_time = 3.5
             # penalize_slow_x_vel = 1.0
             feet_clearance = -1.0
-            tracking_contacts_binary = -0.1  
+            # tracking_contacts_binary = -0.1  
 
     
     class domain_rand(LeggedRobotCfg.domain_rand):
