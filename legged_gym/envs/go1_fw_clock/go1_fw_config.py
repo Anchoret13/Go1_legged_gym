@@ -39,10 +39,12 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
     class init_state( LeggedRobotCfg.init_state ):
         pos = [0.0, 0.0, 0.3] # x,y,z [m]
 
+        #    'FL_hip_joint': 0.1,   # [rad]
+        #     'RL_hip_joint': 0.1,   # [rad]
         default_joint_angles = { # = target angles [rad] when action = 0.0
-            'FL_hip_joint': 0.1,   # [rad]
+            'FL_hip_joint': 0.0,   # [rad]
             'RL_hip_joint': 0.1,   # [rad]
-            'FR_hip_joint': -0.1 ,  # [rad]
+            'FR_hip_joint': -0.0 ,  # [rad]
             'RR_hip_joint': -0.1,   # [rad]
 
             'FL_thigh_joint': 0.6,     # [rad]
@@ -234,7 +236,8 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             rear_feet_air_time = 3.5
             # penalize_slow_x_vel = 1.0
             feet_clearance = -1.0
-            tracking_contacts_binary = -0.1  
+            tracking_contacts_binary = -0.1
+            front_hip = -0.9
 
     
     class domain_rand(LeggedRobotCfg.domain_rand):

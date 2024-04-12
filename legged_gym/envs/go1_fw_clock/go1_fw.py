@@ -432,6 +432,7 @@ class Go1FwClock(WheeledRobot):
         self.hips_pos = torch.index_select(self.dof_pos, 1, hips_idxs)
         diff = torch.sum(torch.square(self.hips_default_pos - self.hips_pos), dim = 1)
         return diff
+
     
     def _reward_front_hip(self):
         front_hips_idxs = torch.tensor([0, 4], device=self.torques.device)
@@ -446,13 +447,23 @@ class Go1FwClock(WheeledRobot):
         self.front_pos = torch.index_select(self.dof_pos, 1, front_leg_idxs)
         diff = torch.sum(torch.square(self.front_default_pos - self.front_pos), dim = 1)
         return diff
-    
+
     def _reward_front_hip(self):
         front_hips_idxs = torch.tensor([0, 4], device=self.torques.device)
         self.front_hips_default_pos = torch.index_select(self.default_dof_pos, 1, front_hips_idxs)
         self.front_hips_pos = torch.index_select(self.dof_pos, 1, front_hips_idxs)
-        diff = torch.sum(torch.square(self.front_hips_default_pos - self.front_hips_pos), dim = 1)
-        return diff
+        diff = self.front_hips_default_pos - self.front_hips_pos
+        return torch.sum(torch.square(diff), dim = 1)
+    
+    # def _reward_front_hip(self):
+    #     front_hips_idxs = torch.tensor([0, 4], device=self.torques.device)
+    #     self.front_hips_default_pos = torch.index_select(self.default_dof_pos, 1, front_hips_idxs)
+    #     self.front_hips_pos = torch.index_select(self.dof_pos, 1, front_hips_idxs)
+    #     diff = self.front_hips_default_pos - self.front_hips_pos
+    #     if torch.any(torch.abs(diff) > 0.3):
+    #         return 100000000
+    #     else:
+    #         return torch.sum(torch.square(diff), dim = 1)
     
     def _reward_penalize_roll(self):
         # Penalize non flat base orientation
