@@ -47,6 +47,7 @@ def train(
         for i, (inputs, targets) in enumerate(tqdm(data_loader, desc=f"Epoch {epoch+1}/{num_epochs}")):
             targets = targets.squeeze()
             inputs, targets = inputs.to(device), targets.to(device)
+            print(inputs.shape)
             optimizer.zero_grad()
 
             predictions, _ = model(inputs, None)

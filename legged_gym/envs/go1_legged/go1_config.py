@@ -48,7 +48,7 @@ class Go1FlatCfg( LeggedRobotCfg ):
         resampling_time = 10. # time before command are changed[s]
         heading_command = False # if true: compute ang vel command from heading error
         class ranges:
-            lin_vel_x = [-0.5, 2.5] # min max [m/s]
+            lin_vel_x = [0.5, 1.5] # min max [m/s]
             lin_vel_y = [-0.0, 0.0]   # min max [m/s]
             ang_vel_yaw = [-0.5, 0.5]    # min max [rad/s]
             heading = [-3.14, 3.14]
@@ -112,14 +112,14 @@ class Go1FlatCfg( LeggedRobotCfg ):
             NOTE: new reward test 3/22
             """
             torques = -0.0001
-            tracking_lin_vel_x = 1.0
-            lin_vel_x = 0.5
+            tracking_lin_vel= 3.5
+            lin_vel_x = 1.0
             tracking_ang_vel = 0.5
             lin_vel_z = -1.0
             orientation = -1. 
-            base_height = -3.
-            # dof_acc = -2.5e-7
-            # collision = -1.
+            base_height = -1.
+            dof_acc = -2.5e-7
+            collision = -1.
             action_rate = -0.1
             """
             NOTE: 3/23 with this reward, the robot will not learn that gait pattern, two foot on the air
@@ -129,7 +129,7 @@ class Go1FlatCfg( LeggedRobotCfg ):
             """
             # tracking_swing_force = 3.0
             # tracking_stance_vel = 3.0
-            raibert_heuristic = -1.
+            # raibert_heuristic = -1.
             # alive = 1.5
             # feet_air_time = 3.0
             
