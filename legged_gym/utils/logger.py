@@ -32,6 +32,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from collections import defaultdict
 from multiprocessing import Process, Value
+import pickle as pkl
 
 class Logger:
     def __init__(self, dt):
@@ -286,3 +287,10 @@ class Logger:
     def __del__(self):
         if self.plot_process is not None:
             self.plot_process.kill()
+
+    def save_log(self, name):
+        path = f'{name}_energy.pkl'
+        print(path)
+        with open(path, "wb") as file:
+            pkl.dump(self.state_log, file)
+            print("SAVED!")

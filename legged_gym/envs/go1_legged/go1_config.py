@@ -127,9 +127,9 @@ class Go1FlatCfg( LeggedRobotCfg ):
             tracking_stance_vel = 0.9
             raibert_heuristic = -1.
             """
-            # tracking_swing_force = 3.0
-            # tracking_stance_vel = 3.0
-            # raibert_heuristic = -1.
+            tracking_swing_force = 3.0
+            tracking_stance_vel = 3.0
+            raibert_heuristic = -1.
             # alive = 1.5
             # feet_air_time = 3.0
             
