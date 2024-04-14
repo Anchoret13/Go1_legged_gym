@@ -57,6 +57,7 @@ def record_cot(args, task_name):
 
     
     for i in range(int(env.max_episode_length)):
+        env.commands[robot_index, 0] = 1.5
         actions = policy(obs.detach())
         obs, _, rews, dones, infos = env.step(actions.detach())
         cot = 0
