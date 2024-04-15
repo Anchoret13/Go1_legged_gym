@@ -465,8 +465,8 @@ class Go1FwClock(WheeledRobot):
     #     self.front_hips_default_pos = torch.index_select(self.default_dof_pos, 1, front_hips_idxs)
     #     self.front_hips_pos = torch.index_select(self.dof_pos, 1, front_hips_idxs)
     #     diff = self.front_hips_default_pos - self.front_hips_pos
-    #     if torch.any(torch.abs(diff) > 0.3):
-    #         return 100000000
+    #     if torch.any(torch.abs(diff) > 0.5):
+    #         return 100
     #     else:
     #         return torch.sum(torch.square(diff), dim = 1)
     
