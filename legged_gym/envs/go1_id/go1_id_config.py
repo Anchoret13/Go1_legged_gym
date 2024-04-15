@@ -30,7 +30,7 @@
 
 from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobotCfgPPO
 
-class Go1FwFlatClockCfg( LeggedRobotCfg ):
+class Go1FwFlatIDCfg( LeggedRobotCfg ):
     class env( LeggedRobotCfg.env):
         num_envs = 4096
         num_actions = 12
@@ -140,85 +140,6 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
 
 
         class scales:
-            # dof_pos_limits = -0.4
-            # torque_limits = -0.01
-            # dof_vel_limits = -10.0
-            # wheel_air_time = -2.                # commented 
-
-            # add by xiaoyu
-            # tracking_lin_vel = 4.0                # was 3.5
-            # tracking_ang_vel = 0.5              # commented
-            
-            # lin_vel_x = 0.5
-            
-            # orientation = -3.0
-            # collision = -1.0                    # commented   
-            # base_height = -0.1
-            # lin_vel_z = -0.05                     # was -0.1
-            # action_rate = -0.01
-            # roller_action_rate = -0.05
-            # hip = -1.0
-            # penalize_roll = -0.5                  # was -0.5
-            # front_leg = -1.5                      # was -0.5
-            # front_hip = -1.0
-
-            # alive:
-            # alive = 0.1
-
-            # gait reward
-            # tracking_contacts_binary = -0.1           # comment for contact
-            # raibert_heuristic = -0.1
-            # tracking_rear_swing_force = 0.5
-            # tracking_rear_stance_vel = 0.5
-            # tracking_swing_force = 1.0
-            # tracking_stance_vel = 1.0
-
-
-            #***********************************
-            #    testing 3/15
-            #***********************************  
-            # torques = -0.001
-            # masked_legs_energy = -1e-4
-            # tracking_ang_vel = 1.0
-            # lin_vel_x = 1.0
-            # tracking_lin_vel_x = 2.5
-            # orientation = -0.5
-            # lin_vel_z = -0.05
-            # action_rate = -0.01
-            # roller_action_rate = -0.05
-            # hip = -1.0
-            # penalize_roll = -0.5                  # was -0.5
-            # front_leg = -1.5                      # was -0.5
-            # front_hip = -1.0
-            # raibert_heuristic = -1.0
-            # tracking_rear_swing_force = 0.5
-            # tracking_rear_stance_vel = 0.5
-            # tracking_swing_force = 1.0
-            # tracking_stance_vel = 1.0
-
-            #***********************************
-            #    testing 3/22
-            #*********************************** 
-            # torques = -0.0001
-            # masked_legs_energy = -5e-3
-            # tracking_lin_vel_x = 2.0
-            # tracking_ang_vel = 0.5
-            # lin_vel_x = 1.0
-            # lin_vel_z = -1.0
-            # # ang_vel_xy = -0.05
-            # # orientation = -1.
-            # action_rate = -0.01
-            # roller_action_rate = -0.05
-            # hip = -1.0
-            # penalize_roll = -0.5
-            # front_leg = -1.5
-            # front_hip = -1.0
-            # raibert_heuristic = -1.0
-            # rear_feet_air_time = 3.0
-
-            #***********************************
-            #    testing 4/5
-            #*********************************** 
             torques = -0.001
             masked_legs_energy = -5e-3
             tracking_ang_vel = 1.0
@@ -252,43 +173,9 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
         hip_friction_sim = False
         hip_action_noise = 0.1
 
-class Go1FwFlatClockCfgPPO( LeggedRobotCfgPPO ):
+class Go1FwFlatIDCfgPPO( LeggedRobotCfgPPO ):
     class algorithm( LeggedRobotCfgPPO.algorithm ):
         entropy_coef = 0.01
     class runner( LeggedRobotCfgPPO.runner ):
         run_name = ''
-        experiment_name = 'roller_skating_asac'
-        
-
-
-
-'''
-Reward notes:
-
-3/16:
-1. fast; base stable
-            torques = -0.001
-            masked_legs_energy = -1e-4
-            lin_vel_z = -0.05                    
-            action_rate = -0.01
-            roller_action_rate = -0.05
-            hip = -0.5
-            penalize_roll = -1.0                 
-            front_leg = -1.5                      
-            front_hip = -1.0
-            raibert_heuristic = -0.1
-            tracking_swing_force = 1.0
-            tracking_stance_vel = 1.0
-
-
-            #***********************************
-            #    testing 3/15
-            #***********************************  
-            tracking_ang_vel = 0.5
-            lin_vel_x = 3.0
-            orientation = -0.5
-
-
-'''
-
-  
+        experiment_name = 'roller_skating_id'
