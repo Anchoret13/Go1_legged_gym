@@ -96,7 +96,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
         # PD Drive parameters:
         control_type = 'P'
         gaits_type = 'fix_f'
-        stiffness = {'hip_joint': 30.0, 'thigh_joint': 20.0, 'calf_joint': 20.0, 'roller': 0.0}  # [N*m/rad]
+        stiffness = {'hip_joint': 20.0, 'thigh_joint': 20.0, 'calf_joint': 20.0, 'roller': 0.0}  # [N*m/rad]
         damping = {'hip_joint': 0.5, 'thigh_joint': 0.5, 'calf_joint': 0.5, 'roller': 0.0}     # [N*m*s/rad]
         # action scale: target angle = actionScale * action + defaultAngle
         action_scale = 0.25
@@ -104,7 +104,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
         decimation = 4
 
     class asset( LeggedRobotCfg.asset ):
-        file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/go1_fw/urdf/go1_fw3_contact.urdf'
+        file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/go1_fw/urdf/go1_fw3_contact_new.urdf'
         name = "go1"
         foot_name = "foot"
         roller_name = "roller"
@@ -135,7 +135,6 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
 
         only_positive_rewards = False
 
-        # add by xiaoyu 3/16
         # max_contact_force = 300
 
 
@@ -231,7 +230,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             hip = -1.0
             penalize_roll = -0.5                  # was -0.5
             front_leg = -3.5                      # was -0.5
-            front_hip = -1.0
+             # front_hip = -1.0
             raibert_heuristic = -2.0
             rear_feet_air_time = 3.5
             penalize_slow_x_vel = 1.0
@@ -240,7 +239,6 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             roller_action_diff = -1.0
             alive = 0.5
 
-    
     class domain_rand(LeggedRobotCfg.domain_rand):
         randomize_friction = True
         friction_range = [0.75, 1.5]

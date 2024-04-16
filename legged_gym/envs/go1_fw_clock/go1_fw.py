@@ -89,6 +89,24 @@ class Go1FwClock(WheeledRobot):
         self.frequencies = 3.0
         self.current_step = 0
 
+    def compute_transformer_input(self):
+        dofs_to_keep = torch.ones(self.num_dof, dtype=torch.bool)
+        dofs_to_keep[self.dof_roller_ids] = False
+
+        self.active_dof_pos = self.dof_pos[:, dofs_to_keep]
+        self.active_default_dof_pos = self.default_dof_pos[:, dofs_to_keep]
+
+        body_lin_vel = self.base_lin_vel
+        body_ang_vel = self.base_ang_vel
+        
+        trans_input = torch.cat((
+            self.projected_gravity, #3
+            (self.active_dof_pos - self.active_default_dof_pos) * self.obs_scales.dof_pos, #12
+            body_lin_vel, #2
+            body_ang_vel, #3
+        ), dim = -1)
+        return trans_input
+
     def compute_observations(self):
         """ Computes observations to exclude passive joint
         """
@@ -465,8 +483,8 @@ class Go1FwClock(WheeledRobot):
     #     self.front_hips_default_pos = torch.index_select(self.default_dof_pos, 1, front_hips_idxs)
     #     self.front_hips_pos = torch.index_select(self.dof_pos, 1, front_hips_idxs)
     #     diff = self.front_hips_default_pos - self.front_hips_pos
-    #     if torch.any(torch.abs(diff) > 0.3):
-    #         return 100000000
+    #     if torch.any(torch.abs(diff) > 0.5):
+    #         return 100
     #     else:
     #         return torch.sum(torch.square(diff), dim = 1)
     

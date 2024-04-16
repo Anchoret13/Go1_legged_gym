@@ -33,7 +33,7 @@ def collect_trajectory(args, traj_num):
     args.load_run = "/home/dyf/Desktop/WELL/Go1/logs/roller_skating_asac/asym"
     ppo_runner, train_cfg = task_registry.make_alg_runner(env=env, name=args.task, args=args, train_cfg=train_cfg)
     policy = ppo_runner.get_inference_policy(device=env.device)
-    dataset_dir = os.path.join(LEGGED_GYM_ROOT_DIR, 'dataset', 'eval_model', 'wheeled_flat')
+    dataset_dir = os.path.join(LEGGED_GYM_ROOT_DIR, 'dataset', 'wheeled_flat')
     os.makedirs(dataset_dir, exist_ok=True)
     for i in range(traj_num):
         single_trajectory = {}
@@ -45,9 +45,13 @@ def collect_trajectory(args, traj_num):
             obs, _, rews, dones, infos = env.step(actions.detach())
             priv_obs = env.get_privileged_observations()
             phys_props = priv_obs[:, 42:]
-            traj_obs.append(obs[0].cpu().detach().numpy().tolist())
+            # NOTE: only use projected gravity and joint pos
+            simp_obs = env.compute_transformer_input()
+            body_vel = simp_obs[:, 15:]
+            targets = torch.cat((phys_props, body_vel), dim = -1)
+            traj_obs.append(simp_obs[0].cpu().detach().numpy().tolist())
             traj_act.append(actions[0].cpu().detach().numpy().tolist())
-            physical_props.append(phys_props[0].cpu().detach().numpy().tolist())
+            physical_props.append(targets[0].cpu().detach().numpy().tolist())
         single_trajectory["obs"] = traj_obs
         single_trajectory["act"] = traj_act
         single_trajectory['physprops'] = physical_props
@@ -59,4 +63,4 @@ def collect_trajectory(args, traj_num):
 
 if __name__ == "__main__":
     args = get_args()
-    collect_trajectory(args, 1)
+    collect_trajectory(args, 300)
