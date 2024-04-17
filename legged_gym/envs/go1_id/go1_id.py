@@ -43,6 +43,7 @@ from ..go1_fw_clock import *
 from .go1_id_config import Go1FwFlatIDCfg
 
 from sys_id.model import GPT2
+from sys_id.RNN import GRU
 from torch.utils.data import DataLoader
 from torch.nn import MSELoss
 import numpy as np
@@ -57,20 +58,16 @@ class Go1FwID(WheeledRobot):
         self.sys_id_path = "" # TODO: just fix this
         self.run_params = {
             'window_size': 50,
-            'batch_size': 1, 
         }
         self.run_params['checkpoint_path'] = self.sys_id_path
         self.sys_model_params = {
             "n_layer": 2,
-            "n_head": 3,
-            "pdrop": 0.1,
-            "max_seq_length": 1000,
-            'position_encoding': 'sine',
-            "output_size": 3,
-            "input_size": (42 + 12) * self.run_params['window_size'], 
-            "hidden_size": (42 + 12) * self.run_params['window_size'], 
-        }
-        self.window_size = 50 # NOTE: this stupid asshole hardcode again
+            "output_size": 9,
+            "input_size": 21, 
+            "hidden_size": 21, 
+        } # NOTE: modify this
+        self.window_size = self.run_params['window_size'] # NOTE: this stupid asshole hardcode again
+        self.adaptive_module = GRU(**self.sys_model_params).to(self.device)
 
     def load_sys_id(self):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -80,7 +77,6 @@ class Go1FwID(WheeledRobot):
         id_model.load_state_dict(checkpoint['state_dict'])
 
     def compute_observations(self):
-
         dofs_to_keep = torch.ones(self.num_dof, dtype=torch.bool)
         dofs_to_keep[self.dof_roller_ids] = False
 
@@ -99,15 +95,28 @@ class Go1FwID(WheeledRobot):
 
         roller_dofs = torch.tensor([False, False, False, True,  False, False, False, True, False, False,
         False, False, False, False])
+        
+        # Privileged Observation
         self.roller_obs = self.dof_pos[:, roller_dofs]
         friction_coeff = self.friction_coeffs[:,0].to(self.device)
-        body_vel = self.body_lin_vel
+        body_lin_vel = self.body_lin_vel
+        body_ang_vel = self.body_ang_vel
+
         self.privileged_obs_buf = torch.cat((self.obs_buf,
                                              self.roller_obs,
                                              friction_coeff,
-                                             body_vel), dim = -1)
+                                             body_lin_vel,
+                                             body_ang_vel), dim = -1)
         
-        
+        # adaptation output
+        adapt_input = torch.cat((
+            self.projected_gravity,
+            (self.active_dof_pos - self.active_default_dof_pos) * self.obs_scales.dof_pos,
+            body_lin_vel,
+            body_ang_vel,
+        ), dim = -1)
+        id_output = self.adaptive_module(adapt_input, None)
+        self.obs_buf = torch.cat
 
     def _init_buffers(self):
 
