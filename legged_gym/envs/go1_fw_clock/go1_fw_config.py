@@ -37,7 +37,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
         num_observations = 42  
         num_privileged_obs = 45
     class init_state( LeggedRobotCfg.init_state ):
-        pos = [0.0, 0.0, 0.3] # x,y,z [m]
+        pos = [0.0, 0.0, 0.35] # x,y,z [m]
 
         #    'FL_hip_joint': 0.1,   # [rad]
         #     'RL_hip_joint': 0.1,   # [rad]
@@ -230,11 +230,11 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             hip = -1.0
             penalize_roll = -0.5                  # was -0.5
             front_leg = -3.5                      # was -0.5
-             # front_hip = -1.0
+            front_hip = -1.0
             raibert_heuristic = -2.0
             rear_feet_air_time = 3.5
              # penalize_slow_x_vel = 1.0
-            # feet_clearance = -1.0
+            feet_clearance = -1.0
              # tracking_contacts_binary = -0.1  
             # roller_action_diff = -1.0
 
