@@ -118,9 +118,6 @@ class Go1FwClock(WheeledRobot):
         self.active_default_dof_pos = self.default_dof_pos[:, dofs_to_keep]
         active_dof_vel = self.dof_vel[:, dofs_to_keep]
 
-        # self.desired_contact_states = torch.zeros(self.num_envs, 4, dtype = torch.float, device = self.device, requires_grad = False)
-        # self.desired_rear_contact_states = torch.zeros(self.num_envs, 2, dtype = torch.float, device = self.device, requires_grad = False)
-
         self.obs_buf = torch.cat((
             self.projected_gravity,
             self.commands[:, :3] * self.commands_scale,

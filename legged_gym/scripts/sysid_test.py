@@ -8,8 +8,14 @@ from legged_gym.utils import  get_args, export_policy_as_jit, task_registry, Log
 import numpy as np
 import torch
 
+<<<<<<< HEAD
 # from sys_id.model import GPT2
 # from sys_id.RNN import GRU
+=======
+from sys_id.dataset import PhysProps
+from sys_id.model import GPT2
+from sys_id.RNN import GRU
+>>>>>>> 3fca7335d63e608a2b786c94956b6ead3cbedd1b
 
 ENV_NUM = 1
 
@@ -86,21 +92,16 @@ def GRU_test(args, eval_params, model_params):
     
 
 if __name__ == "__main__":
-    eval_params = {
-        'checkpoint_path': './logs/2024-04-10_22-02-09/checkpoint_epoch_940.pth', 
-        'dataset_folder_path': '../dataset/eval_model/wheeled_flat', 
+    GRU_eval_params = {
+        'checkpoint_path': './logs/GRU/2024-04-16_21-05-36/checkpoint_epoch_340.pth', 
+        'dataset_folder_path': '../dataset/eval/wheeled_flat', 
         'window_size': 50,
         'batch_size': 1, 
     }
 
     model_params = {
+        "input_size": 21,
+        "hidden_size": 150,
         "n_layer": 2,
-        "n_head": 3,
-        "pdrop": 0.1,
-        "max_seq_length": 1000,
-        'position_encoding': 'sine',
-        "output_size": 3,
-        "input_size": (42 + 12) * eval_params['window_size'], 
-        "hidden_size": (42 + 12) * eval_params['window_size'], 
+        "output_size": 9
     }
-    
