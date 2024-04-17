@@ -34,8 +34,8 @@ class Go1FwFlatIDCfg( LeggedRobotCfg ):
     class env( LeggedRobotCfg.env):
         num_envs = 4096
         num_actions = 12
-        num_observations = 42  
-        num_privileged_obs = 45
+        num_observations = 42 + 9      # obs: 42 ; roller+fric+lin+ang: 9; 
+        num_privileged_obs = 42 + 9
     class init_state( LeggedRobotCfg.init_state ):
         pos = [0.0, 0.0, 0.3] # x,y,z [m]
 
