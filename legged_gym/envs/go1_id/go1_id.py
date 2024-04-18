@@ -69,9 +69,9 @@ class Go1FwID(WheeledRobot):
     def load_sys_id(self):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         id_model = GRU(self.sys_model_params).to(device)
-        optimizer = torch.optim.Adam(id_model.parameters())
         checkpoint = torch.load(self.run_params['checkpoint_path'], map_location = device)
         id_model.load_state_dict(checkpoint['state_dict'])
+        return id_model
 
     def compute_observations(self):
         dofs_to_keep = torch.ones(self.num_dof, dtype=torch.bool)
@@ -136,7 +136,7 @@ class Go1FwID(WheeledRobot):
             "hidden_size": 15, 
         } # NOTE: modify this
         self.window_size = self.run_params['window_size'] # NOTE: this stupid asshole hardcode again
-        self.adaptive_module = GRU(**self.sys_model_params).to(self.device)
+        self.adaptive_module = self.load_sys_id()
         
         # Adaptive completed
 
