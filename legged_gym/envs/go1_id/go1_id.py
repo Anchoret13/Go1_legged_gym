@@ -48,6 +48,15 @@ from torch.utils.data import DataLoader
 from torch.nn import MSELoss
 import numpy as np
 
+def update_history(history, new_obs):
+    # print("+"*50)
+    # print(history.shape)
+    # print(new_obs.shape)
+    # print("+"*50)
+    new_obs = new_obs.unsqueeze(1)
+    updated_history = torch.cat((history[:, 1:, :], new_obs), dim=1)
+    return updated_history
+
 class Go1FwID(WheeledRobot):
     cfg : Go1FwFlatIDCfg
     def __init__(self, cfg, sim_params, physics_engine, sim_device, headless):
@@ -55,23 +64,11 @@ class Go1FwID(WheeledRobot):
         # self.num_passive_joints = self.cfg.env.num_passive_joints
         self.frequencies = 3.0
         self.current_step = 0
-        self.sys_id_path = "" # TODO: just fix this
-        self.run_params = {
-            'window_size': 50,
-        }
-        self.run_params['checkpoint_path'] = self.sys_id_path
-        self.sys_model_params = {
-            "n_layer": 2,
-            "output_size": 9,
-            "input_size": 21, 
-            "hidden_size": 21, 
-        } # NOTE: modify this
-        self.window_size = self.run_params['window_size'] # NOTE: this stupid asshole hardcode again
-        self.adaptive_module = GRU(**self.sys_model_params).to(self.device)
+        
 
     def load_sys_id(self):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        id_model = GPT2(self.sys_model_params).to(device)
+        id_model = GRU(self.sys_model_params).to(device)
         optimizer = torch.optim.Adam(id_model.parameters())
         checkpoint = torch.load(self.run_params['checkpoint_path'], map_location = device)
         id_model.load_state_dict(checkpoint['state_dict'])
@@ -99,8 +96,8 @@ class Go1FwID(WheeledRobot):
         # Privileged Observation
         self.roller_obs = self.dof_pos[:, roller_dofs]
         friction_coeff = self.friction_coeffs[:,0].to(self.device)
-        body_lin_vel = self.body_lin_vel
-        body_ang_vel = self.body_ang_vel
+        body_lin_vel = self.base_lin_vel
+        body_ang_vel = self.base_ang_vel
 
         self.privileged_obs_buf = torch.cat((self.obs_buf,
                                              self.roller_obs,
@@ -109,18 +106,40 @@ class Go1FwID(WheeledRobot):
                                              body_ang_vel), dim = -1)
         
         # adaptation output
-        adapt_input = torch.cat((
+        current_adapt_input = torch.cat((
             self.projected_gravity,
             (self.active_dof_pos - self.active_default_dof_pos) * self.obs_scales.dof_pos,
-            body_lin_vel,
-            body_ang_vel,
+            # body_lin_vel,
+            # body_ang_vel,
         ), dim = -1)
-        id_output = self.adaptive_module(adapt_input, None)
-        self.obs_buf = torch.cat
+        self.obs_history = update_history(self.obs_history, current_adapt_input)
+        id_output = self.adaptive_module(self.obs_history, None)
+        self.obs_buf = torch.cat((
+            self.obs_buf,
+            id_output
+        ),dim = -1)
 
     def _init_buffers(self):
 
         super()._init_buffers()
+
+        # Adaptive module
+        self.sys_id_path = "../../sys_id/logs/GRU/2024-04-17_21-26-44/checkpoint_epoch_1000.pth"
+        self.run_params = {
+            'window_size': 50,
+        }
+        self.run_params['checkpoint_path'] = self.sys_id_path
+        self.sys_model_params = {
+            "n_layer": 2,
+            "output_size": 9,
+            "input_size": 15, 
+            "hidden_size": 15, 
+        } # NOTE: modify this
+        self.window_size = self.run_params['window_size'] # NOTE: this stupid asshole hardcode again
+        self.adaptive_module = GRU(**self.sys_model_params).to(self.device)
+        
+        # Adaptive completed
+
         self.base_pos = self.root_states[:self.num_envs, 0:3]
         self.wheel_indices = torch.tensor([5, 10], device = self.device)
         self.rear_feet_indices = torch.tensor([14, 18], device = self.device)        
@@ -157,7 +176,7 @@ class Go1FwID(WheeledRobot):
         self.wheel_air_time = torch.zeros(self.num_envs, self.wheel_indices.shape[0], dtype=torch.float, device=self.device, requires_grad=False)
         self.rear_feet_air_time = torch.zeros(self.num_envs, self.rear_feet_indices.shape[0], dtype=torch.float, device=self.device, requires_grad=False)
 
-        self.obs_history = torch.zeros(self.num_envs, self.obs_buf.shape[0] * self.window_size, dtype=torch.float, device=self.device, requires_grad=False)
+        self.obs_history = torch.zeros(self.num_envs, self.window_size, self.sys_model_params["input_size"], dtype=torch.float, device=self.device, requires_grad=False)
 
     def _reward_masked_legs_energy(self):
         mask = torch.ones(self.torques.size(-1), device=self.torques.device, dtype=torch.bool)

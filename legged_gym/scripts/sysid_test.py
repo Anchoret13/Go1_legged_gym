@@ -8,22 +8,17 @@ from legged_gym.utils import  get_args, export_policy_as_jit, task_registry, Log
 import numpy as np
 import torch
 
-<<<<<<< HEAD
-# from sys_id.model import GPT2
-# from sys_id.RNN import GRU
-=======
 from sys_id.dataset import PhysProps
 from sys_id.model import GPT2
 from sys_id.RNN import GRU
->>>>>>> 3fca7335d63e608a2b786c94956b6ead3cbedd1b
 
-ENV_NUM = 1
+ENV_NUM = 1            
 
 CMD_TYPE = None
 
 def update_history(history, new_obs):
-    new_obs = new_obs.unsqueeze(-1)
-    updated_history = torch.cat((history[:, :, 1:], new_obs), dim=2)
+    new_obs = new_obs.unsqueeze(1)
+    updated_history = torch.cat((history[:, 1:, :], new_obs), dim=1)
     return updated_history
 
 def transformer_test(args, eval_params, model_params):
@@ -86,14 +81,49 @@ def GRU_test(args, eval_params, model_params):
     window_size = eval_params['window_size']
 
     input_shape = 21
-    history = torch.zeros(ENV_NUM, input_shape * window_size)
+    history = torch.zeros(ENV_NUM, window_size, input_shape).cuda()
+    print(history.shape)
 
     obs = env.get_observations()
+
+    # load model
+    model = GRU(**model_params).to(device)
+    optimizer = torch.optim.Adam(model.parameters())
+    checkpoint = torch.load(GRU_eval_params['checkpoint_path'], map_location=device)
+    model.load_state_dict(checkpoint['state_dict'])
+    model.eval()
     
+    # load policy
+    train_cfg.runner.resume = True
+    ppo_runner, train_cfg = task_registry.make_alg_runner(env=env, name=args.task, args=args, train_cfg=train_cfg)
+    policy = ppo_runner.get_inference_policy(device=env.device)
+    logger = Logger(env.dt)
+    robot_index = 0 # which robot is used for logging
+    joint_index = 1 # which joint is used for logging
+    start_state_log = 100 # ignore starting
+    stop_state_log = 600 # number of steps before plotting states
+    for i in range(int(env.max_episode_length)):
+        actions = policy(obs.detach())
+        obs, _, rews, dones, infos = env.step(actions.detach())
+        adapt_input = env.compute_adapt_input().cuda()
+        history = update_history(history, adapt_input)
+        prediction = model(history, None)
+        target = env.compute_adapt_target().cuda()
+        print(prediction)
+        print(target)
+        if i < stop_state_log and i > start_state_log:
+            logger.log_states({
+                "prediction": prediction,
+                "target": target
+            })
+
+    logger.plot_pred_true()
+    # logger.save_log("Comparison")
+
 
 if __name__ == "__main__":
     GRU_eval_params = {
-        'checkpoint_path': './logs/GRU/2024-04-16_21-05-36/checkpoint_epoch_340.pth', 
+        'checkpoint_path': '../../sys_id/logs/GRU/2024-04-16_21-05-36/checkpoint_epoch_1000.pth', 
         'dataset_folder_path': '../dataset/eval/wheeled_flat', 
         'window_size': 50,
         'batch_size': 1, 
@@ -105,3 +135,5 @@ if __name__ == "__main__":
         "n_layer": 2,
         "output_size": 9
     }
+    args = get_args()
+    GRU_test(args, GRU_eval_params, model_params)
