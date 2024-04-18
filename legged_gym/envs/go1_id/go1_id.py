@@ -68,7 +68,7 @@ class Go1FwID(WheeledRobot):
 
     def load_sys_id(self):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        id_model = GRU(self.sys_model_params).to(device)
+        id_model = GRU(**self.sys_model_params).to(device)
         checkpoint = torch.load(self.run_params['checkpoint_path'], map_location = device)
         id_model.load_state_dict(checkpoint['state_dict'])
         return id_model
@@ -124,7 +124,7 @@ class Go1FwID(WheeledRobot):
         super()._init_buffers()
 
         # Adaptive module
-        self.sys_id_path = "../../sys_id/logs/GRU/2024-04-17_21-26-44/checkpoint_epoch_1000.pth"
+        self.sys_id_path = "../../sys_id/logs/GRU/2024-04-17_15-40-09/checkpoint_epoch_1000.pth"
         self.run_params = {
             'window_size': 50,
         }
