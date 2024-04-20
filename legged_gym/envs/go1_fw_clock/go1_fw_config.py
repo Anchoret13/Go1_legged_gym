@@ -234,7 +234,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             raibert_heuristic = -2.0
             rear_feet_air_time = 3.5
             penalize_slow_x_vel = 1.0
-            feet_clearance = -3.0
+            # feet_clearance = -3.0
             # tracking_contacts_binary = -0.1  
             roller_action_diff = -1.0
             alive = 0.5
