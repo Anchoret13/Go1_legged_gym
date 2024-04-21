@@ -682,6 +682,11 @@ class WheeledRobot(BaseTask):
         self.dof_rollor_names = [s for s in self.dof_names if self.cfg.asset.roller_name in s]
         self.body_roller_names = [s for s in body_names if self.cfg.asset.roller_name in s]
         self.dof_roller_ids = [self.dof_name_to_id[name] for name in self.dof_rollor_names]
+
+
+        self.body_name_to_id = {k: v for k, v in zip(body_names, np.arange(self.num_bodies))}
+        self.body_ankle_names = [s for s in body_names if "ankle" in s]
+        self.body_ankle_ids = [self.body_name_to_id[name] for name in self.body_ankle_names]
         # print(self.dof_roller_ids)
         # 
         #  

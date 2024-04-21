@@ -116,7 +116,24 @@ class Go1FwClock(WheeledRobot):
         ), dim = -1)
         return target
 
+    # def _initial_roller_state(self):
+    #     self.default_ankle_orn = torch.zeros(4, dtype=torch.float, device=self.device, requires_grad=False)
+    #     self.default_ankle_orn[3] = 1.0
 
+    #     body_states_tensor = self.gym.acquire_rigid_body_state_tensor(self.sim)
+    #     self.body_states_tensor  = gymtorch.wrap_tensor(body_states_tensor)
+
+    #     # rb_states[:, 0:3].view(num_envs, num_bodies, 3)
+    #     self.body_orns = self.body_states_tensor[:, 3:7].view(self.num_envs, self.num_bodies, 4)
+
+    # def _reward_roller_orn(self):
+    #     r1, p1, y1 = self.body_orns[:, self.body_ankle_ids,:].to_euler_zyx()
+
+        # self.body_orns = self.dof_state.view(self.num_envs, self.num_dof, 2)[..., 1]
+
+        # get the index of ankle
+
+    
     def compute_observations(self):
         """ Computes observations to exclude passive joint
         """
@@ -268,12 +285,15 @@ class Go1FwClock(WheeledRobot):
         '''
         # self.envs # envs handle 
         # self.actor_handles # robot handle
-        self.bodies_orns = []
-        for i in range(self.num_envs): 
-            body_states = self.gym.get_actor_rigid_body_states(
-                                self.envs[i], self.actor_handles[i], gymapi.STATE_ALL)
-            body_orns = body_states["pose"]["r"]
-            self.bodies_orns.append(body_orns)
+        # self.bodies_orns = []
+        # for i in range(self.num_envs): 
+        #     body_states = self.gym.get_actor_rigid_body_states(
+        #                         self.envs[i], self.actor_handles[i], gymapi.STATE_ALL)
+        #     body_orns = body_states["pose"]["r"]
+        #     self.bodies_orns.append(body_orns)
+        body_states = self.gym.acquire_rigid_body_state_tensor(self.sim)
+        self.body_states = gymtorch.wrap_tensor(body_states)
+        
 
 
     def post_physics_step(self):
@@ -445,9 +465,6 @@ class Go1FwClock(WheeledRobot):
         lin_vel_error = torch.square(self.commands[:, 0] - self.base_lin_vel[:, 0])
         return torch.exp(-lin_vel_error/self.cfg.rewards.tracking_sigma)
     
-    def _reward_roller_orn(self):
-        # TODO: to be updated
-        roller_orn = self.bodies_orns[:self.roller_body_ids]
 
     def _reward_roller_action_rate(self):
         return torch.sum(torch.square(self.last_actions[:,:6] - self.actions[:,:6]), dim = 1)
@@ -629,3 +646,23 @@ class Go1FwClock(WheeledRobot):
     # NOTE: simulate front hip joint noise
     def _apply_curriculum_noise(self):
         pass
+
+    def orientation_error(desired, current):
+        cc = quat_conjugate(current)
+        q_r = quat_mul(desired, cc)
+        return q_r[:, 0:3] * torch.sign(q_r[:, 3]).unsqueeze(-1)
+    
+    def quat_axis(q, axis=0):
+        basis_vec = torch.zeros(q.shape[0], 3, device=q.device)
+        basis_vec[:, axis] = 1
+        return quat_rotate(q, basis_vec)
+    
+    # def _reward_roller_orn(self):
+    #     # TODO: to be updated
+    #     roller_orn = self.body_states[self.roller_body_ids, 3:7]
+    #     # roller_orn_ptichs = quat_axis(roller_orn, 1)
+    #     defulat_quat = torch.tensor([[0.0, 0.0, 0.0, 1.0]])
+    #     roller_orn_err = self.orientation_error(defulat_quat , roller_orn)
+
+    #     return torch.sum(roller_orn_err, dim=1)
+        

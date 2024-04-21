@@ -219,7 +219,8 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             #    testing 4/14
             #*********************************** 
             torques = -0.001
-            masked_legs_energy = -5e-3
+            # masked_legs_energy = -5e-3
+            masked_legs_energy = -1e-4
             tracking_ang_vel = 1.0
             lin_vel_x = 1.0
             tracking_lin_vel_x = 3.5
@@ -233,7 +234,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             front_hip = -1.0
             raibert_heuristic = -2.0
             rear_feet_air_time = 3.5
-            penalize_slow_x_vel = 1.0
+            # penalize_slow_x_vel = 1.0
             # feet_clearance = -3.0
             # tracking_contacts_binary = -0.1  
             roller_action_diff = -1.0
