@@ -50,7 +50,7 @@ from .go1_aw.go1_aw import Go1Aw
 from .go1_aw.go1_aw_config import Go1AwFlatCfg, Go1AwFlatCfgPPO
 
 from .go1_fw_clock.go1_fw import Go1FwClock
-from .go1_fw_clock.go1_fw_config_mod import Go1FwFlatClockCfg, Go1FwFlatClockCfgPPO
+from .go1_fw_clock.go1_fw_config import Go1FwFlatClockCfg, Go1FwFlatClockCfgPPO
 
 from .go1_legged.go1 import Go1_Flat
 from .go1_legged.go1_config import Go1FlatCfg, Go1FlatCfgPPO
