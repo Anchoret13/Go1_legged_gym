@@ -34,8 +34,8 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
     class env( LeggedRobotCfg.env):
         num_envs = 4096
         num_actions = 12
-        num_observations = 42  
-        num_privileged_obs = 45
+        num_observations = 42 + 6
+        num_privileged_obs = 45 + 6
     class init_state( LeggedRobotCfg.init_state ):
         pos = [0.0, 0.0, 0.35] # x,y,z [m]
 
@@ -96,7 +96,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
         # PD Drive parameters:
         control_type = 'P'
         gaits_type = 'fix_f'
-        stiffness = {'hip_joint': 20.0, 'thigh_joint': 20.0, 'calf_joint': 20.0, 'roller': 0.0}  # [N*m/rad]
+        stiffness = {'hip_joint': 30.0, 'thigh_joint': 30.0, 'calf_joint': 30.0, 'roller': 0.0}  # [N*m/rad]
         damping = {'hip_joint': 0.5, 'thigh_joint': 0.5, 'calf_joint': 0.5, 'roller': 0.0}     # [N*m*s/rad]
         # action scale: target angle = actionScale * action + defaultAngle
         action_scale = 0.25

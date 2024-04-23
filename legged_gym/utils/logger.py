@@ -294,10 +294,10 @@ class Logger:
         target = log['target']
         timesteps = list(range(len(prediction)))
 
-        fig, axes = plt.subplots(9, 1, figsize = (15, 20))
+        fig, axes = plt.subplots(9, 1, figsize = (15, 15))
         axes = axes.flatten()
 
-        titles = ["roller 1", "roller 2", "friction coefficient", "lin_x", "lin_y", "lin_z", "roll", "pitch", "yaw"]
+        titles = ["roller 1(rad/s)", "roller 2(rad/s)", "friction coefficient of the ground", "lin_x(m/s)", "lin_y(m/s)", "lin_z(m/s)", "roll(rad/s)", "pitch(rad/s)", "yaw(rad/s)"]
 
         for i in range(9):  # Since each tensor has 9 elements
             values_prediction = [tensor[0, i].item() for tensor in prediction]  # Extract all i-th elements from prediction

@@ -94,7 +94,7 @@ class Go1FwID(WheeledRobot):
         False, False, False, False])
         
         # Privileged Observation
-        self.roller_obs = self.dof_pos[:, roller_dofs]
+        self.roller_obs = self.dof_vel[:, roller_dofs]
         friction_coeff = self.friction_coeffs[:,0].to(self.device)
         body_lin_vel = self.base_lin_vel
         body_ang_vel = self.base_ang_vel
@@ -124,7 +124,7 @@ class Go1FwID(WheeledRobot):
         super()._init_buffers()
 
         # Adaptive module
-        self.sys_id_path = "../../sys_id/logs/GRU/2024-04-17_15-40-09/checkpoint_epoch_1000.pth"
+        self.sys_id_path = '../../sys_id/logs/GRU/2024-04-20_18-14-17/checkpoint_epoch_600.pth'
         self.run_params = {
             'window_size': 50,
         }
@@ -133,7 +133,7 @@ class Go1FwID(WheeledRobot):
             "n_layer": 2,
             "output_size": 9,
             "input_size": 15, 
-            "hidden_size": 15, 
+            "hidden_size": 150, 
         } # NOTE: modify this
         self.window_size = self.run_params['window_size'] # NOTE: this stupid asshole hardcode again
         self.adaptive_module = self.load_sys_id()
