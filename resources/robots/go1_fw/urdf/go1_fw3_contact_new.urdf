@@ -619,7 +619,7 @@
   <joint name="FL_roller_foot_joint" type="continuous">
     <parent link="FL_ankle"/>
     <child link="FL_roller_foot"/>
-    <origin xyz="-0.022 0 -0.05" rpy="-1.57 0 0"/>
+    <origin xyz="-0.025 0 -0.04" rpy="-1.57 0 -0.1"/>
     <axis xyz="0 0 1"/> 
   </joint>
 
@@ -630,7 +630,7 @@
         <mesh filename="../meshes/wheel_tire.stl" scale="0.5 0.5 0.4"/>
 
       </geometry>
-      <material name="blue"/>
+      <material name="red"/>
     </visual>
     
     <collision>
@@ -658,7 +658,7 @@
   <joint name="FR_roller_foot_joint" type="continuous">
     <parent link="FR_ankle"/>
     <child link="FR_roller_foot"/>
-    <origin xyz="-0.022 0 -0.05" rpy="1.57 0 0"/>
+    <origin xyz="-0.025 0 -0.04" rpy="1.57 0 0.1"/>
     <axis xyz="0 0 1"/> 
   </joint>
 
@@ -668,7 +668,7 @@
       <geometry>
           <mesh filename="../meshes/wheel_tire.stl" scale="0.5 0.5 0.4"/>
       </geometry>
-            <material name="blue"/>
+            <material name="red"/>
     </visual>
 
     <collision>

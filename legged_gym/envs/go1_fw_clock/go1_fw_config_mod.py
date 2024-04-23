@@ -30,21 +30,21 @@
 
 from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobotCfgPPO
 
-class Go1FwFlatClockCfg( LeggedRobotCfg ):
+class Go1FwFlatClockCfgMod( LeggedRobotCfg ):
     class env( LeggedRobotCfg.env):
         num_envs = 4096
         num_actions = 12
-        num_observations = 42 + 6
-        num_privileged_obs = 45 + 6
+        num_observations = 42  
+        num_privileged_obs = 45
     class init_state( LeggedRobotCfg.init_state ):
         pos = [0.0, 0.0, 0.35] # x,y,z [m]
 
         #    'FL_hip_joint': 0.1,   # [rad]
-        #     'RL_hip_joint': 0.1,   # [rad]
+        #     'RL_hip_joint': -0.1,   # [rad]
         default_joint_angles = { # = target angles [rad] when action = 0.0
-            'FL_hip_joint': 0.0,   # [rad]
+            'FL_hip_joint': 0.1,   # [rad]
             'RL_hip_joint': 0.1,   # [rad]
-            'FR_hip_joint': -0.0 ,  # [rad]
+            'FR_hip_joint': -0.1 ,  # [rad]
             'RR_hip_joint': -0.1,   # [rad]
 
             'FL_thigh_joint': 0.6,     # [rad]
@@ -96,7 +96,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
         # PD Drive parameters:
         control_type = 'P'
         gaits_type = 'fix_f'
-        stiffness = {'hip_joint': 30.0, 'thigh_joint': 30.0, 'calf_joint': 30.0, 'roller': 0.0}  # [N*m/rad]
+        stiffness = {'hip_joint': 20.0, 'thigh_joint': 20.0, 'calf_joint': 20.0, 'roller': 0.0}  # [N*m/rad]
         damping = {'hip_joint': 0.5, 'thigh_joint': 0.5, 'calf_joint': 0.5, 'roller': 0.0}     # [N*m*s/rad]
         # action scale: target angle = actionScale * action + defaultAngle
         action_scale = 0.25
@@ -104,7 +104,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
         decimation = 4
 
     class asset( LeggedRobotCfg.asset ):
-        file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/go1_fw/urdf/go1_fw3_contact.urdf'
+        file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/go1_fw/urdf/go1_fw3_contact_new.urdf'
         name = "go1"
         foot_name = "foot"
         roller_name = "roller"
@@ -219,11 +219,10 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             #    testing 4/14
             #*********************************** 
             torques = -0.001
-            # masked_legs_energy = -5e-3
-            masked_legs_energy = -1e-4
-            tracking_ang_vel = 1.0
+            masked_legs_energy = -5e-3
+            # tracking_ang_vel = 1.0
             lin_vel_x = 1.0
-            tracking_lin_vel_x = 3.5
+            # tracking_lin_vel_x = 3.5
             orientation = -0.1
             lin_vel_z = -0.05
             action_rate = -0.01
@@ -234,7 +233,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             front_hip = -1.0
             raibert_heuristic = -2.0
             rear_feet_air_time = 3.5
-            # penalize_slow_x_vel = 1.0
+            penalize_slow_x_vel = 1.0
             # feet_clearance = -3.0
             # tracking_contacts_binary = -0.1  
             roller_action_diff = -1.0
