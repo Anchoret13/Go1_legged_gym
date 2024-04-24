@@ -124,7 +124,7 @@ class Go1FwID(WheeledRobot):
         super()._init_buffers()
 
         # Adaptive module
-        self.sys_id_path = '../../sys_id/logs/GRU/2024-04-20_18-14-17/checkpoint_epoch_600.pth'
+        self.sys_id_path = '../../sys_id/logs/GRU/2024-04-23_22-26-17/checkpoint_epoch_1000.pth'
         self.run_params = {
             'window_size': 50,
         }

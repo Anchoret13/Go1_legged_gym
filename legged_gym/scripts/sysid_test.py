@@ -176,7 +176,7 @@ def MLP_test(args, eval_params, model_params):
 
 if __name__ == "__main__":
     GRU_eval_params = {
-        'checkpoint_path': '../../sys_id/logs/GRU/2024-04-20_18-14-17/checkpoint_epoch_440.pth', 
+        'checkpoint_path': '../../sys_id/logs/GRU/2024-04-23_21-03-27/checkpoint_epoch_1000.pth', 
         'dataset_folder_path': '../dataset/eval/wheeled_flat', 
         'window_size': 50,
         'batch_size': 1, 
@@ -189,7 +189,7 @@ if __name__ == "__main__":
         "output_size": 9
     }
     args = get_args()
-    # GRU_test(args, GRU_eval_params, GRU_model_params)
+    GRU_test(args, GRU_eval_params, GRU_model_params)
 
     MLP_eval_params = {
         'checkpoint_path': '../../sys_id/logs/MLP/2024-04-22_16-19-45/mlp_model_epoch_1000.pth', 
@@ -202,4 +202,4 @@ if __name__ == "__main__":
         "hidden_size": 150,
         "output_size": 9
     }
-    MLP_test(args, MLP_eval_params, MLP_model_params)
+    # MLP_test(args, MLP_eval_params, MLP_model_params)
