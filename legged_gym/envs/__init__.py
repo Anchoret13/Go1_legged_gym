@@ -58,6 +58,10 @@ from .go1_legged.go1_config import Go1FlatCfg, Go1FlatCfgPPO
 from .go1_id.go1_id import Go1FwID
 from .go1_id.go1_id_config import Go1FwFlatIDCfg, Go1FwFlatIDCfgPPO
 
+
+from .go1_fw_tilt.go1_fw_tilt import Go1FwTilt
+from .go1_fw_tilt.go1_fw_tilt_config import Go1FwFlatTiltCfg, Go1FwFlatTiltCfgPPO
+
 import os
 
 from legged_gym.utils.task_registry import task_registry
@@ -75,3 +79,4 @@ task_registry.register( "go1_aw", Go1Aw, Go1AwFlatCfg(), Go1AwFlatCfgPPO() )
 task_registry.register( "go1_fw_clock", Go1FwClock, Go1FwFlatClockCfg(), Go1FwFlatClockCfgPPO())
 task_registry.register( "go1_legged", Go1_Flat, Go1FlatCfg(), Go1FlatCfgPPO())
 task_registry.register( "go1_id", Go1FwID, Go1FwFlatIDCfg(), Go1FwFlatIDCfgPPO())
+task_registry.register( "go1_fw_tilt", Go1FwTilt, Go1FwFlatTiltCfg(), Go1FwFlatTiltCfgPPO())
