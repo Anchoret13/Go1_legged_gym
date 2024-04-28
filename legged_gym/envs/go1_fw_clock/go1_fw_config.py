@@ -36,6 +36,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
         num_actions = 12
         num_observations = 42  
         num_privileged_obs = 45
+        episode_length_s = 4
     class init_state( LeggedRobotCfg.init_state ):
         pos = [0.0, 0.0, 0.3] # x,y,z [m]
 
@@ -104,7 +105,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
         decimation = 4
 
     class asset( LeggedRobotCfg.asset ):
-        file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/go1_fw/urdf/go1_fw3_contact_new.urdf'
+        file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/go1_fw/urdf/go1_fw3_contact.urdf'
         name = "go1"
         foot_name = "foot"
         roller_name = "roller"
@@ -120,7 +121,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
         # num_commands = 1
         class ranges(LeggedRobotCfg.commands.ranges):
             heading = [-3.14, 3.14]
-            lin_vel_x = [0.0, 2.0] # min max [m/s]
+            lin_vel_x = [0.5, 1.5] # min max [m/s]
             # old range 3/15
             lin_vel_y = [0.0, 0.0]
             # ang_vel_yaw = [-0.0, 0.]    # min max [rad/s]

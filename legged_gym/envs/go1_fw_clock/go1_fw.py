@@ -102,10 +102,18 @@ class Go1FwClock(WheeledRobot):
         trans_input = torch.cat((
             self.projected_gravity, #3
             (self.active_dof_pos - self.active_default_dof_pos) * self.obs_scales.dof_pos, #12
-            body_lin_vel, #2
-            body_ang_vel, #3
+            # body_lin_vel, #3
+            # body_ang_vel, #3
         ), dim = -1)
         return trans_input
+    
+    def compute_transformer_output(self):
+        body_lin_vel = self.base_lin_vel
+        body_ang_vel = self.base_ang_vel
+        return torch.cat((
+            body_lin_vel,
+            body_ang_vel
+        ),dim = -1)
 
     def compute_observations(self):
         """ Computes observations to exclude passive joint
@@ -132,13 +140,12 @@ class Go1FwClock(WheeledRobot):
         # privileged observation
         roller_dofs = torch.tensor([False, False, False, True,  False, False, False, True, False, False,
         False, False, False, False])
-        self.roller_obs = self.dof_pos[:, roller_dofs]
+        self.roller_obs = self.dof_vel[:, roller_dofs]
         friction_coeff = self.friction_coeffs[:,0].to(self.device)
         # TO BE ADDED: TERRAIN INFO
         self.privileged_obs_buf = torch.cat((self.obs_buf,
                                              self.roller_obs,
                                              friction_coeff), dim = -1)
-        # print(self.privileged_obs_buf)
 
     def _init_buffers(self):
         # # add for wheel robot 

@@ -9,7 +9,7 @@ import numpy as np
 import torch
 import pickle as pkl
 
-ENV_NUM = 1
+ENV_NUM = 300
 
 def collect_trajectory(args, traj_num):
     env_cfg, train_cfg = task_registry.get_cfgs(name=args.task)
@@ -47,20 +47,50 @@ def collect_trajectory(args, traj_num):
             phys_props = priv_obs[:, 42:]
             # NOTE: only use projected gravity and joint pos
             simp_obs = env.compute_transformer_input()
-            body_vel = simp_obs[:, 15:]
+            body_vel = env.compute_transformer_output()
             targets = torch.cat((phys_props, body_vel), dim = -1)
-            traj_obs.append(simp_obs[0].cpu().detach().numpy().tolist())
-            traj_act.append(actions[0].cpu().detach().numpy().tolist())
-            physical_props.append(targets[0].cpu().detach().numpy().tolist())
+            traj_obs.append(simp_obs[i].cpu().detach().numpy().tolist())
+            traj_act.append(actions[i].cpu().detach().numpy().tolist())
+            physical_props.append(targets[i].cpu().detach().numpy().tolist())
+            # print(simp_obs.shape)
+            # print(targets.shape)
         single_trajectory["obs"] = traj_obs
         single_trajectory["act"] = traj_act
         single_trajectory['physprops'] = physical_props
         file_path = os.path.join(dataset_dir, f'traj_{i:04d}.pkl') 
+        print(f'{i} trajectories collected')
         with open(file_path, "wb") as f:
             pkl.dump(single_trajectory, f)
+    # trajectories = []
+    # for r in range(ENV_NUM):
+    #     trajectories.append({
+    #     "obs": [],
+    #     "act": [],
+    #     "physprops": []
+    # })
+    # for i in range(int(env.max_episode_length)):
+    #     actions = policy(obs.detach())
+    #     obs, _, rews, dones, infos = env.step(actions.detach())
 
+    #     priv_obs = env.get_privileged_observations()
+    #     phys_props = priv_obs[:, 42:]  
+    #     simp_obs = env.compute_transformer_input()
+    #     body_vel = env.compute_transformer_output()
+    #     targets = torch.cat((phys_props, body_vel), dim=-1)
+
+    #     # Collect data for each robot
+    #     for r in range(ENV_NUM):
+    #         trajectories[r]["obs"].append(simp_obs[r].cpu().detach().numpy().tolist())
+    #         trajectories[r]["act"].append(actions[r].cpu().detach().numpy().tolist())
+    #         trajectories[r]["physprops"].append(targets[r].cpu().detach().numpy().tolist())
+
+    # for r in range(ENV_NUM):
+    #     file_path = os.path.join(dataset_dir, f'traj_{r:04d}.pkl')
+    #     print(f'Trajectory for robot {r} collected')
+    #     with open(file_path, "wb") as f:
+    #         pkl.dump(trajectories[r], f)
 
 
 if __name__ == "__main__":
     args = get_args()
-    collect_trajectory(args, 300)
+    collect_trajectory(args, ENV_NUM)
