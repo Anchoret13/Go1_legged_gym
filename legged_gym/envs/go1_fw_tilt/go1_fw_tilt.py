@@ -1,33 +1,3 @@
-# SPDX-FileCopyrightText: Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-# SPDX-License-Identifier: BSD-3-Clause
-# 
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
-#
-# 1. Redistributions of source code must retain the above copyright notice, this
-# list of conditions and the following disclaimer.
-#
-# 2. Redistributions in binary form must reproduce the above copyright notice,
-# this list of conditions and the following disclaimer in the documentation
-# and/or other materials provided with the distribution.
-#
-# 3. Neither the name of the copyright holder nor the names of its
-# contributors may be used to endorse or promote products derived from
-# this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
-# Copyright (c) 2021 ETH Zurich, Nikita Rudin
-
 from time import time
 import numpy as np
 import os
@@ -40,14 +10,47 @@ import torch
 from typing import Tuple, Dict
 from ..base.wheeled_robot import WheeledRobot
 from .go1_fw_tilt_config import Go1FwFlatTiltCfg
-
-
+from ..go1_fw_clock.go1_fw import Go1FwClock
 
 def sigmoid(x, k, lower, upper):
     midpoint = (lower + upper) / 2.0
     scale = k / (upper - lower)
     return 1 / (1 + torch.exp(-scale * (x - midpoint)))
 
+# def torch_rand_sigmoid(lower, upper, shape, device):
+#     uniform_samples = torch.rand(*shape, device = device)
+#     sigmoid_samples = torch.sigmoid((uniform_samples - 0.5) * 10) 
+#     scaled_samples = (upper - lower) * sigmoid_samples + lower
+#     return scaled_samples
+
+def frequency_ac_vel(cmd_vel):
+    stride_length = 0.6 # NOTE: adjust this
+    frequency = cmd_vel / stride_length
+    return frequency
+
+def adaptive_sample_vel_cmd(min_vel, max_vel, current_step, env_ids, device, total_iterations = 60000, n_samples = 1000, steps_per_iteration = 24):
+    #  NOTE: STUPID HARD CODING Method
+    # compute k with total_iteration, k_range
+    # num_steps_per_env = 24, so consider 24 steps as one iteration.
+    if len(env_ids) == 0:
+        env_ids = torch.tensor([0])
+    current_iteration = current_step // steps_per_iteration
+    k_min = -10
+    k_max = 1
+    if current_iteration < (total_iterations * 0.5):
+        k = k_min + (current_iteration * (k_max - k_min) /  (total_iterations * 0.5))
+    else:
+        k = k_max
+    values = torch.linspace(min_vel, max_vel, n_samples)
+    probs = sigmoid(values, k, min_vel, max_vel)
+    probs /= probs.sum()
+    sampled_indices = torch.multinomial(probs, num_samples=len(env_ids), replacement=True)
+    sampled_velocities = values[sampled_indices]
+    commands = torch.zeros_like(env_ids, dtype = torch.float, device = device)
+
+    for i, env_id in enumerate(env_ids):
+        commands[i] = sampled_velocities[i]
+    return commands
 
 class Go1FwTilt(WheeledRobot):
     cfg : Go1FwFlatTiltCfg
@@ -124,7 +127,7 @@ class Go1FwTilt(WheeledRobot):
         ), dim = -1)
 
         # privileged observation
-        roller_dofs = torch.tensor([False, False, False, True,  False, False, False, True, False, False,
+        roller_dofs = torch.tensor([False, False, False, True, True,  False, False, False, True, True, False, False,
         False, False, False, False])
         self.roller_obs = self.dof_vel[:, roller_dofs]
         friction_coeff = self.friction_coeffs[:,0].to(self.device)
@@ -195,12 +198,14 @@ class Go1FwTilt(WheeledRobot):
         self.actions = torch.clip(actions, -clip_actions, clip_actions).to(self.device)
         # self.actions
         n = self.actions.size(0)
-        modified_actions = torch.zeros(n, 14)
+        modified_actions = torch.zeros(n, self.num_dof)
         modified_actions[:, :3] = self.actions[:, :3]  
-        modified_actions[:, 3] = 0  
-        modified_actions[:, 4:7] = self.actions[:, 3:6]  
-        modified_actions[:, 7] = 0  
-        modified_actions[:, 8:] = self.actions[:, 6:] 
+        modified_actions[:, 3] = 0
+        modified_actions[:, 4] = 0 
+        modified_actions[:, 5:8] = self.actions[:, 3:6]  
+        modified_actions[:, 8] = 0
+        modified_actions[:, 9] = 0  
+        modified_actions[:, 10:] = self.actions[:, 6:] 
         modified_actions = modified_actions.to(self.device)
 
 
@@ -444,7 +449,7 @@ class Go1FwTilt(WheeledRobot):
     
     def _reward_hip(self):
         # penalize hip action
-        hips_idxs = torch.tensor([0, 4, 8, 11], device=self.torques.device)
+        hips_idxs = torch.tensor([0, 5, 10, 13], device=self.torques.device)
         self.hips_default_pos = torch.index_select(self.default_dof_pos, 1, hips_idxs)
         self.hips_pos = torch.index_select(self.dof_pos, 1, hips_idxs)
         diff = torch.sum(torch.square(self.hips_default_pos - self.hips_pos), dim = 1)
@@ -452,21 +457,21 @@ class Go1FwTilt(WheeledRobot):
 
     
     def _reward_front_hip(self):
-        front_hips_idxs = torch.tensor([0, 4], device=self.torques.device)
+        front_hips_idxs = torch.tensor([0, 5], device=self.torques.device)
         front_hips_default_pos = torch.index_select(self.default_dof_pos, 1, front_hips_idxs)
         front_hips_pos = torch.index_select(self.dof_pos, 1, front_hips_idxs)
         diff = torch.sum(torch.square(front_hips_default_pos - front_hips_pos), dim = 1)
         return diff
 
     def _reward_front_leg(self):
-        front_leg_idxs = torch.tensor([0, 1, 2, 4, 5, 6], device = self.torques.device)
+        front_leg_idxs = torch.tensor([0, 1, 2, 5, 6, 7], device = self.torques.device)
         self.front_default_pos = torch.index_select(self.default_dof_pos, 1, front_leg_idxs)
         self.front_pos = torch.index_select(self.dof_pos, 1, front_leg_idxs)
         diff = torch.sum(torch.square(self.front_default_pos - self.front_pos), dim = 1)
         return diff
 
     def _reward_front_hip(self):
-        front_hips_idxs = torch.tensor([0, 4], device=self.torques.device)
+        front_hips_idxs = torch.tensor([0, 5], device=self.torques.device)
         self.front_hips_default_pos = torch.index_select(self.default_dof_pos, 1, front_hips_idxs)
         self.front_hips_pos = torch.index_select(self.dof_pos, 1, front_hips_idxs)
         diff = self.front_hips_default_pos - self.front_hips_pos

@@ -59,7 +59,10 @@ class Go1FwFlatTiltCfg( Go1FwFlatClockCfg):
             'RR_calf_joint': -1.5,    # [rad]
 
             'FL_roller_foot_joint': 0,
-            'FR_roller_foot_joint': 0
+            'FR_roller_foot_joint': 0,
+
+            'FL_tilt_joint': 0,
+            'FR_tilt_joint': 0
         }
     
     # FOR PLANE:
@@ -97,18 +100,29 @@ class Go1FwFlatTiltCfg( Go1FwFlatClockCfg):
         # PD Drive parameters:
         control_type = 'P'
         gaits_type = 'fix_f'
-        stiffness = {'hip_joint': 30.0, 'thigh_joint': 30.0, 'calf_joint': 30.0, 'roller': 0.0}  # [N*m/rad]
-        damping = {'hip_joint': 0.5, 'thigh_joint': 0.5, 'calf_joint': 0.5, 'roller': 0.0}     # [N*m*s/rad]
+        stiffness = {'hip_joint': 30.0, 
+                    'thigh_joint': 30.0,
+                    'calf_joint': 30.0, 
+                    'roller': 0.0, 
+                    'tilt':0.0}  # [N*m/rad]
+        
+        damping = {'hip_joint': 0.5, 
+                    'thigh_joint': 0.5,
+                    'calf_joint': 0.5, 
+                    'roller': 0.0, 
+                    'tilt':0.0}     # [N*m*s/rad]
+        
         # action scale: target angle = actionScale * action + defaultAngle
         action_scale = 0.25
         # decimation: Number of control action updates @ sim DT per policy DT
         decimation = 4
 
     class asset( Go1FwFlatClockCfg.asset ):
-        file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/go1_fw/urdf/go1_fw3_wheel_tilt.urdf'
+        file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/go1_fw/urdf/go1_fw3_contact_tilt_wheel.urdf'
         name = "go1"
         foot_name = "foot"
         roller_name = "roller"
+        roller_tilt_name = "tilt"
         penalize_contacts_on = ["thigh", "calf"]
         terminate_after_contacts_on = ["base"]
         self_collisions = 1 # 1 to disable, 0 to enable...bitwise filter
@@ -241,17 +255,8 @@ class Go1FwFlatTiltCfg( Go1FwFlatClockCfg):
     #         roller_action_diff = -1.0
     #         alive = 0.5
 
-    # class domain_rand(LeggedRobotCfg.domain_rand):
-    #     randomize_friction = True
-    #     friction_range = [0.75, 1.5]
-    #     push_robots = False
-    #     # push_interval_s = 15
-    #     # max_push_vel_xy = 1.0
-    #     randomize_base_mass = False
-
-    #     # added_mass_range = [-1, 3]
-    #     hip_friction_sim = False
-    #     hip_action_noise = 0.1
+    class domain_rand(Go1FwFlatClockCfg.domain_rand):
+        roller_tilt_rand_range = [-0.01, 0.01]
 
 class Go1FwFlatTiltCfgPPO( Go1FwFlatClockCfgPPO ):
     class algorithm( LeggedRobotCfgPPO.algorithm ):

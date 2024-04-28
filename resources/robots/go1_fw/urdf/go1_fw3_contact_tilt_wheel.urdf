@@ -620,13 +620,13 @@
 
 
  <!-- *****************       FL roller        ***************** -->
-  <joint name="FL_turn_joint" type="revolute">
+  <joint name="FL_tilt_joint" type="revolute">
     <parent link="FL_ankle"/>
     <child link="FL_turn"/>
     <origin xyz="-0.035 -0.00 -0.035" rpy="0 -0.8 0"/>
     <axis xyz="1 0 0"/>
     <dynamics damping="0" friction="0"/>
-    <limit effort="33.5" lower="-1.57" upper="1.57" velocity="28"/>
+    <limit effort="33.5" lower="-0.01" upper="0.01" velocity="28"/>
   </joint>
   <link name="FL_turn">
   </link>
@@ -670,13 +670,13 @@
 
 
   <!-- *****************       FR roller        ***************** -->
-  <joint name="FR_turn_joint" type="revolute">
+  <joint name="FR_tilt_joint" type="revolute">
     <parent link="FR_ankle"/>
     <child link="FR_turn"/>
     <origin xyz="-0.035 -0.00 -0.035" rpy="0 -0.8 0"/>
     <axis xyz="1 0 0"/>
     <dynamics damping="0" friction="0"/>
-    <limit effort="33.5" lower="-1.57" upper="1.57" velocity="28"/>
+    <limit effort="33.5" lower="-0.01" upper="-0.01" velocity="28"/>
   </joint>
   <link name="FR_turn">
   </link>

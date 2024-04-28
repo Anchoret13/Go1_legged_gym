@@ -123,7 +123,7 @@ print("Working directory: %s" % os.getcwd())
 asset_root = "/home/xyz/isaac-project/Go1/resources/robots/go1_fw"
 
 # List of assets that will be loaded, both URDF and MJCF files are supported
-asset_file = "urdf/go1_fw3_contact_turning_wheel.urdf"
+asset_file = "urdf/go1_fw3_contact_tilt_wheel.urdf"
 asset_name = "go1"
 loaded_assets = []
 
