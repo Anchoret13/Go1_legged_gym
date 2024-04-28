@@ -35,8 +35,9 @@ class Go1FwFlatTiltCfg( Go1FwFlatClockCfg):
     class env( Go1FwFlatClockCfg.env):
         num_envs = 4096
         num_actions = 12
-        num_observations = 42 + 6
-        num_privileged_obs = 45 + 6
+        num_observations = 42 + 6 
+        #                    + 4
+        num_privileged_obs = 45 + 6 + 2
     class init_state( Go1FwFlatClockCfg.init_state ):
         pos = [0.0, 0.0, 0.35] # x,y,z [m]
 

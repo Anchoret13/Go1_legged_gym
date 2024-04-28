@@ -110,6 +110,7 @@ class Go1FwTilt(WheeledRobot):
         """
         dofs_to_keep = torch.ones(self.num_dof, dtype=torch.bool)
         dofs_to_keep[self.dof_roller_ids] = False
+        dofs_to_keep[self.dof_roller_tilt_ids] = False
 
         # Select the columns
         self.active_dof_pos = self.dof_pos[:, dofs_to_keep]
@@ -126,6 +127,7 @@ class Go1FwTilt(WheeledRobot):
             self.base_ang_vel
         ), dim = -1)
 
+        # TODO add friction for roller dof?
         # privileged observation
         roller_dofs = torch.tensor([False, False, False, True, True,  False, False, False, True, True, False, False,
         False, False, False, False])
@@ -140,6 +142,7 @@ class Go1FwTilt(WheeledRobot):
     def _init_buffers(self):
         # # add for wheel robot 
         # self.num_rollers = 2
+        # TODO the idx will change with tilt joint added
         super()._init_buffers()
         self.base_pos = self.root_states[:self.num_envs, 0:3]
         self.wheel_indices = torch.tensor([5, 10], device = self.device)
@@ -150,6 +153,8 @@ class Go1FwTilt(WheeledRobot):
                                         requires_grad=False)
         
         # desired_contact_state from WTW
+         # TODO is 4 and 2 change?
+        
         self.desired_contact_states = torch.zeros(self.num_envs, 4, dtype=torch.float, device=self.device,
                                                   requires_grad=False, )
         
