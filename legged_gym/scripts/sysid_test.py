@@ -110,8 +110,8 @@ def GRU_test(args, eval_params, model_params):
     robot_index = 0 # which robot is used for logging
     joint_index = 1 # which joint is used for logging
     start_state_log = 0 # do not ignore starting
-    stop_state_log = 1000 # number of steps before plotting states
-    for i in range(1100):
+    stop_state_log = 500 # number of steps before plotting states
+    for i in range(600):
         actions = policy(obs.detach())
         obs, _, rews, dones, infos = env.step(actions.detach())
         adapt_input = env.compute_adapt_input().cuda()
@@ -159,8 +159,8 @@ def MLP_test(args, eval_params, model_params):
     policy = ppo_runner.get_inference_policy(device=env.device)
     logger = Logger(env.dt)
     start_state_log = 0 # do not ignore starting
-    stop_state_log = 1000 # number of steps before plotting states
-    for i in range(1100):
+    stop_state_log = 500 # number of steps before plotting states
+    for i in range(600):
         actions = policy(obs.detach())
         obs, _, rews, dones, infos = env.step(actions.detach())
         adapt_input = env.compute_adapt_input().cuda()
@@ -176,7 +176,7 @@ def MLP_test(args, eval_params, model_params):
 
 if __name__ == "__main__":
     GRU_eval_params = {
-        'checkpoint_path': '../../sys_id/logs/GRU/2024-04-23_21-03-27/checkpoint_epoch_1000.pth', 
+        'checkpoint_path': '../../sys_id/logs/GRU/2024-04-23_22-26-17/checkpoint_epoch_1000.pth', 
         'dataset_folder_path': '../dataset/eval/wheeled_flat', 
         'window_size': 50,
         'batch_size': 1, 
@@ -189,7 +189,7 @@ if __name__ == "__main__":
         "output_size": 9
     }
     args = get_args()
-    GRU_test(args, GRU_eval_params, GRU_model_params)
+    # GRU_test(args, GRU_eval_params, GRU_model_params)
 
     MLP_eval_params = {
         'checkpoint_path': '../../sys_id/logs/MLP/2024-04-22_16-19-45/mlp_model_epoch_1000.pth', 
@@ -202,4 +202,4 @@ if __name__ == "__main__":
         "hidden_size": 150,
         "output_size": 9
     }
-    # MLP_test(args, MLP_eval_params, MLP_model_params)
+    MLP_test(args, MLP_eval_params, MLP_model_params)

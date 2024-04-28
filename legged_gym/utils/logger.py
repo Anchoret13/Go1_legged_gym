@@ -294,7 +294,7 @@ class Logger:
         target = log['target']
         timesteps = list(range(len(prediction)))
 
-        fig, axes = plt.subplots(9, 1, figsize = (15, 15))
+        fig, axes = plt.subplots(9, 1, figsize = (10, 15))
         axes = axes.flatten()
 
         titles = ["roller 1(rad/s)", "roller 2(rad/s)", "friction coefficient of the ground", "lin_x(m/s)", "lin_y(m/s)", "lin_z(m/s)", "roll(rad/s)", "pitch(rad/s)", "yaw(rad/s)"]

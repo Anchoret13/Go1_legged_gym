@@ -101,7 +101,7 @@ class Go1FwID(WheeledRobot):
 
         self.privileged_obs_buf = torch.cat((self.obs_buf,
                                              self.roller_obs,
-                                             friction_coeff,
+                                            #  friction_coeff,
                                              body_lin_vel,
                                              body_ang_vel), dim = -1)
         
@@ -114,6 +114,9 @@ class Go1FwID(WheeledRobot):
         ), dim = -1)
         self.obs_history = update_history(self.obs_history, current_adapt_input)
         id_output = self.adaptive_module(self.obs_history, None)
+        
+        # NOTE: this is for removing friction
+        id_output = torch.cat((id_output[:, :2], id_output[:, 3:]), dim=1)  
         self.obs_buf = torch.cat((
             self.obs_buf,
             id_output
@@ -199,7 +202,10 @@ class Go1FwID(WheeledRobot):
         modified_actions[:, 7] = 0  
         modified_actions[:, 8:] = self.actions[:, 6:] 
         modified_actions = modified_actions.to(self.device)
-
+        
+        # NOTE: Following code fixed the action of front joint, trying to solve split problem
+        modified_actions[:, 0] = 0
+        modified_actions[:, 4] = 0
 
         self.render()
         for _ in range(self.cfg.control.decimation):
@@ -557,7 +563,7 @@ class Go1FwID(WheeledRobot):
         # NOTE: based on phase, not working as expected?
         phases = 1 - torch.abs(1.0 - torch.clip((self.rear_foot_indices * 2.0) - 1.0, 0.0, 1.0) * 2.0)
         foot_height = (self.rear_foot_positions[:, :, 2]).view(self.num_envs, -1)
-        target_height = 0.03 * phases + 0.03 # currently target height is 0.02
+        target_height = 0.07 * phases + 0.07 # currently target height is 0.02
         rew_foot_clearance = torch.square(target_height - foot_height) * (1 - self.desired_rear_contact_states)
         return torch.sum(rew_foot_clearance, dim=1)
 

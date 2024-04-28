@@ -34,8 +34,8 @@ class Go1FwFlatIDCfg( LeggedRobotCfg ):
     class env( LeggedRobotCfg.env):
         num_envs = 4096
         num_actions = 12
-        num_observations = 42 + 9      # obs: 42 ; roller+fric+lin+ang: 9; 
-        num_privileged_obs = 42 + 9
+        num_observations = 42 + 8      # obs: 42 ; roller+fric+lin+ang: 9; 
+        num_privileged_obs = 42 + 8
     class init_state( LeggedRobotCfg.init_state ):
         pos = [0.0, 0.0, 0.3] # x,y,z [m]
 
@@ -52,9 +52,9 @@ class Go1FwFlatIDCfg( LeggedRobotCfg ):
             'FR_thigh_joint': 0.6,     # [rad]
             'RR_thigh_joint': 1.,   # [rad]
 
-            'FL_calf_joint': -1.6,   # [rad]
+            'FL_calf_joint': -1.5,   # [rad]
             'RL_calf_joint': -1.5,    # [rad]
-            'FR_calf_joint': -1.6,  # [rad]
+            'FR_calf_joint': -1.5,  # [rad]
             'RR_calf_joint': -1.5,    # [rad]
 
             'FL_roller_foot_joint': 0,
@@ -96,7 +96,7 @@ class Go1FwFlatIDCfg( LeggedRobotCfg ):
         # PD Drive parameters:
         control_type = 'P'
         gaits_type = 'fix_f'
-        stiffness = {'hip_joint': 30.0, 'thigh_joint': 30.0, 'calf_joint': 30.0, 'roller': 0.0}  # [N*m/rad]
+        stiffness = {'hip_joint': 30.0, 'thigh_joint': 25.0, 'calf_joint': 25.0, 'roller': 0.0}  # [N*m/rad]
         damping = {'hip_joint': 0.5, 'thigh_joint': 0.5, 'calf_joint': 0.5, 'roller': 0.0}     # [N*m*s/rad]
         # action scale: target angle = actionScale * action + defaultAngle
         action_scale = 0.25
@@ -119,19 +119,20 @@ class Go1FwFlatIDCfg( LeggedRobotCfg ):
     class commands(LeggedRobotCfg.commands):
         # num_commands = 1
         class ranges(LeggedRobotCfg.commands.ranges):
-            heading = [-3.14, 3.14]
+            # heading = [-3.14, 3.14]
+            heading = [-0, 0]
             lin_vel_x = [0.5, 2.5] # min max [m/s]
             # old range 3/15
             lin_vel_y = [0.0, 0.0]
-            # ang_vel_yaw = [-0.0, 0.]    # min max [rad/s]
-            ang_vel_yaw = [-0.5, 0.5]
+            ang_vel_yaw = [-0.0, 0.]    # min max [rad/s]
+            # ang_vel_yaw = [-0.5, 0.5]
 
 
     class rewards( LeggedRobotCfg.rewards ):
         # soft_dof_pos_limit = 0.01 # NOTE: trying fully following wtw setting
         soft_dof_pos_limit = 0.9
         # self_dof_vel_limit = 0.01
-        base_height_target = 0.3
+        base_height_target = 0.35
 
         only_positive_rewards = False
 
@@ -140,11 +141,54 @@ class Go1FwFlatIDCfg( LeggedRobotCfg ):
 
 
         class scales:
+            # torques = -0.001
+            # masked_legs_energy = -1e-3
+            # tracking_ang_vel = 1.0
+            # lin_vel_x = 1.5
+            # tracking_lin_vel_x = 5.5
+            # orientation = -0.1
+            # lin_vel_z = -0.5
+            # action_rate = -0.01
+            # roller_action_rate = -0.1
+            # hip = -0.1
+            # penalize_roll = -0.5                  # was -0.5
+            # front_leg = -0.5                      # was -0.5
+            # # front_hip = -1.0
+            # raibert_heuristic = -2.0
+            # rear_feet_air_time = 3.5
+            # penalize_slow_x_vel = 0.01
+            # feet_clearance = -5.0
+            # # tracking_contacts_binary = -0.1  
+            # roller_action_diff = -0.1
+            # collision = -0.5
+            # base_height = -0.1
+
+            # torques = -0.001
+            # masked_legs_energy = -5e-3
+            # tracking_ang_vel = 1.0
+            # lin_vel_x = 1.5
+            # tracking_lin_vel_x = 4.5
+            # orientation = -0.1
+            # lin_vel_z = -0.05
+            # action_rate = -0.01
+            # roller_action_rate = -0.1
+            # hip = -1.0
+            # penalize_roll = -0.5                  
+            # front_leg = -3.5                      
+            # front_hip = -1.0
+            # raibert_heuristic = -2.0
+            # rear_feet_air_time = 3.5
+            # penalize_slow_x_vel = 0.5
+            # feet_clearance = -5.0
+            # roller_action_diff = -0.1
+            # collision = -1.0
+            # base_height = -0.1
+
             torques = -0.001
-            masked_legs_energy = -5e-3
+            masked_legs_energy = -1e-3
             tracking_ang_vel = 1.0
-            lin_vel_x = 1.5
-            tracking_lin_vel_x = 4.5
+            lin_vel_x = 1.0
+            tracking_lin_vel_x = 5.5
             orientation = -0.1
             lin_vel_z = -0.05
             action_rate = -0.01
@@ -155,12 +199,17 @@ class Go1FwFlatIDCfg( LeggedRobotCfg ):
             front_hip = -1.0
             raibert_heuristic = -2.0
             rear_feet_air_time = 3.5
-            # penalize_slow_x_vel = -1.0
-            feet_clearance = -10.0
-            # tracking_contacts_binary = -0.1  
-            roller_action_diff = -0.1
-
+            penalize_slow_x_vel = 1.0
+            feet_clearance = -5.0
+            roller_action_diff = -1.0
+            collision = -1.0
             base_height = -0.1
+
+            tracking_rear_swing_force = 0.5
+            tracking_rear_stance_vel = 0.5
+            tracking_swing_force = 1.0
+            tracking_stance_vel = 1.0
+
     
     class domain_rand(LeggedRobotCfg.domain_rand):
         randomize_friction = True
