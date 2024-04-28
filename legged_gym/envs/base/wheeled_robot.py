@@ -506,9 +506,9 @@ class WheeledRobot(BaseTask):
         self.noise_scale_vec = self._get_noise_scale_vec(self.cfg)
         self.gravity_vec = to_torch(get_axis_params(-1., self.up_axis_idx), device=self.device).repeat((self.num_envs, 1))
         self.forward_vec = to_torch([1., 0., 0.], device=self.device).repeat((self.num_envs, 1))
-        self.torques = torch.zeros(self.num_envs, 14, dtype=torch.float, device=self.device, requires_grad=False)
-        self.p_gains = torch.zeros(14, dtype=torch.float, device=self.device, requires_grad=False)
-        self.d_gains = torch.zeros(14, dtype=torch.float, device=self.device, requires_grad=False)
+        self.torques = torch.zeros(self.num_envs, self.num_dof, dtype=torch.float, device=self.device, requires_grad=False)
+        self.p_gains = torch.zeros(self.num_dof, dtype=torch.float, device=self.device, requires_grad=False)
+        self.d_gains = torch.zeros(self.num_dof, dtype=torch.float, device=self.device, requires_grad=False)
         self.actions = torch.zeros(self.num_envs, self.num_actions, dtype=torch.float, device=self.device, requires_grad=False)
         self.last_actions = torch.zeros(self.num_envs, self.num_actions, dtype=torch.float, device=self.device, requires_grad=False)
         self.last_dof_vel = torch.zeros_like(self.dof_vel)
@@ -682,6 +682,19 @@ class WheeledRobot(BaseTask):
         self.dof_rollor_names = [s for s in self.dof_names if self.cfg.asset.roller_name in s]
         self.body_roller_names = [s for s in body_names if self.cfg.asset.roller_name in s]
         self.dof_roller_ids = [self.dof_name_to_id[name] for name in self.dof_rollor_names]
+
+
+        self.body_name_to_id = {k: v for k, v in zip(body_names, np.arange(self.num_bodies))}
+        self.body_ankle_names = [s for s in body_names if "ankle" in s]
+        self.body_ankle_ids = [self.body_name_to_id[name] for name in self.body_ankle_names]
+
+        self.dof_roller_tilt_names = [s for s in self.dof_names if self.cfg.asset.roller_tilt_name in s]
+        self.dof_roller_tilt_ids = [self.dof_name_to_id[name] for name in self.dof_roller_tilt_names]
+
+        self.is_roller_tilted = False
+        if len(self.dof_roller_tilt_names) > 0:
+            self.is_roller_tilted = True
+
         # print(self.dof_roller_ids)
         # 
         #  
@@ -707,6 +720,7 @@ class WheeledRobot(BaseTask):
             self.gym.set_asset_rigid_shape_properties(robot_asset, rigid_shape_props)
             actor_handle = self.gym.create_actor(env_handle, robot_asset, start_pose, self.cfg.asset.name, i, self.cfg.asset.self_collisions, 0)
             dof_props = self._process_dof_props(dof_props_asset, i)
+            # TODO: the dof_props may not initilized properly 
             # *********************** changed by xiaoyu ************************************
             #  this code change for passvie joint
             # 
@@ -715,10 +729,21 @@ class WheeledRobot(BaseTask):
                 dof_props ["driveMode"][j] = gymapi.DOF_MODE_NONE
                 dof_props ["stiffness"][j] = 0.0
                 dof_props ["damping"][j] = 0.0
-                dof_props ["effort"][j] = 0.0
-                dof_props ["velocity"][j] = 100000000.0
-                dof_props ["friction"][j] = 0.0
-            # 
+                # dof_props ["effort"][j] = 0.0
+                # dof_props ["velocity"][j] = 100000000.0
+                # dof_props ["friction"][j] = 0.0
+
+            #  
+            # # *****************************************************************************
+            if self.is_roller_tilted:    
+                for k in self.dof_roller_tilt_ids:
+                    dof_props ["driveMode"][k] = gymapi.DOF_MODE_NONE
+                    dof_props ["stiffness"][k] = 0.0
+                    dof_props ["damping"][k] = 0.0
+                    dof_props ["lower"][k] = self.cfg.domain_rand.roller_tilt_rand_range[0]
+                    dof_props ["upper"][k] = self.cfg.domain_rand.roller_tilt_rand_range[1]
+
+
             #  
             # # *****************************************************************************
             self.gym.set_actor_dof_properties(env_handle, actor_handle, dof_props)
@@ -735,6 +760,7 @@ class WheeledRobot(BaseTask):
         self.rear_feet_indices = torch.zeros(2, dtype=torch.long, device=self.device, requires_grad=False)
         for i in range(len(feet_names)):
             self.feet_indices[i] = self.gym.find_actor_rigid_body_handle(self.envs[0], self.actor_handles[0], feet_names[i])
+        # TODO is idx correct?
         self.rear_feet_indices[0] = 14
         self.rear_feet_indices[1] = 18
         self.penalised_contact_indices = torch.zeros(len(penalized_contact_names), dtype=torch.long, device=self.device, requires_grad=False)

@@ -1,33 +1,3 @@
-# SPDX-FileCopyrightText: Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-# SPDX-License-Identifier: BSD-3-Clause
-# 
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
-#
-# 1. Redistributions of source code must retain the above copyright notice, this
-# list of conditions and the following disclaimer.
-#
-# 2. Redistributions in binary form must reproduce the above copyright notice,
-# this list of conditions and the following disclaimer in the documentation
-# and/or other materials provided with the distribution.
-#
-# 3. Neither the name of the copyright holder nor the names of its
-# contributors may be used to endorse or promote products derived from
-# this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
-# Copyright (c) 2021 ETH Zurich, Nikita Rudin
-
 from time import time
 import numpy as np
 import os
@@ -39,7 +9,8 @@ from legged_gym.utils.math import *
 import torch
 from typing import Tuple, Dict
 from ..base.wheeled_robot import WheeledRobot
-from .go1_fw_config import Go1FwFlatClockCfg
+from .go1_fw_tilt_config import Go1FwFlatTiltCfg
+from ..go1_fw_clock.go1_fw import Go1FwClock
 
 def sigmoid(x, k, lower, upper):
     midpoint = (lower + upper) / 2.0
@@ -81,8 +52,8 @@ def adaptive_sample_vel_cmd(min_vel, max_vel, current_step, env_ids, device, tot
         commands[i] = sampled_velocities[i]
     return commands
 
-class Go1FwClock(WheeledRobot):
-    cfg : Go1FwFlatClockCfg
+class Go1FwTilt(WheeledRobot):
+    cfg : Go1FwFlatTiltCfg
     def __init__(self, cfg, sim_params, physics_engine, sim_device, headless):
         super().__init__(cfg, sim_params, physics_engine, sim_device, headless)
         # self.num_passive_joints = self.cfg.env.num_passive_joints
@@ -107,15 +78,6 @@ class Go1FwClock(WheeledRobot):
         ), dim = -1)
         return trans_input
     
-<<<<<<< HEAD
-    def compute_transformer_output(self):
-        body_lin_vel = self.base_lin_vel
-        body_ang_vel = self.base_ang_vel
-        return torch.cat((
-            body_lin_vel,
-            body_ang_vel
-        ),dim = -1)
-=======
     def compute_adapt_target(self):
         target = torch.cat((
             self.roller_obs.to(self.device),
@@ -141,7 +103,6 @@ class Go1FwClock(WheeledRobot):
         # self.body_orns = self.dof_state.view(self.num_envs, self.num_dof, 2)[..., 1]
 
         # get the index of ankle
->>>>>>> 8038e5b8c4967f2f50f72fd5f11ff976ae0ff0ae
 
     
     def compute_observations(self):
@@ -149,6 +110,7 @@ class Go1FwClock(WheeledRobot):
         """
         dofs_to_keep = torch.ones(self.num_dof, dtype=torch.bool)
         dofs_to_keep[self.dof_roller_ids] = False
+        dofs_to_keep[self.dof_roller_tilt_ids] = False
 
         # Select the columns
         self.active_dof_pos = self.dof_pos[:, dofs_to_keep]
@@ -165,8 +127,9 @@ class Go1FwClock(WheeledRobot):
             self.base_ang_vel
         ), dim = -1)
 
+        # TODO add friction for roller dof?
         # privileged observation
-        roller_dofs = torch.tensor([False, False, False, True,  False, False, False, True, False, False,
+        roller_dofs = torch.tensor([False, False, False, True, True,  False, False, False, True, True, False, False,
         False, False, False, False])
         self.roller_obs = self.dof_vel[:, roller_dofs]
         friction_coeff = self.friction_coeffs[:,0].to(self.device)
@@ -174,10 +137,12 @@ class Go1FwClock(WheeledRobot):
         self.privileged_obs_buf = torch.cat((self.obs_buf,
                                              self.roller_obs,
                                              friction_coeff), dim = -1)
+        # print(self.privileged_obs_buf)
 
     def _init_buffers(self):
         # # add for wheel robot 
         # self.num_rollers = 2
+        # TODO the idx will change with tilt joint added
         super()._init_buffers()
         self.base_pos = self.root_states[:self.num_envs, 0:3]
         self.wheel_indices = torch.tensor([5, 10], device = self.device)
@@ -188,6 +153,8 @@ class Go1FwClock(WheeledRobot):
                                         requires_grad=False)
         
         # desired_contact_state from WTW
+         # TODO is 4 and 2 change?
+        
         self.desired_contact_states = torch.zeros(self.num_envs, 4, dtype=torch.float, device=self.device,
                                                   requires_grad=False, )
         
@@ -236,12 +203,14 @@ class Go1FwClock(WheeledRobot):
         self.actions = torch.clip(actions, -clip_actions, clip_actions).to(self.device)
         # self.actions
         n = self.actions.size(0)
-        modified_actions = torch.zeros(n, 14)
+        modified_actions = torch.zeros(n, self.num_dof)
         modified_actions[:, :3] = self.actions[:, :3]  
-        modified_actions[:, 3] = 0  
-        modified_actions[:, 4:7] = self.actions[:, 3:6]  
-        modified_actions[:, 7] = 0  
-        modified_actions[:, 8:] = self.actions[:, 6:] 
+        modified_actions[:, 3] = 0
+        modified_actions[:, 4] = 0 
+        modified_actions[:, 5:8] = self.actions[:, 3:6]  
+        modified_actions[:, 8] = 0
+        modified_actions[:, 9] = 0  
+        modified_actions[:, 10:] = self.actions[:, 6:] 
         modified_actions = modified_actions.to(self.device)
 
 
@@ -485,7 +454,7 @@ class Go1FwClock(WheeledRobot):
     
     def _reward_hip(self):
         # penalize hip action
-        hips_idxs = torch.tensor([0, 4, 8, 11], device=self.torques.device)
+        hips_idxs = torch.tensor([0, 5, 10, 13], device=self.torques.device)
         self.hips_default_pos = torch.index_select(self.default_dof_pos, 1, hips_idxs)
         self.hips_pos = torch.index_select(self.dof_pos, 1, hips_idxs)
         diff = torch.sum(torch.square(self.hips_default_pos - self.hips_pos), dim = 1)
@@ -493,21 +462,21 @@ class Go1FwClock(WheeledRobot):
 
     
     def _reward_front_hip(self):
-        front_hips_idxs = torch.tensor([0, 4], device=self.torques.device)
+        front_hips_idxs = torch.tensor([0, 5], device=self.torques.device)
         front_hips_default_pos = torch.index_select(self.default_dof_pos, 1, front_hips_idxs)
         front_hips_pos = torch.index_select(self.dof_pos, 1, front_hips_idxs)
         diff = torch.sum(torch.square(front_hips_default_pos - front_hips_pos), dim = 1)
         return diff
 
     def _reward_front_leg(self):
-        front_leg_idxs = torch.tensor([0, 1, 2, 4, 5, 6], device = self.torques.device)
+        front_leg_idxs = torch.tensor([0, 1, 2, 5, 6, 7], device = self.torques.device)
         self.front_default_pos = torch.index_select(self.default_dof_pos, 1, front_leg_idxs)
         self.front_pos = torch.index_select(self.dof_pos, 1, front_leg_idxs)
         diff = torch.sum(torch.square(self.front_default_pos - self.front_pos), dim = 1)
         return diff
 
     def _reward_front_hip(self):
-        front_hips_idxs = torch.tensor([0, 4], device=self.torques.device)
+        front_hips_idxs = torch.tensor([0, 5], device=self.torques.device)
         self.front_hips_default_pos = torch.index_select(self.default_dof_pos, 1, front_hips_idxs)
         self.front_hips_pos = torch.index_select(self.dof_pos, 1, front_hips_idxs)
         diff = self.front_hips_default_pos - self.front_hips_pos

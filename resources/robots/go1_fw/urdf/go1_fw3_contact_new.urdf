@@ -619,26 +619,22 @@
   <joint name="FL_roller_foot_joint" type="continuous">
     <parent link="FL_ankle"/>
     <child link="FL_roller_foot"/>
-    <origin xyz="-0.022 0 -0.05" rpy="-1.57 0 0.1"/>
+    <origin xyz="-0.025 0 -0.04" rpy="-1.57 0 -0.1"/>
     <axis xyz="0 0 1"/> 
-    <!-- <origin xyz="-0.025 -0.00 -0.04" rpy="0 0 0"/> -->
-    <!-- <axis xyz="0 1 0"/>  -->
   </joint>
 
   <link name="FL_roller_foot">
-     <visual>
-      <!-- <origin rpy="-1.57 0 0" xyz="-0.0 -0.0 -0.0"/> -->
-       <origin rpy="0 0 0" xyz="0 0 0"/>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
         <mesh filename="../meshes/wheel_tire.stl" scale="0.5 0.5 0.4"/>
-        <!-- <sphere radius="0.03"/> -->
+
       </geometry>
-      <material name="some_color">
-      <color rgba="1 0 0 1"/> <!-- Red color -->
-      </material>
+      <material name="red"/>
     </visual>
+    
     <collision>
-     <origin rpy="0 0 0" xyz="0 0 0"/>
+    <origin rpy="0 0 0" xyz="0 0 0"/>
       <!-- <origin rpy="-1.57 0 0" xyz="0 0 0"/> -->
         <geometry>
           <!-- <mesh filename="../meshes/wheel_tire.stl" scale="0.5 0.5 0.2"/> -->
@@ -662,24 +658,19 @@
   <joint name="FR_roller_foot_joint" type="continuous">
     <parent link="FR_ankle"/>
     <child link="FR_roller_foot"/>
-    <origin xyz="-0.022 0 -0.05" rpy="1.57 0 -0.1"/>
+    <origin xyz="-0.025 0 -0.04" rpy="1.57 0 0.1"/>
     <axis xyz="0 0 1"/> 
-    <!-- <origin xyz="-0.025 -0.00 -0.04" rpy="0 0 0"/>
-    <axis xyz="0 1 0"/>  -->
   </joint>
 
   <link name="FR_roller_foot">
     <visual>
-      <!-- <origin rpy="-1.57 0 0" xyz="-0.0 -0.0 -0.0"/> -->
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="../meshes/wheel_tire.stl" scale="0.5 0.5 0.4"/>
-        <!-- <sphere radius="0.03"/> -->
+          <mesh filename="../meshes/wheel_tire.stl" scale="0.5 0.5 0.4"/>
       </geometry>
-      <material name="some_color">
-      <color rgba="1 0 0 1"/> <!-- Red color -->
-      </material>
+            <material name="red"/>
     </visual>
+
     <collision>
     <origin rpy="0 0 0" xyz="0 0 0"/>
       <!-- <origin rpy="-1.57 0 0" xyz="0 0 0"/> -->

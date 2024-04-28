@@ -288,8 +288,36 @@ class Logger:
         if self.plot_process is not None:
             self.plot_process.kill()
 
+    def plot_pred_true(self):
+        log = self.state_log
+        prediction = log['prediction']
+        target = log['target']
+        timesteps = list(range(len(prediction)))
+
+        fig, axes = plt.subplots(9, 1, figsize = (10, 15))
+        axes = axes.flatten()
+
+        titles = ["roller 1(rad/s)", "roller 2(rad/s)", "friction coefficient of the ground", "lin_x(m/s)", "lin_y(m/s)", "lin_z(m/s)", "roll(rad/s)", "pitch(rad/s)", "yaw(rad/s)"]
+
+        for i in range(9):  # Since each tensor has 9 elements
+            values_prediction = [tensor[0, i].item() for tensor in prediction]  # Extract all i-th elements from prediction
+            values_target = [tensor[0, i].item() for tensor in target]  # Extract all i-th elements from target
+
+            # Plot each element, element-wise across the tensors, against the timestep
+            axes[i].plot(timesteps, values_prediction, color='blue', label='Prediction' if i == 0 else "")
+            axes[i].plot(timesteps, values_target, color='red', label='Target' if i == 0 else "")
+
+            axes[i].set_title(titles[i])
+            axes[i].set_xlabel('Timestep')
+            axes[i].set_ylabel('Value')
+
+            if i == 0:
+                axes[i].legend()
+        plt.tight_layout()
+        plt.show()
+
     def save_log(self, name):
-        path = f'{name}_energy.pkl'
+        path = f'{name}.pkl'
         print(path)
         with open(path, "wb") as file:
             pkl.dump(self.state_log, file)

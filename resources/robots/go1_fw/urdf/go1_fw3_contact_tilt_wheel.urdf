@@ -212,11 +212,12 @@
     
     <!-- Add Block -->
     <visual>
-    <origin xyz="-0.04 -0.0475 -0.045" rpy="1.98 0. 1.58"/> <!-- Adjust as needed -->
-    <geometry>
-      <mesh filename="../meshes/hunong.stl" scale="0.1 0.1 0.1"/> <!-- Example size, adjust as needed -->
-    </geometry>
-    <material name="silver"/> <!-- Choose appropriate material -->
+     <!-- <origin xyz="-0.04 -0.0475 -0.045" rpy="1.98 0. 1.58"/>  -->
+      <origin xyz="-0.055 -0.0475 -0.035" rpy="2.08 0. 1.58"/> 
+      <geometry>
+        <mesh filename="../meshes/hunong.stl" scale="0.1 0.1 0.1"/> 
+      </geometry>
+      <material name="silver"/> 
   </visual>
   
   <!-- Add block collision model -->
@@ -351,12 +352,14 @@
     </inertial>
 
     <!-- Add Block -->
+    
     <visual>
-    <origin xyz="-0.04 -0.0475 -0.045" rpy="1.98 0. 1.58"/> <!-- Adjust as needed -->
-    <geometry>
-      <mesh filename="../meshes/hunong.stl" scale="0.1 0.1 0.1"/> <!-- Example size, adjust as needed -->
-    </geometry>
-    <material name="silver"/> <!-- Choose appropriate material -->
+     <!-- <origin xyz="-0.04 -0.0475 -0.045" rpy="1.98 0. 1.58"/>  -->
+      <origin xyz="-0.055 -0.0475 -0.04" rpy="2.08 0. 1.58"/> 
+      <geometry>
+        <mesh filename="../meshes/hunong.stl" scale="0.1 0.1 0.1"/> 
+      </geometry>
+      <material name="silver"/> 
   </visual>
   
   <!-- Add block collision model -->
@@ -366,6 +369,7 @@
       <box size="0.04 0.07 0.01"/> 
     </geometry>
   </collision> -->
+
   </link>
 
   <joint name="RR_hip_joint" type="revolute">
@@ -616,10 +620,21 @@
 
 
  <!-- *****************       FL roller        ***************** -->
-  <joint name="FL_roller_foot_joint" type="continuous">
+  <joint name="FL_tilt_joint" type="revolute">
     <parent link="FL_ankle"/>
+    <child link="FL_turn"/>
+    <origin xyz="-0.035 -0.00 -0.035" rpy="0 -0.8 0"/>
+    <axis xyz="1 0 0"/>
+    <dynamics damping="0" friction="0"/>
+    <limit effort="33.5" lower="-0.01" upper="0.01" velocity="28"/>
+  </joint>
+  <link name="FL_turn">
+  </link>
+
+  <joint name="FL_roller_foot_joint" type="continuous">
+    <parent link="FL_turn"/>
     <child link="FL_roller_foot"/>
-    <origin xyz="-0.025 -0.00 -0.04" rpy="0 0 0"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
     <axis xyz="-0 1 0"/> 
   </joint>
 
@@ -655,10 +670,22 @@
 
 
   <!-- *****************       FR roller        ***************** -->
-  <joint name="FR_roller_foot_joint" type="continuous">
+  <joint name="FR_tilt_joint" type="revolute">
     <parent link="FR_ankle"/>
+    <child link="FR_turn"/>
+    <origin xyz="-0.035 -0.00 -0.035" rpy="0 -0.8 0"/>
+    <axis xyz="1 0 0"/>
+    <dynamics damping="0" friction="0"/>
+    <limit effort="33.5" lower="-0.01" upper="-0.01" velocity="28"/>
+  </joint>
+  <link name="FR_turn">
+  </link>
+
+
+  <joint name="FR_roller_foot_joint" type="continuous">
+    <parent link="FR_turn"/>
     <child link="FR_roller_foot"/>
-    <origin xyz="-0.025 -0.00 -0.04" rpy="0 0 0"/>
+    <origin xyz="0.0 -0.00 0.0" rpy="0 0 0"/>
     <axis xyz="0 1 0"/> 
   </joint>
 

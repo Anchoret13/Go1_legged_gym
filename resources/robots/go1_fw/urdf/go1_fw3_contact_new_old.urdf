@@ -220,12 +220,12 @@
   </visual>
   
   <!-- Add block collision model -->
-  <!-- <collision>
-    <origin xyz="-0.01 0.01 -0.02" rpy="0.0 0.2 0"/> 
+  <collision>
+    <origin xyz="-0.01 0.01 -0.02" rpy="0.0 0.2 0"/> <!-- Match visual origin -->
     <geometry>
-      <box size="0.04 0.07 0.01"/> 
+      <box size="0.04 0.07 0.01"/> <!-- Match visual size -->
     </geometry>
-  </collision> -->
+  </collision>
   </link>
 
   <joint name="FL_hip_joint" type="revolute">
@@ -360,12 +360,12 @@
   </visual>
   
   <!-- Add block collision model -->
-  <!-- <collision>
-    <origin xyz="-0.01 0.01 -0.02" rpy="0.0 0.2 0"/> 
+  <collision>
+    <origin xyz="-0.01 0.01 -0.02" rpy="0.0 0.2 0"/> <!-- Match visual origin -->
     <geometry>
-      <box size="0.04 0.07 0.01"/> 
+      <box size="0.04 0.07 0.01"/> <!-- Match visual size -->
     </geometry>
-  </collision> -->
+  </collision>
   </link>
 
   <joint name="RR_hip_joint" type="revolute">
@@ -619,13 +619,16 @@
   <joint name="FL_roller_foot_joint" type="continuous">
     <parent link="FL_ankle"/>
     <child link="FL_roller_foot"/>
-    <origin xyz="-0.025 -0.00 -0.04" rpy="0 0 0"/>
-    <axis xyz="-0 1 0"/> 
+    <origin xyz="-0.022 0 -0.05" rpy="-1.57 0 0.0"/>
+    <axis xyz="0 0 1"/> 
+    <!-- <origin xyz="-0.025 -0.00 -0.04" rpy="0 0 0"/> -->
+    <!-- <axis xyz="0 1 0"/>  -->
   </joint>
 
   <link name="FL_roller_foot">
      <visual>
-      <origin rpy="-1.57 0 0.0" xyz="-0.0 -0.0 -0.0"/>
+      <!-- <origin rpy="-1.57 0 0" xyz="-0.0 -0.0 -0.0"/> -->
+       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
         <mesh filename="../meshes/wheel_tire.stl" scale="0.5 0.5 0.4"/>
         <!-- <sphere radius="0.03"/> -->
@@ -635,7 +638,7 @@
       </material>
     </visual>
     <collision>
-      <origin rpy="-1.57 0 0.0" xyz="0 0 0"/>
+     <origin rpy="0 0 0" xyz="0 0 0"/>
         <geometry>
           <!-- <mesh filename="../meshes/wheel_tire.stl" scale="0.5 0.5 0.2"/> -->
           <sphere radius="0.03"/>
@@ -658,13 +661,16 @@
   <joint name="FR_roller_foot_joint" type="continuous">
     <parent link="FR_ankle"/>
     <child link="FR_roller_foot"/>
-    <origin xyz="-0.025 -0.00 -0.04" rpy="0 0 0"/>
-    <axis xyz="0 1 0"/> 
+    <origin xyz="-0.022 0 -0.05" rpy="1.57 0 -0.0"/>
+    <axis xyz="0 0 1"/> 
+    <!-- <origin xyz="-0.025 -0.00 -0.04" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>  -->
   </joint>
 
   <link name="FR_roller_foot">
     <visual>
-      <origin rpy="-1.57 0 -0.0" xyz="-0.0 -0.0 -0.0"/>
+      <!-- <origin rpy="-1.57 0 0" xyz="-0.0 -0.0 -0.0"/> -->
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
         <mesh filename="../meshes/wheel_tire.stl" scale="0.5 0.5 0.4"/>
         <!-- <sphere radius="0.03"/> -->
@@ -674,7 +680,8 @@
       </material>
     </visual>
     <collision>
-      <origin rpy="-1.57 0 -0.0" xyz="0 0 0"/>
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+      <!-- <origin rpy="-1.57 0 0" xyz="0 0 0"/> -->
         <geometry>
           <!-- <mesh filename="../meshes/wheel_tire.stl" scale="0.5 0.5 0.2"/> -->
           <sphere radius="0.03"/>
