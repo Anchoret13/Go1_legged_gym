@@ -563,7 +563,7 @@ class Go1FwID(WheeledRobot):
         # NOTE: based on phase, not working as expected?
         phases = 1 - torch.abs(1.0 - torch.clip((self.rear_foot_indices * 2.0) - 1.0, 0.0, 1.0) * 2.0)
         foot_height = (self.rear_foot_positions[:, :, 2]).view(self.num_envs, -1)
-        target_height = 0.07 * phases + 0.07 # currently target height is 0.02
+        target_height = 0.06 * phases + 0.06 # currently target height is 0.02
         rew_foot_clearance = torch.square(target_height - foot_height) * (1 - self.desired_rear_contact_states)
         return torch.sum(rew_foot_clearance, dim=1)
 

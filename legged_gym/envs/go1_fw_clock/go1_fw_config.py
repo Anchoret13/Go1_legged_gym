@@ -119,19 +119,19 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
     class commands(LeggedRobotCfg.commands):
         # num_commands = 1
         class ranges(LeggedRobotCfg.commands.ranges):
-            heading = [-3.14, 3.14]
-            lin_vel_x = [0.5, 2.0] # min max [m/s]
+            heading = [0, 0]
+            lin_vel_x = [0.5, 2.5] # min max [m/s]
             # old range 3/15
             lin_vel_y = [0.0, 0.0]
             # ang_vel_yaw = [-0.0, 0.]    # min max [rad/s]
-            ang_vel_yaw = [-0.5, 0.5]
+            ang_vel_yaw = [-0.0, 0.0]
 
 
     class rewards( LeggedRobotCfg.rewards ):
         # soft_dof_pos_limit = 0.01 # NOTE: trying fully following wtw setting
         soft_dof_pos_limit = 0.9
         # self_dof_vel_limit = 0.01
-        base_height_target = 0.34
+        base_height_target = 0.35
 
         only_positive_rewards = False
 
@@ -220,7 +220,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             #*********************************** 
             torques = -0.001
             # masked_legs_energy = -5e-3
-            masked_legs_energy = -1e-4
+            masked_legs_energy = -1e-3
             tracking_ang_vel = 1.0
             lin_vel_x = 1.0
             tracking_lin_vel_x = 3.5
@@ -235,8 +235,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             raibert_heuristic = -2.0
             rear_feet_air_time = 3.5
             # penalize_slow_x_vel = 1.0
-            # feet_clearance = -3.0
-            # tracking_contacts_binary = -0.1  
+            feet_clearance = -3.0
             roller_action_diff = -1.0
             alive = 0.5
 

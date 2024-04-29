@@ -29,14 +29,16 @@
 # Copyright (c) 2021 ETH Zurich, Nikita Rudin
 
 from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobotCfgPPO
+from legged_gym.envs.go1_fw_clock.go1_fw_config import Go1FwFlatClockCfg, Go1FwFlatClockCfgPPO
 
-class Go1FwFlatIDCfg( LeggedRobotCfg ):
-    class env( LeggedRobotCfg.env):
+
+class Go1FwFlatIDCfg( Go1FwFlatClockCfg ):
+    class env( Go1FwFlatClockCfg.env):
         num_envs = 4096
         num_actions = 12
         num_observations = 42 + 8      # obs: 42 ; roller+fric+lin+ang: 9; 
         num_privileged_obs = 42 + 8
-    class init_state( LeggedRobotCfg.init_state ):
+    class init_state( Go1FwFlatClockCfg.init_state ):
         pos = [0.0, 0.0, 0.3] # x,y,z [m]
 
         #    'FL_hip_joint': 0.1,   # [rad]
@@ -62,37 +64,14 @@ class Go1FwFlatIDCfg( LeggedRobotCfg ):
         }
     
     # FOR PLANE:
-    class terrain( LeggedRobotCfg.terrain) :
-        mesh_type = 'plane'
-        curriculum = True
-        measure_heights = True
-        selected = True
+    # class terrain( Go1FwFlatClockCfg.terrain) :
+    #     mesh_type = 'plane'
+    #     curriculum = True
+    #     measure_heights = True
+    #     selected = True
         
-    # class terrain( LeggedRobotCfg.terrain):
-    #     mesh_type = 'trimesh'
-        # horizontal_scale  = 0.1
-        # vertical_scale = 0.001
-        # border_size = 0
-        # curriculum = True
-        # static_friction = 1.0
-        # dynamic_friction = 1.0
-        # restitution = 0.0
-        # TODO: terrain noise magnitude
-        # TODO: terrain smoothness
-        # measure_heights = True
-        # measured_points_x = [-0.8, -0.7, -0.6, -0.5, -0.4, -0.3, -0.2, -0.1, 0., 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
-        # measured_points_y = [-0.5, -0.4, -0.3, -0.2, -0.1, 0., 0.1, 0.2, 0.3, 0.4, 0.5]
-        # selected = False
-        # terrain_length = 20.
-        # terrain_width = 20.
-        # num_cols = 10
-        # num_rows = 10
-        # # NOTE: terrain_proportions: [smooth slope, rough slope, stairs up, stairs down, discrete]
-        # terrain_proportions = [0.4, 0.4, 0.0, 0.0, 0.2]
-        # # trimesh  
-        # slope_treshold = 0.
 
-    class control( LeggedRobotCfg.control ):
+    class control( Go1FwFlatClockCfg.control ):
         # PD Drive parameters:
         control_type = 'P'
         gaits_type = 'fix_f'
@@ -103,22 +82,22 @@ class Go1FwFlatIDCfg( LeggedRobotCfg ):
         # decimation: Number of control action updates @ sim DT per policy DT
         decimation = 4
 
-    class asset( LeggedRobotCfg.asset ):
-        file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/go1_fw/urdf/go1_fw3_contact.urdf'
-        name = "go1"
-        foot_name = "foot"
-        roller_name = "roller"
-        penalize_contacts_on = ["thigh", "calf"]
-        terminate_after_contacts_on = ["base"]
-        self_collisions = 1 # 1 to disable, 0 to enable...bitwise filter
+    # class asset( Go1FwFlatClockCfg.asset ):
+    #     file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/go1_fw/urdf/go1_fw3_contact.urdf'
+    #     name = "go1"
+    #     foot_name = "foot"
+    #     roller_name = "roller"
+    #     penalize_contacts_on = ["thigh", "calf"]
+    #     terminate_after_contacts_on = ["base"]
+    #     self_collisions = 1 # 1 to disable, 0 to enable...bitwise filter
        
-        default_dof_drive_mode = 3 # see GymDofDriveModeFlags (0 is none, 1 is pos tgt, 2 is vel tgt, 3 effort)
-        replace_cylinder_with_capsule = False # replace collision cylinders with capsules, leads to faster/more stable simulation
-        flip_visual_attachments = False # Some .obj meshes must be flipped from y-up to z-up
+    #     default_dof_drive_mode = 3 # see GymDofDriveModeFlags (0 is none, 1 is pos tgt, 2 is vel tgt, 3 effort)
+    #     replace_cylinder_with_capsule = False # replace collision cylinders with capsules, leads to faster/more stable simulation
+    #     flip_visual_attachments = False # Some .obj meshes must be flipped from y-up to z-up
         
-    class commands(LeggedRobotCfg.commands):
+    class commands(Go1FwFlatClockCfg.commands):
         # num_commands = 1
-        class ranges(LeggedRobotCfg.commands.ranges):
+        class ranges(Go1FwFlatClockCfg.commands.ranges):
             # heading = [-3.14, 3.14]
             heading = [-0, 0]
             lin_vel_x = [0.5, 2.5] # min max [m/s]
@@ -128,90 +107,68 @@ class Go1FwFlatIDCfg( LeggedRobotCfg ):
             # ang_vel_yaw = [-0.5, 0.5]
 
 
-    class rewards( LeggedRobotCfg.rewards ):
-        # soft_dof_pos_limit = 0.01 # NOTE: trying fully following wtw setting
-        soft_dof_pos_limit = 0.9
-        # self_dof_vel_limit = 0.01
-        base_height_target = 0.35
+    # class rewards( Go1FwFlatClockCfg.rewards ):
+    #     # soft_dof_pos_limit = 0.01 # NOTE: trying fully following wtw setting
+    #     soft_dof_pos_limit = 0.9
+    #     # self_dof_vel_limit = 0.01
+    #     base_height_target = 0.35
 
-        only_positive_rewards = False
+    #     only_positive_rewards = False
 
-        # add by xiaoyu 3/16
-        # max_contact_force = 300
+    #     # add by xiaoyu 3/16
+    #     # max_contact_force = 300
 
 
-        class scales:
-            # torques = -0.001
-            # masked_legs_energy = -1e-3
-            # tracking_ang_vel = 1.0
-            # lin_vel_x = 1.5
-            # tracking_lin_vel_x = 5.5
-            # orientation = -0.1
-            # lin_vel_z = -0.5
-            # action_rate = -0.01
-            # roller_action_rate = -0.1
-            # hip = -0.1
-            # penalize_roll = -0.5                  # was -0.5
-            # front_leg = -0.5                      # was -0.5
-            # # front_hip = -1.0
-            # raibert_heuristic = -2.0
-            # rear_feet_air_time = 3.5
-            # penalize_slow_x_vel = 0.01
-            # feet_clearance = -5.0
-            # # tracking_contacts_binary = -0.1  
-            # roller_action_diff = -0.1
-            # collision = -0.5
-            # base_height = -0.1
+    #     class scales:
+    #         # torques = -0.001
+    #         # masked_legs_energy = -5e-3
+    #         # tracking_ang_vel = 1.0
+    #         # lin_vel_x = 1.0
+    #         # tracking_lin_vel_x = 3.5
+    #         # orientation = -0.1
+    #         # lin_vel_z = -0.1
+    #         # action_rate = -0.01
+    #         # roller_action_rate = -0.1
+    #         # hip = -0.1
+    #         # penalize_roll = -0.5                  # was -0.5
+    #         # front_leg = -2.5                      # was -0.5
+    #         # front_hip = -1.0
+    #         # raibert_heuristic = -2.0
+    #         # rear_feet_air_time = 2.5
+    #         # penalize_slow_x_vel = 0.01
+    #         # feet_clearance = -5.0
+    #         # # tracking_contacts_binary = -0.1  
+    #         # roller_action_diff = -0.5
+    #         # collision = -1.0
+    #         # base_height = -0.1
 
-            # torques = -0.001
-            # masked_legs_energy = -5e-3
-            # tracking_ang_vel = 1.0
-            # lin_vel_x = 1.5
-            # tracking_lin_vel_x = 4.5
-            # orientation = -0.1
-            # lin_vel_z = -0.05
-            # action_rate = -0.01
-            # roller_action_rate = -0.1
-            # hip = -1.0
-            # penalize_roll = -0.5                  
-            # front_leg = -3.5                      
-            # front_hip = -1.0
-            # raibert_heuristic = -2.0
-            # rear_feet_air_time = 3.5
-            # penalize_slow_x_vel = 0.5
-            # feet_clearance = -5.0
-            # roller_action_diff = -0.1
-            # collision = -1.0
-            # base_height = -0.1
+    #         #########################
+    #         # TESTED ON GO1_FW_CLOCK
+    #         #########################
+    #         torques = -0.001
+    #         # masked_legs_energy = -5e-3
+    #         masked_legs_energy = -1e-3
+    #         tracking_ang_vel = 1.0
+    #         lin_vel_x = 1.0
+    #         tracking_lin_vel_x = 3.5
+    #         orientation = -0.1
+    #         lin_vel_z = -0.05
+    #         action_rate = -0.01
+    #         roller_action_rate = -0.1
+    #         hip = -1.0
+    #         penalize_roll = -0.5                  # was -0.5
+    #         front_leg = -3.5                      # was -0.5
+    #         front_hip = -1.0
+    #         raibert_heuristic = -2.0
+    #         rear_feet_air_time = 3.5
+    #         # penalize_slow_x_vel = 1.0
+    #         feet_clearance = -3.0
+    #         roller_action_diff = -1.0
+    #         alive = 0.5
 
-            torques = -0.001
-            masked_legs_energy = -1e-3
-            tracking_ang_vel = 1.0
-            lin_vel_x = 1.0
-            tracking_lin_vel_x = 5.5
-            orientation = -0.1
-            lin_vel_z = -0.05
-            action_rate = -0.01
-            roller_action_rate = -0.1
-            hip = -1.0
-            penalize_roll = -0.5                  # was -0.5
-            front_leg = -3.5                      # was -0.5
-            front_hip = -1.0
-            raibert_heuristic = -2.0
-            rear_feet_air_time = 3.5
-            penalize_slow_x_vel = 1.0
-            feet_clearance = -5.0
-            roller_action_diff = -1.0
-            collision = -1.0
-            base_height = -0.1
-
-            tracking_rear_swing_force = 0.5
-            tracking_rear_stance_vel = 0.5
-            tracking_swing_force = 1.0
-            tracking_stance_vel = 1.0
-
+            
     
-    class domain_rand(LeggedRobotCfg.domain_rand):
+    class domain_rand(Go1FwFlatClockCfg.domain_rand):
         randomize_friction = True
         friction_range = [0.75, 1.5]
         push_robots = False
