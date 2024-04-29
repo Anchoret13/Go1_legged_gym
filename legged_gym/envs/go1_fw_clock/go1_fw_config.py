@@ -34,8 +34,14 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
     class env( LeggedRobotCfg.env):
         num_envs = 4096
         num_actions = 12
+<<<<<<< HEAD
+        num_observations = 42  
+        num_privileged_obs = 45
+        episode_length_s = 4
+=======
         num_observations = 42 + 6
         num_privileged_obs = 45 + 6
+>>>>>>> 8038e5b8c4967f2f50f72fd5f11ff976ae0ff0ae
     class init_state( LeggedRobotCfg.init_state ):
         pos = [0.0, 0.0, 0.35] # x,y,z [m]
 
@@ -119,8 +125,17 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
     class commands(LeggedRobotCfg.commands):
         # num_commands = 1
         class ranges(LeggedRobotCfg.commands.ranges):
+<<<<<<< HEAD
             heading = [0, 0]
             lin_vel_x = [0.5, 2.5] # min max [m/s]
+=======
+            heading = [-3.14, 3.14]
+<<<<<<< HEAD
+            lin_vel_x = [0.5, 1.5] # min max [m/s]
+=======
+            lin_vel_x = [0.5, 2.0] # min max [m/s]
+>>>>>>> 8038e5b8c4967f2f50f72fd5f11ff976ae0ff0ae
+>>>>>>> eefbcb911d3ccb8cb878f0b2a7085360a27c0f9a
             # old range 3/15
             lin_vel_y = [0.0, 0.0]
             # ang_vel_yaw = [-0.0, 0.]    # min max [rad/s]
