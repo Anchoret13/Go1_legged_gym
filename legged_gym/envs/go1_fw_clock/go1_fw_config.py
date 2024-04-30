@@ -36,6 +36,9 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
         num_actions = 12
         num_observations = 42 + 6
         num_privileged_obs = 45 + 6
+
+        # NOTE: For data collection:
+        # episode_length_s = 5
     class init_state( LeggedRobotCfg.init_state ):
         pos = [0.0, 0.0, 0.35] # x,y,z [m]
 
@@ -53,9 +56,9 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             'RR_thigh_joint': 1.,   # [rad]
 
             'FL_calf_joint': -1.6,   # [rad]
-            'RL_calf_joint': -1.5,    # [rad]
+            'RL_calf_joint': -1.6,    # [rad]
             'FR_calf_joint': -1.6,  # [rad]
-            'RR_calf_joint': -1.5,    # [rad]
+            'RR_calf_joint': -1.6,    # [rad]
 
             'FL_roller_foot_joint': 0,
             'FR_roller_foot_joint': 0
@@ -108,8 +111,8 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
         name = "go1"
         foot_name = "foot"
         roller_name = "roller"
-        penalize_contacts_on = ["thigh", "calf"]
-        terminate_after_contacts_on = ["base"]
+        penalize_contacts_on = ["thigh", "calf", "hip"]
+        terminate_after_contacts_on = ["base", "hip"]
         self_collisions = 1 # 1 to disable, 0 to enable...bitwise filter
        
         default_dof_drive_mode = 3 # see GymDofDriveModeFlags (0 is none, 1 is pos tgt, 2 is vel tgt, 3 effort)
@@ -131,7 +134,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
         # soft_dof_pos_limit = 0.01 # NOTE: trying fully following wtw setting
         soft_dof_pos_limit = 0.9
         # self_dof_vel_limit = 0.01
-        base_height_target = 0.34
+        base_height_target = 0.32
 
         only_positive_rewards = False
 
@@ -224,21 +227,23 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             tracking_ang_vel = 1.0
             lin_vel_x = 1.0
             tracking_lin_vel_x = 3.5
-            orientation = -0.1
+            orientation = -1.0
             lin_vel_z = -0.05
             action_rate = -0.01
             roller_action_rate = -0.1
             hip = -1.0
-            penalize_roll = -0.5                  # was -0.5
+            # penalize_roll = -0.5                  # was -0.5
             front_leg = -3.5                      # was -0.5
             front_hip = -1.0
             raibert_heuristic = -2.0
             rear_feet_air_time = 3.5
-            # penalize_slow_x_vel = 1.0
+            penalize_slow_x_vel = 1.0
             feet_clearance = -3.0
             # tracking_contacts_binary = -0.1  
             roller_action_diff = -1.0
             # alive = 0.5
+            base_height = -0.1
+            collision = -1.5
 
     class domain_rand(LeggedRobotCfg.domain_rand):
         randomize_friction = True

@@ -71,6 +71,7 @@ class Go1FwID(WheeledRobot):
         id_model = GRU(**self.sys_model_params).to(device)
         checkpoint = torch.load(self.run_params['checkpoint_path'], map_location = device)
         id_model.load_state_dict(checkpoint['state_dict'])
+        id_model.eval()
         return id_model
 
     def compute_observations(self):
@@ -113,7 +114,8 @@ class Go1FwID(WheeledRobot):
             # body_ang_vel,
         ), dim = -1)
         self.obs_history = update_history(self.obs_history, current_adapt_input)
-        id_output = self.adaptive_module(self.obs_history, None)
+        with torch.no_grad():
+            id_output = self.adaptive_module(self.obs_history, None)
         
         # NOTE: this is for removing friction
         id_output = torch.cat((id_output[:, :2], id_output[:, 3:]), dim=1)  
@@ -127,7 +129,7 @@ class Go1FwID(WheeledRobot):
         super()._init_buffers()
 
         # Adaptive module
-        self.sys_id_path = '../../sys_id/logs/GRU/2024-04-23_22-26-17/checkpoint_epoch_1000.pth'
+        self.sys_id_path = '../../sys_id/logs/GRU/2024-04-29_15-17-04/checkpoint_epoch_1000.pth'
         self.run_params = {
             'window_size': 50,
         }
@@ -180,6 +182,27 @@ class Go1FwID(WheeledRobot):
         self.rear_feet_air_time = torch.zeros(self.num_envs, self.rear_feet_indices.shape[0], dtype=torch.float, device=self.device, requires_grad=False)
 
         self.obs_history = torch.zeros(self.num_envs, self.window_size, self.sys_model_params["input_size"], dtype=torch.float, device=self.device, requires_grad=False)
+        # NOTE: initialize self.obs_history with initial body states instead of zero
+        # NOTE: history: gravity * 3 + joint pos * 12 STUPID HARD CODING AGAIN
+        # OBSERVE DURING TESTING: [-7.7713e-02,  4.1827e-06, -9.9698e-01,  6.5741e-03, -1.2822e-01,
+        #  -1.8338e-01, -6.9623e-03, -1.2815e-01, -1.8329e-01, -1.9083e-03,
+        #   2.3087e-02, -1.9692e-01,  2.3413e-03,  2.1936e-02, -1.9744e-01]
+        self.obs_history[:, 0] = 0
+        self.obs_history[:, 1] = 0
+        self.obs_history[:, 2] = -1
+        self.obs_history[:, 3] = 0
+        self.obs_history[:, 4] = -1.3e-01
+        self.obs_history[:, 5] = -1.8e-01
+        self.obs_history[:, 6] = 0
+        self.obs_history[:, 7] = -1.3e-01
+        self.obs_history[:, 8] = -1.8e-01
+        self.obs_history[:, 9] = 0
+        self.obs_history[:, 10] = 0
+        self.obs_history[:, 11] = -2.0e-01
+        self.obs_history[:, 12] = 0
+        self.obs_history[:, 13] = 0
+        self.obs_history[:, 14] = -2.0e-01
+
 
     def _reward_masked_legs_energy(self):
         mask = torch.ones(self.torques.size(-1), device=self.torques.device, dtype=torch.bool)

@@ -237,8 +237,8 @@ class Go1FwClock(WheeledRobot):
 
 
         # NOTE: Following code fixed the action of front joint, trying to solve split problem
-        # modified_actions[:, 0] = 0
-        # modified_actions[:, 4] = 0
+        modified_actions[:, 0] = 0
+        modified_actions[:, 4] = 0
 
         self.render()
         for _ in range(self.cfg.control.decimation):
