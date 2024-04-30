@@ -154,6 +154,10 @@ class Go1Fw(WheeledRobot):
         modified_actions[:, 8:] = self.actions[:, 6:] 
         modified_actions = modified_actions.to(self.device)
 
+        # NOTE: Following code fixed the action of front joint, trying to solve split problem
+        modified_actions[:, 0] = 0
+        modified_actions[:, 4] = 0
+
         self.render()
         for _ in range(self.cfg.control.decimation):
             self.torques = self._compute_torques(modified_actions).view(self.torques.shape)

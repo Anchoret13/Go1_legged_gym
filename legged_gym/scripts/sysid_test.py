@@ -91,7 +91,22 @@ def GRU_test(args, eval_params, model_params):
 
     input_shape = 15
     history = torch.zeros(ENV_NUM, window_size, input_shape).cuda()
-    print(history.shape)
+    history[:, 0] = 0
+    history[:, 1] = 0
+    history[:, 2] = -1
+    history[:, 3] = 0
+    history[:, 4] = -1.3e-01
+    history[:, 5] = -1.8e-01
+    history[:, 6] = 0
+    history[:, 7] = -1.3e-01
+    history[:, 8] = -1.8e-01
+    history[:, 9] = 0
+    history[:, 10] = 0
+    history[:, 11] = -2.0e-01
+    history[:, 12] = 0
+    history[:, 13] = 0
+    history[:, 14] = -2.0e-01
+
 
     obs = env.get_observations()
 
@@ -176,7 +191,7 @@ def MLP_test(args, eval_params, model_params):
 
 if __name__ == "__main__":
     GRU_eval_params = {
-        'checkpoint_path': '../../sys_id/logs/GRU/2024-04-29_14-30-32/checkpoint_epoch_340.pth', 
+        'checkpoint_path': '../../sys_id/logs/GRU/2024-04-30_14-04-58/checkpoint_epoch_200.pth', 
         'dataset_folder_path': '../dataset/eval/wheeled_flat', 
         'window_size': 50,
         'batch_size': 1, 
