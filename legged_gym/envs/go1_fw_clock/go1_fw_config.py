@@ -99,8 +99,46 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
         # PD Drive parameters:
         control_type = 'P'
         gaits_type = 'fix_f'
-        stiffness = {'hip_joint': 30.0, 'thigh_joint': 30.0, 'calf_joint': 30.0, 'roller': 0.0}  # [N*m/rad]
-        damping = {'hip_joint': 0.5, 'thigh_joint': 0.5, 'calf_joint': 0.5, 'roller': 0.0}     # [N*m*s/rad]
+        # stiffness = {'hip_joint': 30.0, 'thigh_joint': 30.0, 'calf_joint': 30.0, 'roller': 0.0}  # [N*m/rad]
+        stiffness = {
+            'FL_hip_joint': 35.0,  
+            'RL_hip_joint': 30.0,  
+            'FR_hip_joint': 35.0, 
+            'RR_hip_joint': 30.0, 
+
+            'FL_thigh_joint': 35.0,
+            'RL_thigh_joint': 30.0, 
+            'FR_thigh_joint': 35.0,  
+            'RR_thigh_joint': 30.0,   
+
+            'FL_calf_joint': 35.0,  
+            'RL_calf_joint': 30.0,  
+            'FR_calf_joint': 35.0,  
+            'RR_calf_joint': 30.0,  
+
+            'FL_roller_foot_joint': 0,
+            'FR_roller_foot_joint': 0
+        }
+        # damping = {'hip_joint': 0.5, 'thigh_joint': 0.5, 'calf_joint': 0.5, 'roller': 0.0}     # [N*m*s/rad]
+        damping = {
+            'FL_hip_joint': 0.5,  
+            'RL_hip_joint': 0.5,  
+            'FR_hip_joint': 0.5, 
+            'RR_hip_joint': 0.5, 
+
+            'FL_thigh_joint': 0.5,
+            'RL_thigh_joint': 0.5, 
+            'FR_thigh_joint': 0.5,  
+            'RR_thigh_joint': 0.5,   
+
+            'FL_calf_joint': 0.5,  
+            'RL_calf_joint': 0.5,  
+            'FR_calf_joint': 0.5,  
+            'RR_calf_joint': 0.5,  
+
+            'FL_roller_foot_joint': 0,
+            'FR_roller_foot_joint': 0
+        }
         # action scale: target angle = actionScale * action + defaultAngle
         action_scale = 0.25
         # decimation: Number of control action updates @ sim DT per policy DT
@@ -134,7 +172,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
         # soft_dof_pos_limit = 0.01 # NOTE: trying fully following wtw setting
         soft_dof_pos_limit = 0.9
         # self_dof_vel_limit = 0.01
-        base_height_target = 0.32
+        base_height_target = 0.37
 
         only_positive_rewards = False
 
@@ -225,7 +263,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             # masked_legs_energy = -5e-3
             masked_legs_energy = -1e-3
             tracking_ang_vel = 1.0
-            lin_vel_x = 1.0
+            lin_vel_x = 0.1
             tracking_lin_vel_x = 3.5
             orientation = -3.0
             lin_vel_z = -1.0
@@ -247,7 +285,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
 
     class domain_rand(LeggedRobotCfg.domain_rand):
         randomize_friction = True
-        friction_range = [0.75, 1.5]
+        friction_range = [0.25, 1.5]
         push_robots = False
         # push_interval_s = 15
         # max_push_vel_xy = 1.0
