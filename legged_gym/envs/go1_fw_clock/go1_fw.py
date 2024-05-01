@@ -105,6 +105,10 @@ class Go1FwClock(WheeledRobot):
             # body_lin_vel, #3
             # body_ang_vel, #3
         ), dim = -1)
+        print("+"*50)
+        print("INIT VALUE")
+        print(self.projected_gravity)
+        print((self.active_dof_pos - self.active_default_dof_pos) * self.obs_scales.dof_pos)
         return trans_input
     
     def compute_adapt_target(self):
@@ -239,6 +243,10 @@ class Go1FwClock(WheeledRobot):
         # NOTE: Following code fixed the action of front joint, trying to solve split problem
         modified_actions[:, 0] = 0
         modified_actions[:, 4] = 0
+
+        # # NOTE: fixing front thigh
+        # modified_actions[:, 1] = 0
+        # modified_actions[:, 5] = 0
 
         self.render()
         for _ in range(self.cfg.control.decimation):

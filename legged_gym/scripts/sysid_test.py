@@ -91,21 +91,24 @@ def GRU_test(args, eval_params, model_params):
 
     input_shape = 15
     history = torch.zeros(ENV_NUM, window_size, input_shape).cuda()
-    history[:, 0] = 0
-    history[:, 1] = 0
-    history[:, 2] = -1
-    history[:, 3] = 0
-    history[:, 4] = -1.3e-01
-    history[:, 5] = -1.8e-01
-    history[:, 6] = 0
-    history[:, 7] = -1.3e-01
-    history[:, 8] = -1.8e-01
-    history[:, 9] = 0
-    history[:, 10] = 0
-    history[:, 11] = -2.0e-01
-    history[:, 12] = 0
-    history[:, 13] = 0
-    history[:, 14] = -2.0e-01
+    # tensor([[ 0.0463,  0.0487,  0.0087, -0.0476,  0.0367,  0.0201, -0.0883, -0.1690,
+    #       0.5352,  0.0176, -0.2382,  0.5574]], device='cuda:0')
+    history[:, :, 0] = 0.0   
+    history[:, :, 1] = 0.0   
+    history[:, :, 2] = -1    
+    history[:, :, 3] = 0.05  
+    history[:, :, 4] = 0.05  
+    history[:, :, 5] = 0.01  
+    history[:, :, 6] = -0.05 
+    history[:, :, 7] = 0.05  
+    history[:, :, 8] = 0.01  
+    history[:, :, 9] = -0.08 
+    history[:, :, 10] = -0.02
+    history[:, :, 11] = 0.54 
+    history[:, :, 12] = 0.02 
+    history[:, :, 13] = -0.24
+    history[:, :, 14] = 0.56 
+    print(history)
 
 
     obs = env.get_observations()
@@ -191,7 +194,7 @@ def MLP_test(args, eval_params, model_params):
 
 if __name__ == "__main__":
     GRU_eval_params = {
-        'checkpoint_path': '../../sys_id/logs/GRU/2024-04-30_14-04-58/checkpoint_epoch_200.pth', 
+        'checkpoint_path': '../../sys_id/logs/GRU/2024-04-30_15-49-58/checkpoint_epoch_120.pth', 
         'dataset_folder_path': '../dataset/eval/wheeled_flat', 
         'window_size': 50,
         'batch_size': 1, 

@@ -129,7 +129,7 @@ class Go1FwID(WheeledRobot):
         super()._init_buffers()
 
         # Adaptive module
-        self.sys_id_path = '../../sys_id/logs/GRU/2024-04-30_14-04-58/checkpoint_epoch_200.pth'
+        self.sys_id_path = '../../sys_id/logs/GRU/2024-04-30_15-49-58/checkpoint_epoch_200.pth'
         self.run_params = {
             'window_size': 50,
         }
@@ -183,26 +183,21 @@ class Go1FwID(WheeledRobot):
 
         self.obs_history = torch.zeros(self.num_envs, self.window_size, self.sys_model_params["input_size"], dtype=torch.float, device=self.device, requires_grad=False)
         # NOTE: initialize self.obs_history with initial body states instead of zero
-        # NOTE: history: gravity * 3 + joint pos * 12 STUPID HARD CODING AGAIN
-        # OBSERVE DURING TESTING: [-7.7713e-02,  4.1827e-06, -9.9698e-01,  6.5741e-03, -1.2822e-01,
-        #  -1.8338e-01, -6.9623e-03, -1.2815e-01, -1.8329e-01, -1.9083e-03,
-        #   2.3087e-02, -1.9692e-01,  2.3413e-03,  2.1936e-02, -1.9744e-01]
-        self.obs_history[:, 0] = 0
-        self.obs_history[:, 1] = 0
-        self.obs_history[:, 2] = -1
-        self.obs_history[:, 3] = 0
-        self.obs_history[:, 4] = -1.3e-01
-        self.obs_history[:, 5] = -1.8e-01
-        self.obs_history[:, 6] = 0
-        self.obs_history[:, 7] = -1.3e-01
-        self.obs_history[:, 8] = -1.8e-01
-        self.obs_history[:, 9] = 0
-        self.obs_history[:, 10] = 0
-        self.obs_history[:, 11] = -2.0e-01
-        self.obs_history[:, 12] = 0
-        self.obs_history[:, 13] = 0
-        self.obs_history[:, 14] = -2.0e-01
-
+        self.obs_history[:, :, 0] = 0
+        self.obs_history[:, :, 1] = 0
+        self.obs_history[:, :, 2] = -1
+        self.obs_history[:, :, 3] = 0
+        self.obs_history[:, :, 4] = -1.3e-01
+        self.obs_history[:, :, 5] = -1.8e-01
+        self.obs_history[:, :, 6] = 0
+        self.obs_history[:, :, 7] = -1.3e-01
+        self.obs_history[:, :, 8] = -1.8e-01
+        self.obs_history[:, :, 9] = 0
+        self.obs_history[:, :, 10] = 0
+        self.obs_history[:, :, 11] = -2.0e-01
+        self.obs_history[:, :, 12] = 0
+        self.obs_history[:, :, 13] = 0
+        self.obs_history[:, :, 14] = -2.0e-01
 
     def _reward_masked_legs_energy(self):
         mask = torch.ones(self.torques.size(-1), device=self.torques.device, dtype=torch.bool)
@@ -307,6 +302,23 @@ class Go1FwID(WheeledRobot):
     def reset_idx(self, env_ids):
         super().reset_idx(env_ids)
         self.gait_indices[env_ids] = 0
+
+        # reset obs_history
+        self.obs_history[:, :, 0] = 0.0   
+        self.obs_history[:, :, 1] = 0.0   
+        self.obs_history[:, :, 2] = -1    
+        self.obs_history[:, :, 3] = 0.05  
+        self.obs_history[:, :, 4] = 0.05  
+        self.obs_history[:, :, 5] = 0.01  
+        self.obs_history[:, :, 6] = -0.05 
+        self.obs_history[:, :, 7] = 0.05          
+        self.obs_history[:, :, 8] = 0.01  
+        self.obs_history[:, :, 9] = -0.08 
+        self.obs_history[:, :, 10] = -0.02
+        self.obs_history[:, :, 11] = 0.54 
+        self.obs_history[:, :, 12] = 0.02 
+        self.obs_history[:, :, 13] = -0.24
+        self.obs_history[:, :, 14] = 0.56 
 
     def _resample_commands(self, env_ids):
         """ Randommly select commands of some environments
