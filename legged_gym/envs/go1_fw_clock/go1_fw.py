@@ -105,6 +105,7 @@ class Go1FwClock(WheeledRobot):
             # body_lin_vel, #3
             # body_ang_vel, #3
         ), dim = -1)
+        print(trans_input)
         return trans_input
     
     def compute_adapt_target(self):
@@ -155,6 +156,7 @@ class Go1FwClock(WheeledRobot):
             # self.base_ang_vel
         ), dim = -1)
 
+        self.compute_adapt_input()
         # privileged observation
         roller_dofs = torch.tensor([False, False, False, True,  False, False, False, True, False, False,
         False, False, False, False])

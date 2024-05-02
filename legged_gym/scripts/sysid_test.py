@@ -96,19 +96,19 @@ def GRU_test(args, eval_params, model_params):
     history[:, :, 0] = 0.0   
     history[:, :, 1] = 0.0   
     history[:, :, 2] = -1    
-    history[:, :, 3] = 0.05  
-    history[:, :, 4] = 0.05  
-    history[:, :, 5] = 0.01  
-    history[:, :, 6] = -0.05 
-    history[:, :, 7] = 0.05  
-    history[:, :, 8] = 0.01  
-    history[:, :, 9] = -0.08 
-    history[:, :, 10] = -0.02
-    history[:, :, 11] = 0.54 
-    history[:, :, 12] = 0.02 
-    history[:, :, 13] = -0.24
-    history[:, :, 14] = 0.56 
-    print(history)
+    history[:, :, 3] = 0.03  
+    history[:, :, 4] = -0.06  
+    history[:, :, 5] = -0.13  
+    history[:, :, 6] = 0.013 
+    history[:, :, 7] = -0.06  
+    history[:, :, 8] = -0.12  
+    history[:, :, 9] = -0.06 
+    history[:, :, 10] = -0.06
+    history[:, :, 11] = -0.18 
+    history[:, :, 12] = -0.01 
+    history[:, :, 13] = 0.08
+    history[:, :, 14] = -0.08 
+    # print(history)
 
 
     obs = env.get_observations()
@@ -194,7 +194,7 @@ def MLP_test(args, eval_params, model_params):
 
 if __name__ == "__main__":
     GRU_eval_params = {
-        'checkpoint_path': '../../sys_id/logs/GRU/2024-04-30_15-49-58/checkpoint_epoch_120.pth', 
+        'checkpoint_path': '../../sys_id/logs/GRU/2024-05-02_00-58-33/checkpoint_epoch_220.pth', 
         'dataset_folder_path': '../dataset/eval/wheeled_flat', 
         'window_size': 50,
         'batch_size': 1, 

@@ -38,7 +38,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
         num_privileged_obs = 45
 
         # NOTE: For data collection:
-        # episode_length_s = 5
+        # episode_length_s = 50
     class init_state( LeggedRobotCfg.init_state ):
         pos = [0.0, 0.0, 0.35] # x,y,z [m]
 
@@ -172,7 +172,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
         # soft_dof_pos_limit = 0.01 # NOTE: trying fully following wtw setting
         soft_dof_pos_limit = 0.9
         # self_dof_vel_limit = 0.01
-        base_height_target = 0.35
+        base_height_target = 0.32
 
         only_positive_rewards = False
 
@@ -183,7 +183,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             # REMOVE HISTORY REWARD
             torques = -0.001
             # masked_legs_energy = -5e-3
-            masked_legs_energy = -1e-3
+            masked_legs_energy = -5e-4
             tracking_ang_vel = 1.0
             lin_vel_x = 0.1
             tracking_lin_vel_x = 3.5
@@ -195,10 +195,10 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             penalize_roll = -2.5                  # was -0.5
             front_leg = -3.5                      # was -0.5
             front_hip = -1.0
-            raibert_heuristic = -2.0
+            raibert_heuristic = -5.0
             rear_feet_air_time = 3.5
             # penalize_slow_x_vel = 1.0
-            feet_clearance = -3.0
+            feet_clearance = -5.0
             # tracking_contacts_binary = -0.1  
             roller_action_diff = -1.0
             # alive = 0.5

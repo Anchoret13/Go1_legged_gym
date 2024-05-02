@@ -30,7 +30,7 @@ def collect_trajectory(args, traj_num):
 
     # load policy
     train_cfg.runner.resume = True
-    args.load_run = "/home/well/Desktop/Skating/legged_gym/logs/roller_skating_asac/Apr30_15-22-48_"
+    args.load_run = "/home/well/Desktop/Skating/legged_gym/logs/roller_skating_asac/May02_00-04-12_"
     ppo_runner, train_cfg = task_registry.make_alg_runner(env=env, name=args.task, args=args, train_cfg=train_cfg)
     policy = ppo_runner.get_inference_policy(device=env.device)
     dataset_dir = os.path.join(LEGGED_GYM_ROOT_DIR, 'dataset', 'short', 'wheeled_flat')
