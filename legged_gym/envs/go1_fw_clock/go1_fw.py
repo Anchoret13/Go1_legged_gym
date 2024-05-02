@@ -105,10 +105,6 @@ class Go1FwClock(WheeledRobot):
             # body_lin_vel, #3
             # body_ang_vel, #3
         ), dim = -1)
-        print("+"*50)
-        print("INIT VALUE")
-        print(self.projected_gravity)
-        print((self.active_dof_pos - self.active_default_dof_pos) * self.obs_scales.dof_pos)
         return trans_input
     
     def compute_adapt_target(self):
@@ -155,8 +151,8 @@ class Go1FwClock(WheeledRobot):
             (self.active_dof_pos - self.active_default_dof_pos) * self.obs_scales.dof_pos,
             active_dof_vel * self.obs_scales.dof_vel,
             torch.clip(self.actions, -1, 1),
-            self.base_lin_vel,
-            self.base_ang_vel
+            # self.base_lin_vel,
+            # self.base_ang_vel
         ), dim = -1)
 
         # privileged observation

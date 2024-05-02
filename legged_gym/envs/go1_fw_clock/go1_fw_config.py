@@ -34,8 +34,8 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
     class env( LeggedRobotCfg.env):
         num_envs = 4096
         num_actions = 12
-        num_observations = 42 + 6
-        num_privileged_obs = 45 + 6
+        num_observations = 42 
+        num_privileged_obs = 45
 
         # NOTE: For data collection:
         # episode_length_s = 5
@@ -45,20 +45,20 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
         #    'FL_hip_joint': 0.1,   # [rad]
         #     'RL_hip_joint': 0.1,   # [rad]
         default_joint_angles = { # = target angles [rad] when action = 0.0
-            'FL_hip_joint': 0.0,   # [rad]
+            'FL_hip_joint': 0.05,   # [rad]
             'RL_hip_joint': 0.1,   # [rad]
-            'FR_hip_joint': -0.0 ,  # [rad]
+            'FR_hip_joint': -0.05 ,  # [rad]
             'RR_hip_joint': -0.1,   # [rad]
 
-            'FL_thigh_joint': 0.6,     # [rad]
+            'FL_thigh_joint': 0.8,     # [rad]
             'RL_thigh_joint': 1.,   # [rad]
-            'FR_thigh_joint': 0.6,     # [rad]
+            'FR_thigh_joint': 0.8,     # [rad]
             'RR_thigh_joint': 1.,   # [rad]
 
-            'FL_calf_joint': -1.6,   # [rad]
-            'RL_calf_joint': -1.6,    # [rad]
-            'FR_calf_joint': -1.6,  # [rad]
-            'RR_calf_joint': -1.6,    # [rad]
+            'FL_calf_joint': -1.5,   # [rad]
+            'RL_calf_joint': -1.5,    # [rad]
+            'FR_calf_joint': -1.5,  # [rad]
+            'RR_calf_joint': -1.5,    # [rad]
 
             'FL_roller_foot_joint': 0,
             'FR_roller_foot_joint': 0
@@ -101,20 +101,20 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
         gaits_type = 'fix_f'
         # stiffness = {'hip_joint': 30.0, 'thigh_joint': 30.0, 'calf_joint': 30.0, 'roller': 0.0}  # [N*m/rad]
         stiffness = {
-            'FL_hip_joint': 35.0,  
+            'FL_hip_joint': 40.0,  
             'RL_hip_joint': 30.0,  
-            'FR_hip_joint': 35.0, 
+            'FR_hip_joint': 40.0, 
             'RR_hip_joint': 30.0, 
 
             'FL_thigh_joint': 35.0,
-            'RL_thigh_joint': 30.0, 
+            'RL_thigh_joint': 35.0, 
             'FR_thigh_joint': 35.0,  
-            'RR_thigh_joint': 30.0,   
+            'RR_thigh_joint': 35.0,   
 
             'FL_calf_joint': 35.0,  
-            'RL_calf_joint': 30.0,  
+            'RL_calf_joint': 35.0,  
             'FR_calf_joint': 35.0,  
-            'RR_calf_joint': 30.0,  
+            'RR_calf_joint': 35.0,  
 
             'FL_roller_foot_joint': 0,
             'FR_roller_foot_joint': 0
@@ -172,7 +172,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
         # soft_dof_pos_limit = 0.01 # NOTE: trying fully following wtw setting
         soft_dof_pos_limit = 0.9
         # self_dof_vel_limit = 0.01
-        base_height_target = 0.37
+        base_height_target = 0.35
 
         only_positive_rewards = False
 
@@ -180,97 +180,19 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
 
 
         class scales:
-            # dof_pos_limits = -0.4
-            # torque_limits = -0.01
-            # dof_vel_limits = -10.0
-            # wheel_air_time = -2.                # commented 
-
-            # add by xiaoyu
-            # tracking_lin_vel = 4.0                # was 3.5
-            # tracking_ang_vel = 0.5              # commented
-            
-            # lin_vel_x = 0.5
-            
-            # orientation = -3.0
-            # collision = -1.0                    # commented   
-            # base_height = -0.1
-            # lin_vel_z = -0.05                     # was -0.1
-            # action_rate = -0.01
-            # roller_action_rate = -0.05
-            # hip = -1.0
-            # penalize_roll = -0.5                  # was -0.5
-            # front_leg = -1.5                      # was -0.5
-            # front_hip = -1.0
-
-            # alive:
-            # alive = 0.1
-
-            # gait reward
-            # tracking_contacts_binary = -0.1           # comment for contact
-            # raibert_heuristic = -0.1
-            # tracking_rear_swing_force = 0.5
-            # tracking_rear_stance_vel = 0.5
-            # tracking_swing_force = 1.0
-            # tracking_stance_vel = 1.0
-
-
-            #***********************************
-            #    testing 3/15
-            #***********************************  
-            # torques = -0.001
-            # masked_legs_energy = -1e-4
-            # tracking_ang_vel = 1.0
-            # lin_vel_x = 1.0
-            # tracking_lin_vel_x = 2.5
-            # orientation = -0.5
-            # lin_vel_z = -0.05
-            # action_rate = -0.01
-            # roller_action_rate = -0.05
-            # hip = -1.0
-            # penalize_roll = -0.5                  # was -0.5
-            # front_leg = -1.5                      # was -0.5
-            # front_hip = -1.0
-            # raibert_heuristic = -1.0
-            # tracking_rear_swing_force = 0.5
-            # tracking_rear_stance_vel = 0.5
-            # tracking_swing_force = 1.0
-            # tracking_stance_vel = 1.0
-
-            #***********************************
-            #    testing 3/22
-            #*********************************** 
-            # torques = -0.0001
-            # masked_legs_energy = -5e-3
-            # tracking_lin_vel_x = 2.0
-            # tracking_ang_vel = 0.5
-            # lin_vel_x = 1.0
-            # lin_vel_z = -1.0
-            # # ang_vel_xy = -0.05
-            # # orientation = -1.
-            # action_rate = -0.01
-            # roller_action_rate = -0.05
-            # hip = -1.0
-            # penalize_roll = -0.5
-            # front_leg = -1.5
-            # front_hip = -1.0
-            # raibert_heuristic = -1.0
-            # rear_feet_air_time = 3.0
-
-            #***********************************
-            #    testing 4/14
-            #*********************************** 
+            # REMOVE HISTORY REWARD
             torques = -0.001
             # masked_legs_energy = -5e-3
             masked_legs_energy = -1e-3
             tracking_ang_vel = 1.0
             lin_vel_x = 0.1
             tracking_lin_vel_x = 3.5
-            orientation = -3.0
+            orientation = -0.5
             lin_vel_z = -1.0
             action_rate = -0.01
             roller_action_rate = -0.1
             hip = -1.0
-            # penalize_roll = -0.5                  # was -0.5
+            penalize_roll = -2.5                  # was -0.5
             front_leg = -3.5                      # was -0.5
             front_hip = -1.0
             raibert_heuristic = -2.0
@@ -285,7 +207,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
 
     class domain_rand(LeggedRobotCfg.domain_rand):
         randomize_friction = True
-        friction_range = [0.25, 1.5]
+        friction_range = [0.1, 1.75]
         push_robots = False
         # push_interval_s = 15
         # max_push_vel_xy = 1.0
