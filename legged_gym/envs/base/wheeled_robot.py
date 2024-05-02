@@ -584,11 +584,6 @@ class WheeledRobot(BaseTask):
         self.gym.add_triangle_mesh(self.sim, self.terrain.vertices.flatten(order='C'), self.terrain.triangles.flatten(order='C'), tm_params)   
         self.height_samples = torch.tensor(self.terrain.heightsamples).view(self.terrain.tot_rows, self.terrain.tot_cols).to(self.device)
     
-    def _create_random_uniform_terrain(self):
-        pass
-
-    def _create_wave_terrain(self):
-        pass      
     def _create_envs(self):
         """ Creates environments:
              1. loads the robot URDF/MJCF asset,
