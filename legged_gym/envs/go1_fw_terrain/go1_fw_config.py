@@ -6,10 +6,16 @@ class Go1FwTerrainCfg(Go1FwFlatClockCfg):
  
     # FOR PLANE:
     class terrain( LeggedRobotCfg.terrain) :
-        mesh_type = 'plane'
-        curriculum = True
-        measure_heights = False
+        mesh_type = 'trimesh'
+        # mesh_type = 'rough'
+        # curriculum = True
+        measure_heights = True
+
         selected = True
+        # terrain_kwargs = {'type': 'rough slope'}
+
+        # terrain types: [smooth slope, rough slope, stairs up, stairs down, discrete]
+        terrain_proportions = [0, 1.0, 0, 0, 0.0]
         
     # class terrain( LeggedRobotCfg.terrain):
     #     mesh_type = 'trimesh'

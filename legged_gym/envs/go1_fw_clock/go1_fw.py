@@ -105,7 +105,7 @@ class Go1FwClock(WheeledRobot):
             # body_lin_vel, #3
             # body_ang_vel, #3
         ), dim = -1)
-        print(trans_input)
+        # print(trans_input)
         return trans_input
     
     def compute_adapt_target(self):
