@@ -91,20 +91,28 @@ class Go1FwTerrain(Go1FwClock):
         heightfield = np.zeros((num_terains*num_rows, num_cols), dtype=np.int16)
 
 
-        SubTerrain(width=num_rows, length=num_cols, vertical_scale=vertical_scale, horizontal_scale=horizontal_scale)
-        heightfield[0:num_rows, :] = random_uniform_terrain(new_sub_terrain(), 
+        # SubTerrain(width=num_rows, length=num_cols, vertical_scale=vertical_scale, horizontal_scale=horizontal_scale)
+        heightfield[0:num_rows, :] = random_uniform_terrain(SubTerrain(
+                                                                        width=num_rows, 
+                                                                        length=num_cols, 
+                                                                        vertical_scale=vertical_scale, 
+                                                                        horizontal_scale=horizontal_scale), 
                                                             min_height=-0.2, 
                                                             max_height=0.2, 
                                                             step=0.2, 
                                                             downsampled_scale=0.5
                                                             ).height_field_raw
-        vertices, triangles = convert_heightfield_to_trimesh(heightfield, horizontal_scale=horizontal_scale, vertical_scale=vertical_scale, slope_threshold=1.5)
+        vertices, triangles = convert_heightfield_to_trimesh(
+                                                    heightfield, 
+                                                    horizontal_scale=horizontal_scale, 
+                                                    vertical_scale=vertical_scale, 
+                                                    slope_threshold=1.5)
         tm_params = gymapi.TriangleMeshParams()
         tm_params.nb_vertices = vertices.shape[0]
         tm_params.nb_triangles = triangles.shape[0]
         tm_params.transform.p.x = -1.
         tm_params.transform.p.y = -1.
-        self.gym.add_triangle_mesh(sim, vertices.flatten(), triangles.flatten(), tm_params)
+        self.gym.add_triangle_mesh(self.sim, vertices.flatten(), triangles.flatten(), tm_params)
 
     def _create_terrain_discrete(self):
         pass
