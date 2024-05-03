@@ -127,7 +127,7 @@ class Terrain:
         elif choice < self.proportions[1]:
             # terrain_utils.pyramid_sloped_terrain(terrain, slope=slope, platform_size=3.)
             # terrain_utils.random_uniform_terrain(terrain, min_height=-0.01, max_height=0.01, step=0.05, downsampled_scale=0.2)
-            terrain_utils.random_uniform_terrain(terrain, min_height=-0.01, max_height=0.01, step=0.2, downsampled_scale=0.5)
+            terrain_utils.random_uniform_terrain(terrain, min_height=-0.01, max_height=0.02, step=0.01, downsampled_scale=0.2)
         elif choice < self.proportions[3]:
             if choice<self.proportions[2]:
                 step_height *= -1

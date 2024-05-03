@@ -61,6 +61,27 @@ class Go1FwTerrain(Go1FwClock):
         # self.frequencies = 3.0
         # self.current_step = 0
 
+    def _reward_rear_feet_air_time(self):
+        contact =  self.contact_forces[:, self.rear_feet_indices, 2] > 0.1
+        contact_filt = torch.logical_or(contact, self.last_rear_feet_contacts)
+        self.last_rear_feet_contacts = contact
+        first_contact = (self.rear_feet_air_time > 0.) * contact_filt
+        self.rear_feet_air_time += self.dt
+        rew_airTime = torch.sum((self.rear_feet_air_time - 0.5) * first_contact, dim=1) # reward only on first contact with the ground
+        rew_airTime *= torch.norm(self.commands[:, :2], dim=1) > 0.1 #no reward for zero command
+        self.rear_feet_air_time *= ~contact_filt
+        return rew_airTime
+    
+    def _reward_masked_legs_energy(self):
+        mask = torch.ones(self.torques.size(-1), device=self.torques.device, dtype=torch.bool)
+        mask[self.dof_roller_ids] = False
+        mask[9] = False
+        mask[12] = False
+
+        masked_torques = self.torques[:, mask]
+        masked_dof_vel = self.dof_vel[:, mask]
+
+        return torch.sum(torch.square(masked_torques * masked_dof_vel), dim=1)
     # def create_sim(self):
     #     """ Creates simulation, terrain and evironments
     #     """
