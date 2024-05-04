@@ -70,7 +70,13 @@ class Go1FwTerrain(Go1FwClock):
     #     masked_torques = self.torques[:, mask]
     #     masked_dof_vel = self.dof_vel[:, mask]
     #     return torch.sum(torch.square(masked_torques * masked_dof_vel), dim=1)
-    
+
+    def compute_observations(self):
+        super().compute_observations()
+        if self.cfg.terrain.measure_heights:
+            heights = torch.clip(self.root_states[:, 2].unsqueeze(1) - 0.5 - self.measured_heights, -1, 1.) * self.obs_scales.height_measurements
+            self.privileged_obs_buf = torch.cat((self.privileged_obs_buf, heights), dim=-1)
+
     def create_sim(self):
         """ Creates simulation, terrain and evironments
         """
@@ -78,20 +84,15 @@ class Go1FwTerrain(Go1FwClock):
         self.sim = self.gym.create_sim(self.sim_device_id, self.graphics_device_id, self.physics_engine, self.sim_params)
         mesh_type = self.cfg.terrain.mesh_type
         # if mesh_type in ['trimesh', 'heightfield', 'rough', 'discrete', 'stair']:
-        if mesh_type in ['trimesh', 'heightfield', 'rough', 'discrete', 'stair']:
+        if mesh_type in ['trimesh', 'heightfield']:
             self.terrain = Terrain(self.cfg.terrain, self.num_envs)
+
         if mesh_type=='plane':
             self._create_ground_plane()
         elif mesh_type=='heightfield':
             self._create_heightfield()
         elif mesh_type=='trimesh':
             self._create_trimesh()
-        elif mesh_type=='rough':
-            self._create_terrain_rough()
-        elif mesh_type=='discrete':
-            self._create_terrain_discrete()
-        elif mesh_type=='slope':
-            self._create_terrain_slope()
         elif mesh_type is not None:
             raise ValueError("Terrain mesh type not recognised. Allowed types are [None, plane, heightfield, trimesh]")
         self._create_envs()

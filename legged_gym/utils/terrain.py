@@ -99,9 +99,9 @@ class Terrain:
             terrain_type = 'random_uniform_terrain'
         elif terrain_name == 'discrete':
             terrain_type = 'discrete_obstacles_terrain'
-        elif terrain_type == 'stairs':
+        elif terrain_name == 'stairs':
             terrain_type = 'stairs_terrain'
-        elif terrain_type == 'slope':
+        elif terrain_name == 'slope':
             terrain_type = 'sloped_terrain'
         else:
             print("Error terrain type:")

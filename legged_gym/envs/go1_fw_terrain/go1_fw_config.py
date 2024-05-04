@@ -3,7 +3,14 @@ from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobot
 from legged_gym.envs.go1_fw_clock.go1_fw_config import Go1FwFlatClockCfg, Go1FwFlatClockCfgPPO
 
 class Go1FwTerrainCfg(Go1FwFlatClockCfg):
- 
+    class env:
+        num_envs = 4096
+        num_actions = 12
+        num_observations = 42 
+        num_privileged_obs = 45 + 187
+        episode_length_s = 20 # episode length in seconds
+        env_spacing = 3.  # not used with heightfields/trimeshes 
+        send_timeouts = True # send time out information to the algorithm
     # FOR PLANE:
     class terrain( Go1FwFlatClockCfg.terrain) :
         mesh_type = 'trimesh'
@@ -19,7 +26,7 @@ class Go1FwTerrainCfg(Go1FwFlatClockCfg):
             'max_height': 0.05,
             'min_size': 1.0,
             'max_size': 5.0,
-            'num_rects': 20
+            'num_rects': 15
         }
 '''
         terrain_kwargs = {
@@ -34,7 +41,7 @@ class Go1FwTerrainCfg(Go1FwFlatClockCfg):
             'max_height': 0.05,
             'min_size': 1.0,
             'max_size': 5.0,
-            'num_rects': 20
+            'num_rects': 15
         }
 
         terrain_kwargs = {
@@ -45,7 +52,7 @@ class Go1FwTerrainCfg(Go1FwFlatClockCfg):
         
         terrain_kwargs = {
             'type': 'slope',
-            'slope': 0.5,
+            'slope': 0.3,
         }
 '''
         

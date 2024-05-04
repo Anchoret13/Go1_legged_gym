@@ -65,6 +65,9 @@ from .go1_fw_tilt.go1_fw_tilt_config import Go1FwFlatTiltCfg, Go1FwFlatTiltCfgPP
 from .go1_fw_terrain.go1_fw import Go1FwTerrain
 from .go1_fw_terrain.go1_fw_config import Go1FwTerrainCfg, Go1FwTerrainCfgPPO
 
+from .go1_fw_test.go1_fw import Go1FwTest
+from .go1_fw_test.go1_fw_config import Go1FwTestCfg, Go1FwTestCfgPPO
+
 import os
 
 from legged_gym.utils.task_registry import task_registry
@@ -87,3 +90,5 @@ task_registry.register( "go1_id", Go1FwID, Go1FwFlatIDCfg(), Go1FwFlatIDCfgPPO()
 task_registry.register( "go1_fw_tilt", Go1FwTilt, Go1FwFlatTiltCfg(), Go1FwFlatTiltCfgPPO())
 
 task_registry.register( "go1_fw_terrain", Go1FwTerrain, Go1FwTerrainCfg(), Go1FwTerrainCfgPPO())
+
+task_registry.register( "go1_fw_test", Go1FwTest, Go1FwTestCfg(), Go1FwTestCfgPPO())
