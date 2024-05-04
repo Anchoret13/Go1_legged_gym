@@ -70,8 +70,8 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
         curriculum = True
         measure_heights = True
         selected = True
-        static_friction = 1.0
-        dynamic_friction = 1.0
+        static_friction = 0.9
+        dynamic_friction = 0.9
         
     # class terrain( LeggedRobotCfg.terrain):
     #     mesh_type = 'trimesh'
