@@ -66,6 +66,7 @@ class Terrain:
             self.randomized_terrain()   
         
         self.heightsamples = self.height_field_raw
+
         if self.type=="trimesh":
             self.vertices, self.triangles = terrain_utils.convert_heightfield_to_trimesh(   self.height_field_raw,
                                                                                             self.cfg.horizontal_scale,
@@ -93,7 +94,19 @@ class Terrain:
                 self.add_terrain_to_map(terrain, i, j)
 
     def selected_terrain(self):
-        terrain_type = self.cfg.terrain_kwargs.pop('type')
+        terrain_name = self.cfg.terrain_kwargs.pop('type')
+        if terrain_name == 'rough':
+            terrain_type = 'random_uniform_terrain'
+        elif terrain_name == 'discrete':
+            terrain_type = 'discrete_obstacles_terrain'
+        elif terrain_name == 'stairs':
+            terrain_type = 'stairs_terrain'
+        elif terrain_name == 'slope':
+            terrain_type = 'sloped_terrain'
+        else:
+            print("Error terrain type:")
+            print("please select from: rough | discrete | stairs | slope")
+
         for k in range(self.cfg.num_sub_terrains):
             # Env coordinates in the world
             (i, j) = np.unravel_index(k, (self.cfg.num_rows, self.cfg.num_cols))
@@ -103,8 +116,10 @@ class Terrain:
                               length=self.width_per_env_pixels,
                               vertical_scale=self.cfg.vertical_scale,
                               horizontal_scale=self.cfg.horizontal_scale)
-
-            eval(terrain_type)(terrain, **self.cfg.terrain_kwargs.terrain_kwargs)
+            
+            terrain_func = getattr(terrain_utils, terrain_type)
+            terrain_func(terrain, **self.cfg.terrain_kwargs)
+            # eval(terrain_type)(terrain, **self.cfg.terrain_kwargs.terrain_kwargs)
             self.add_terrain_to_map(terrain, i, j)
     
     def make_terrain(self, choice, difficulty):

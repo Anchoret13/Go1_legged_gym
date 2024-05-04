@@ -156,13 +156,14 @@ class Go1FwClock(WheeledRobot):
             # self.base_ang_vel
         ), dim = -1)
 
-        self.compute_adapt_input()
+        # self.compute_adapt_input()
+
         # privileged observation
         roller_dofs = torch.tensor([False, False, False, True,  False, False, False, True, False, False,
         False, False, False, False])
         self.roller_obs = self.dof_vel[:, roller_dofs]
         friction_coeff = self.friction_coeffs[:,0].to(self.device)
-        # TO BE ADDED: TERRAIN INFO
+        # TODO TO BE ADDED: TERRAIN INFO
         self.privileged_obs_buf = torch.cat((self.obs_buf,
                                              self.roller_obs,
                                              friction_coeff), dim = -1)
@@ -626,7 +627,10 @@ class Go1FwClock(WheeledRobot):
         return rew_airTime
     
     def _reward_rear_feet_air_time(self):
-        contact =  self.contact_forces[:, self.rear_feet_indices, 2] > 30.
+        # is_rear_foot_on_ground = self.rear_foot_positions[:, :, 2] < 0.03
+        contact =  self.contact_forces[:, self.rear_feet_indices, 2] > 0.1
+        # contact = torch.logical_and(contact, is_rear_foot_on_ground )
+
         contact_filt = torch.logical_or(contact, self.last_rear_feet_contacts)
         self.last_rear_feet_contacts = contact
         first_contact = (self.rear_feet_air_time > 0.) * contact_filt

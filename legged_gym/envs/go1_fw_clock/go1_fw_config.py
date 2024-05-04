@@ -174,7 +174,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
         # soft_dof_pos_limit = 0.01 # NOTE: trying fully following wtw setting
         soft_dof_pos_limit = 0.9
         # self_dof_vel_limit = 0.01
-        base_height_target = 0.32
+        base_height_target = 0.35
 
         only_positive_rewards = False
 
@@ -194,8 +194,8 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             action_rate = -0.01
             roller_action_rate = -0.1
             hip = -1.0
-            penalize_roll = -2.5                  # was -0.5
-            front_leg = -3.5                      # was -0.5
+            penalize_roll = -2.5                  
+            front_leg = -3.5                      
             front_hip = -1.0
             raibert_heuristic = -5.0
             rear_feet_air_time = 3.5
@@ -204,6 +204,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             # tracking_contacts_binary = -0.1  
             roller_action_diff = -1.0
             # alive = 0.5
+
             base_height = -0.1
             collision = -1.5
 
@@ -228,34 +229,5 @@ class Go1FwFlatClockCfgPPO( LeggedRobotCfgPPO ):
         
 
 
-
-'''
-Reward notes:
-
-3/16:
-1. fast; base stable
-            torques = -0.001
-            masked_legs_energy = -1e-4
-            lin_vel_z = -0.05                    
-            action_rate = -0.01
-            roller_action_rate = -0.05
-            hip = -0.5
-            penalize_roll = -1.0                 
-            front_leg = -1.5                      
-            front_hip = -1.0
-            raibert_heuristic = -0.1
-            tracking_swing_force = 1.0
-            tracking_stance_vel = 1.0
-
-
-            #***********************************
-            #    testing 3/15
-            #***********************************  
-            tracking_ang_vel = 0.5
-            lin_vel_x = 3.0
-            orientation = -0.5
-
-
-'''
 
   

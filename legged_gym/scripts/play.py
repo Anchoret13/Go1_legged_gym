@@ -88,8 +88,8 @@ def play(args):
     camera_direction = np.array(env_cfg.viewer.lookat) - np.array(env_cfg.viewer.pos)
     img_idx = 0
     frames = []
-    for i,dof_name in enumerate(env.dof_names):
-        print(i, " : ",dof_name)
+    # for i,dof_name in enumerate(env.dof_names):
+    #     print(i, " : ",dof_name)
     for i in range(10*int(env.max_episode_length)):
         actions = policy(obs.detach())
         obs, _, rews, dones, infos = env.step(actions.detach())
