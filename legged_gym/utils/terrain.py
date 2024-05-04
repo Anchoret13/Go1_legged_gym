@@ -101,8 +101,8 @@ class Terrain:
             terrain = terrain_utils.SubTerrain("terrain",
                               width=self.width_per_env_pixels,
                               length=self.width_per_env_pixels,
-                              vertical_scale=self.vertical_scale,
-                              horizontal_scale=self.horizontal_scale)
+                              vertical_scale=self.cfg.vertical_scale,
+                              horizontal_scale=self.cfg.horizontal_scale)
 
             eval(terrain_type)(terrain, **self.cfg.terrain_kwargs.terrain_kwargs)
             self.add_terrain_to_map(terrain, i, j)
@@ -125,8 +125,9 @@ class Terrain:
                 slope *= -1
             terrain_utils.pyramid_sloped_terrain(terrain, slope=slope, platform_size=3.)
         elif choice < self.proportions[1]:
-            terrain_utils.pyramid_sloped_terrain(terrain, slope=slope, platform_size=3.)
-            terrain_utils.random_uniform_terrain(terrain, min_height=-0.05, max_height=0.05, step=0.005, downsampled_scale=0.2)
+            # terrain_utils.pyramid_sloped_terrain(terrain, slope=slope, platform_size=3.)
+            # terrain_utils.random_uniform_terrain(terrain, min_height=-0.01, max_height=0.01, step=0.05, downsampled_scale=0.2)
+            terrain_utils.random_uniform_terrain(terrain, min_height=-0.01, max_height=0.02, step=0.01, downsampled_scale=0.2)
         elif choice < self.proportions[3]:
             if choice<self.proportions[2]:
                 step_height *= -1

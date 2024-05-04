@@ -105,7 +105,7 @@ class Go1FwClock(WheeledRobot):
             # body_lin_vel, #3
             # body_ang_vel, #3
         ), dim = -1)
-        print(trans_input)
+        # print(trans_input)
         return trans_input
     
     def compute_adapt_target(self):
@@ -626,7 +626,7 @@ class Go1FwClock(WheeledRobot):
         return rew_airTime
     
     def _reward_rear_feet_air_time(self):
-        contact =  self.contact_forces[:, self.rear_feet_indices, 2] > 1.
+        contact =  self.contact_forces[:, self.rear_feet_indices, 2] > 30.
         contact_filt = torch.logical_or(contact, self.last_rear_feet_contacts)
         self.last_rear_feet_contacts = contact
         first_contact = (self.rear_feet_air_time > 0.) * contact_filt
