@@ -205,8 +205,6 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             roller_action_diff = -1.0
             # alive = 0.5
 
-
-
             base_height = -0.1
             collision = -1.5
 
