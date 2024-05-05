@@ -43,8 +43,8 @@ from .base.legged_robot import LeggedRobot
 # from .a1w.a1w import A1W
 # from .a1w.a1w_config import A1wFlatCfg, A1wFlatCfgPPO
 from .go1.go1_config import Go1RoughCfg, Go1RoughCfgPPO
-from .go1_fw.go1_fw import Go1Fw
-from .go1_fw.go1_fw_config import Go1FwFlatCfg, Go1FwFlatCfgPPO
+# from .go1_fw.go1_fw import Go1Fw
+# from .go1_fw.go1_fw_config import Go1FwFlatCfg, Go1FwFlatCfgPPO
 
 from .go1_aw.go1_aw import Go1Aw
 from .go1_aw.go1_aw_config import Go1AwFlatCfg, Go1AwFlatCfgPPO
@@ -80,7 +80,7 @@ from legged_gym.utils.task_registry import task_registry
 # task_registry.register( "go_w", GO_W, go_w_cfg(), go_w_cfgppo())
 # task_registry.register( "a1_w", A1W, A1wFlatCfg(), A1wFlatCfgPPO())
 task_registry.register( "go1", LeggedRobot, Go1RoughCfg(), Go1RoughCfgPPO() )
-task_registry.register( "go1_fw", Go1Fw, Go1FwFlatCfg(), Go1FwFlatCfgPPO() )
+# task_registry.register( "go1_fw", Go1Fw, Go1FwFlatCfg(), Go1FwFlatCfgPPO() )
 task_registry.register( "go1_aw", Go1Aw, Go1AwFlatCfg(), Go1AwFlatCfgPPO() )
 task_registry.register( "go1_fw_clock", Go1FwClock, Go1FwFlatClockCfg(), Go1FwFlatClockCfgPPO())
 task_registry.register( "go1_legged", Go1_Flat, Go1FlatCfg(), Go1FlatCfgPPO())
