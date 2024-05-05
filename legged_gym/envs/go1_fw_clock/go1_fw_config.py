@@ -184,6 +184,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
         class scales:
             # REMOVE HISTORY REWARD
             torques = -0.001
+            # masked_legs_energy = -5e-3
             masked_legs_energy = -5e-4
             tracking_ang_vel = 1.0
             lin_vel_x = 0.1
