@@ -15,19 +15,21 @@ class Go1FwTerrainCfg(Go1FwFlatClockCfg):
     class terrain( Go1FwFlatClockCfg.terrain) :
         mesh_type = 'trimesh'
         measure_heights = True
-        # NOTE: 
-        curriculum = False
-        # terrain_proportions = [0, 1.0, 0, 0, 0.0]
 
+        # NOTE: [plane, rough, slope, stair, discrete, stepping]
+        curriculum = True
+        terrain_proportions = [0.4, 0.15, 0.15, 0.15, 0.15]
+
+        # customized_terrain = True
+        # customized_terrain_set = {
+        #     'plane': 0.5,
+        #     'rough': 0.3,
+        #     'pyramid_stairs':0.2
+        # }
+        # terrain_proportions = [0, 1.0, 0, 0, 0.0]
         # NOTE: varibale below when mesh_type is trimesh
-        selected = True
-        terrain_kwargs = {
-            'type': 'discrete',
-            'max_height': 0.05,
-            'min_size': 1.0,
-            'max_size': 5.0,
-            'num_rects': 15
-        }
+        # if selected => terrain_kwargs is not None
+        selected = False
 '''
         terrain_kwargs = {
             'type': 'rough',
@@ -45,8 +47,8 @@ class Go1FwTerrainCfg(Go1FwFlatClockCfg):
         }
 
         terrain_kwargs = {
-            'type': 'stairs',
-            'step_width': 0.75,
+            'type': 'pyramid_stairs',
+            'step_width': 0.31,
             'step_height': 0.05,
         }
         

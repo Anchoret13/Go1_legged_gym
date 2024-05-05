@@ -54,13 +54,20 @@ def play(args):
     env_cfg, train_cfg = task_registry.get_cfgs(name=args.task)
     # override some parameters for testing
     env_cfg.env.num_envs = min(env_cfg.env.num_envs, ENV_NUM)
-    env_cfg.terrain.num_rows = 1
+    env_cfg.terrain.num_rows = 4
     env_cfg.terrain.num_cols = 1
     env_cfg.terrain.curriculum = False
     env_cfg.noise.add_noise = False
     env_cfg.domain_rand.randomize_friction = True
     env_cfg.domain_rand.push_robots = False
-    
+
+
+    env_cfg.terrain.selected = True
+    env_cfg.terrain.terrain_kwargs = {
+            'type': 'pyramid_stairs',
+            'step_width': 0.31,
+            'step_height': 0.05,
+        }
     # prepare environment
     env, _ = task_registry.make_env(name=args.task, args=args, env_cfg=env_cfg)
     

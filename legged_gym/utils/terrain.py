@@ -62,6 +62,8 @@ class Terrain:
             self.curiculum()
         elif cfg.selected:
             self.selected_terrain()
+        # elif cfg.customized_terrain:
+        #     self.customized_terrain()
         else:    
             self.randomized_terrain()   
         
@@ -82,30 +84,83 @@ class Terrain:
             difficulty = np.random.choice([0.05, 0.1, 0.15])
             terrain = self.make_terrain(choice, difficulty)
             self.add_terrain_to_map(terrain, i, j)
+
+    # def customized_terrain(self):
+    #     func_name_array = []
+    #     func_array = []
+    #     prob_array = []
+    #     for func_name, prob in self.cfg.customized_terrain_set:
+    #         try:
+    #             func_name_array.append(func_name)
+    #             func_array.append(get_terrain_func(func_name))
+    #             prob_array.append(prob)
+    #         except AttributeError:
+    #             print(f"Function {func_name} not found in terrain_utils")
         
+    #     for i in range(self.cfg.num_cols):
+    #         for j in range(self.cfg.num_rows):
+    #             terrain = terrain_utils.SubTerrain(   "terrain",
+    #                             width=self.width_per_env_pixels,
+    #                             length=self.width_per_env_pixels,
+    #                             vertical_scale=self.cfg.vertical_scale,
+    #                             horizontal_scale=self.cfg.horizontal_scale)
+    #             difficulty = np.random.choice([0.1, 0.15])
+    #             choice = j / self.cfg.num_cols + 0.001
+    #             for idx, prob in zip(prob_array):
+    #                 if choice < prob:
+    #                     name = func_name_array[idx]
+    #                     if name == 'plane':
+    #                         pass
+    #                     elif name == 'rough':
+    #                         terrain_utils.random_uniform_terrain(terrain, 
+    #                                                             min_height=-0.01,
+    #                                                             max_height=0.02,
+    #                                                             step=0.01,
+    #                                                             downsampled_scale=0.2)
+    #                     elif name == 'pyramid_stairs':
+    #                         step_height = 0.05 + 0.18 * difficulty
+    #                         terrain_utils.pyramid_stairs_terrain(terrain,
+    #                                                             step_width=0.31,
+    #                                                             step_height=step_height, 
+    #                                                             platform_size=3.)
+    #                     elif name  == 'pyramid_sloped':
+    #                         slope = difficulty * 0.4
+    #                         terrain_utils.pyramid_sloped_terrain(terrain,
+    #                                                             slope=slope,
+    #                                                             platform_size=3.)
+    #                     elif name == 'discrete':
+    #                         discrete_obstacles_height = 0.05 + difficulty * 0.2
+    #                         num_rectangles = 20
+    #                         rectangle_min_size = 1.
+    #                         rectangle_max_size = 2.
+    #                         terrain_utils.discrete_obstacles_terrain(terrain,
+    #                                                                 discrete_obstacles_height,
+    #                                                                 rectangle_min_size,
+    #                                                                 rectangle_max_size,
+    #                                                                 num_rectangles,
+    #                                                                 platform_size=3.)
+    #                     else:
+    #                         print(f"Function {name} not found in terrain_utils")
+        
+                
+
+    #                 else:
+    #                     continue
+
+
+
     def curiculum(self):
         for j in range(self.cfg.num_cols):
             for i in range(self.cfg.num_rows):
                 # difficulty = i / self.cfg.num_rows
                 difficulty = np.random.choice([0.1, 0.15])
-                choice = j / self.cfg.num_cols + 0.001
-
+                # choice = j / self.cfg.num_cols + 0.001
+                choice = i / self.cfg.num_rows + 0.001
                 terrain = self.make_terrain(choice, difficulty)
                 self.add_terrain_to_map(terrain, i, j)
 
     def selected_terrain(self):
         terrain_name = self.cfg.terrain_kwargs.pop('type')
-        if terrain_name == 'rough':
-            terrain_type = 'random_uniform_terrain'
-        elif terrain_name == 'discrete':
-            terrain_type = 'discrete_obstacles_terrain'
-        elif terrain_name == 'stairs':
-            terrain_type = 'stairs_terrain'
-        elif terrain_name == 'slope':
-            terrain_type = 'sloped_terrain'
-        else:
-            print("Error terrain type:")
-            print("please select from: rough | discrete | stairs | slope")
 
         for k in range(self.cfg.num_sub_terrains):
             # Env coordinates in the world
@@ -117,7 +172,7 @@ class Terrain:
                               vertical_scale=self.cfg.vertical_scale,
                               horizontal_scale=self.cfg.horizontal_scale)
             
-            terrain_func = getattr(terrain_utils, terrain_type)
+            terrain_func = get_terrain_func(terrain_name)
             terrain_func(terrain, **self.cfg.terrain_kwargs)
             # eval(terrain_type)(terrain, **self.cfg.terrain_kwargs.terrain_kwargs)
             self.add_terrain_to_map(terrain, i, j)
@@ -135,17 +190,18 @@ class Terrain:
         stone_distance = 0.05 if difficulty==0 else 0.1
         gap_size = 1. * difficulty
         pit_depth = 1. * difficulty
+
         if choice < self.proportions[0]:
-            if choice < self.proportions[0]/ 2:
-                slope *= -1
-            terrain_utils.pyramid_sloped_terrain(terrain, slope=slope, platform_size=3.)
+            pass
         elif choice < self.proportions[1]:
             # terrain_utils.pyramid_sloped_terrain(terrain, slope=slope, platform_size=3.)
             # terrain_utils.random_uniform_terrain(terrain, min_height=-0.01, max_height=0.01, step=0.05, downsampled_scale=0.2)
-            terrain_utils.random_uniform_terrain(terrain, min_height=-0.01, max_height=0.02, step=0.01, downsampled_scale=0.2)
+            terrain_utils.random_uniform_terrain(terrain, min_height=-0.01, max_height=0.02, step=0.05, downsampled_scale=0.2)
+        elif choice < self.proportions[2]:
+            terrain_utils.pyramid_sloped_terrain(terrain, slope=slope, platform_size=3.)
         elif choice < self.proportions[3]:
-            if choice<self.proportions[2]:
-                step_height *= -1
+            # if choice<self.proportions[2]:
+            #     step_height *= -1
             terrain_utils.pyramid_stairs_terrain(terrain, step_width=0.31, step_height=step_height, platform_size=3.)
         elif choice < self.proportions[4]:
             num_rectangles = 20
@@ -202,3 +258,26 @@ def pit_terrain(terrain, depth, platform_size=1.):
     y1 = terrain.width // 2 - platform_size
     y2 = terrain.width // 2 + platform_size
     terrain.height_field_raw[x1:x2, y1:y2] = -depth
+
+def get_terrain_func(key_word):
+        if key_word == 'rough':
+            terrain_func = getattr(terrain_utils, 'random_uniform_terrain')
+        elif key_word == 'sloped':
+            terrain_func = getattr(terrain_utils, 'sloped_terrain')
+        elif key_word == 'pyramid_sloped':
+            terrain_func == getattr(terrain_utils, 'pyramid_sloped_terrain')
+        elif key_word == 'discrete':
+            terrain_func == getattr(terrain_utils, 'discrete_obstacles_terrain')
+        elif key_word == 'wave':
+            terrain_func = getattr(terrain_utils, 'wave_terrain')
+        elif key_word == 'stairs':
+            terrain_func = getattr(terrain_utils, 'stairs_terrain')
+        elif key_word == 'pyramid_stairs':
+            terrain_func = getattr(terrain_utils, 'pyramid_stairs_terrain')
+        elif key_word == 'stepping_stones':
+            terrain_func = getattr(terrain_utils, 'stepping_stones_terrain')
+        else:
+            print("Error terrain type")
+            terrain_func = None
+
+        return terrain_func
