@@ -54,20 +54,48 @@ def play(args):
     env_cfg, train_cfg = task_registry.get_cfgs(name=args.task)
     # override some parameters for testing
     env_cfg.env.num_envs = min(env_cfg.env.num_envs, ENV_NUM)
-    env_cfg.terrain.num_rows = 4
+    env_cfg.terrain.num_rows = 10
     env_cfg.terrain.num_cols = 1
-    env_cfg.terrain.curriculum = False
+
     env_cfg.noise.add_noise = False
     env_cfg.domain_rand.randomize_friction = True
     env_cfg.domain_rand.push_robots = False
 
-
-    env_cfg.terrain.selected = True
-    env_cfg.terrain.terrain_kwargs = {
-            'type': 'pyramid_stairs',
-            'step_width': 0.31,
-            'step_height': 0.05,
-        }
+    env_cfg.terrain.curriculum = True
+    # NOTE: [plane, rough, slope, stair, discrete, stepping]
+    env_cfg.terrain.terrain_proportions = [0.4, 0.3, 0.1, 0.1, 0.1]
+    env_cfg.terrain.selected = False
+    terrain_type = 'slope'
+    if env_cfg.terrain.selected :
+        if terrain_type == 'rough':
+            env_cfg.terrain.terrain_kwargs = {
+                'type': 'rough',
+                'min_height': -0.01,
+                'max_height': 0.02,
+                'step': 0.01,
+                'downsampled_scale': 0.2
+            }
+        elif terrain_type == 'slope':
+            env_cfg.terrain.terrain_kwargs = {
+                'type': 'pyramid_sloped',
+                'slope': 0.3,
+            }    
+        elif terrain_type == 'stair':
+            env_cfg.terrain.terrain_kwargs = {
+                'type': 'pyramid_stairs',
+                'step_width': 0.31,
+                'step_height': 0.05,
+            }
+        elif terrain_type == 'discrete':
+            env_cfg.terrain.terrain_kwargs = {
+                'type': 'discrete',
+                'max_height': 0.05,
+                'min_size': 1.0,
+                'max_size': 5.0,
+                'num_rects': 15
+            }
+        else:
+            print(f'terrain type {terrain_type} is included')
     # prepare environment
     env, _ = task_registry.make_env(name=args.task, args=args, env_cfg=env_cfg)
     

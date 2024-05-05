@@ -62,8 +62,6 @@ class Terrain:
             self.curiculum()
         elif cfg.selected:
             self.selected_terrain()
-        # elif cfg.customized_terrain:
-        #     self.customized_terrain()
         else:    
             self.randomized_terrain()   
         
@@ -265,9 +263,9 @@ def get_terrain_func(key_word):
         elif key_word == 'sloped':
             terrain_func = getattr(terrain_utils, 'sloped_terrain')
         elif key_word == 'pyramid_sloped':
-            terrain_func == getattr(terrain_utils, 'pyramid_sloped_terrain')
+            terrain_func = getattr(terrain_utils, 'pyramid_sloped_terrain')
         elif key_word == 'discrete':
-            terrain_func == getattr(terrain_utils, 'discrete_obstacles_terrain')
+            terrain_func = getattr(terrain_utils, 'discrete_obstacles_terrain')
         elif key_word == 'wave':
             terrain_func = getattr(terrain_utils, 'wave_terrain')
         elif key_word == 'stairs':
