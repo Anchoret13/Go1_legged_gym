@@ -38,7 +38,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
         num_privileged_obs = 45
 
         # NOTE: For data collection:
-        # episode_length_s = 50
+        # episode_length_s = 20
     class init_state( LeggedRobotCfg.init_state ):
         pos = [0.0, 0.0, 0.35] # x,y,z [m]
 
@@ -70,8 +70,8 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
         curriculum = True
         measure_heights = True
         selected = True
-        static_friction = 0.9
-        dynamic_friction = 0.9
+        static_friction = 0.8
+        dynamic_friction = 0.8
         
     # class terrain( LeggedRobotCfg.terrain):
     #     mesh_type = 'trimesh'
@@ -189,7 +189,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             tracking_ang_vel = 1.0
             lin_vel_x = 0.1
             tracking_lin_vel_x = 3.5
-            orientation = -0.5
+            orientation = -1.0
             lin_vel_z = -1.0
             action_rate = -0.01
             roller_action_rate = -0.1
@@ -202,7 +202,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             # penalize_slow_x_vel = 1.0
             feet_clearance = -5.0
             # tracking_contacts_binary = -0.1  
-            roller_action_diff = -1.0
+            roller_action_diff = -0.01
             # alive = 0.5
 
             base_height = -0.1

@@ -128,7 +128,7 @@ def GRU_test(args, eval_params, model_params):
     robot_index = 0 # which robot is used for logging
     joint_index = 1 # which joint is used for logging
     start_state_log = 0 # do not ignore starting
-    stop_state_log = 500 # number of steps before plotting states
+    stop_state_log = 1500 # number of steps before plotting states
     for i in range(600):
         actions = policy(obs.detach())
         obs, _, rews, dones, infos = env.step(actions.detach())
@@ -194,7 +194,7 @@ def MLP_test(args, eval_params, model_params):
 
 if __name__ == "__main__":
     GRU_eval_params = {
-        'checkpoint_path': '../../sys_id/logs/GRU/2024-05-02_00-58-33/checkpoint_epoch_220.pth', 
+        'checkpoint_path': '../../sys_id/logs/GRU/2024-05-04_20-06-42/checkpoint_epoch_80.pth', 
         'dataset_folder_path': '../dataset/eval/wheeled_flat', 
         'window_size': 50,
         'batch_size': 1, 

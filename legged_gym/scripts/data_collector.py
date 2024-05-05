@@ -9,7 +9,9 @@ import numpy as np
 import torch
 import pickle as pkl
 
-ENV_NUM = 500
+import random
+
+ENV_NUM = 1500
 
 def collect_trajectory(args, traj_num):
     env_cfg, train_cfg = task_registry.get_cfgs(name=args.task)
@@ -30,7 +32,7 @@ def collect_trajectory(args, traj_num):
 
     # load policy
     train_cfg.runner.resume = True
-    args.load_run = "/home/well/Desktop/Skating/legged_gym/logs/roller_skating_asac/May02_21-41-38_"
+    args.load_run = "/home/well/Desktop/Skating/legged_gym/logs/roller_skating_asac/May02_21-41-38_SAVE_THIS_IT_WORKS"
     ppo_runner, train_cfg = task_registry.make_alg_runner(env=env, name=args.task, args=args, train_cfg=train_cfg)
     policy = ppo_runner.get_inference_policy(device=env.device)
     dataset_dir = os.path.join(LEGGED_GYM_ROOT_DIR, 'dataset', 'short', 'wheeled_flat')
@@ -76,9 +78,11 @@ def collect_trajectory(args, traj_num):
             multi_actions[env_idx].append(actions[env_idx].cpu().detach().numpy().tolist())
 
     for idx in range(len(multi_trajectories)):
-        multi_trajectories[idx]["obs"] = multi_obs[idx]
-        multi_trajectories[idx]["physprops"] = multi_physprops[idx]
-        multi_trajectories[idx]["act"] = multi_actions[idx]
+        original_length = len(multi_obs[idx])
+        clip_length = random.randint(int(0.25 * original_length), original_length)
+        multi_trajectories[idx]["obs"] = multi_obs[idx][:clip_length]
+        multi_trajectories[idx]["physprops"] = multi_physprops[idx][:clip_length]
+        multi_trajectories[idx]["act"] = multi_actions[idx][:clip_length]
         file_path = os.path.join(dataset_dir, f'traj_{idx:04d}.pkl')
         print(f'{idx} trajectories collected')
         with open(file_path, "wb") as f:
