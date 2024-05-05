@@ -98,40 +98,56 @@ class Go1FwFlatTiltCfg( Go1FwFlatClockCfg):
         # slope_treshold = 0.
 
     class control( Go1FwFlatClockCfg.control ):
-        # PD Drive parameters:
-        control_type = 'P'
-        gaits_type = 'fix_f'
-        stiffness = {'hip_joint': 30.0, 
-                    'thigh_joint': 30.0,
-                    'calf_joint': 30.0, 
-                    'roller': 0.0, 
-                    'tilt':0.0}  # [N*m/rad]
-        
-        damping = {'hip_joint': 0.5, 
-                    'thigh_joint': 0.5,
-                    'calf_joint': 0.5, 
-                    'roller': 0.0, 
-                    'tilt':0.0}     # [N*m*s/rad]
-        
-        # action scale: target angle = actionScale * action + defaultAngle
-        action_scale = 0.25
-        # decimation: Number of control action updates @ sim DT per policy DT
-        decimation = 4
+        stiffness = {
+            'FL_hip_joint': 40.0,  
+            'RL_hip_joint': 30.0,  
+            'FR_hip_joint': 40.0, 
+            'RR_hip_joint': 30.0, 
 
+            'FL_thigh_joint': 35.0,
+            'RL_thigh_joint': 35.0, 
+            'FR_thigh_joint': 35.0,  
+            'RR_thigh_joint': 35.0,   
+
+            'FL_calf_joint': 35.0,  
+            'RL_calf_joint': 35.0,  
+            'FR_calf_joint': 35.0,  
+            'RR_calf_joint': 35.0,  
+
+            'FL_roller_foot_joint': 0,
+            'FR_roller_foot_joint': 0,
+
+            'FR_tilt_joint':0.0,
+            'FL_tilt_joint':0.0,
+        }
+        # damping = {'hip_joint': 0.5, 'thigh_joint': 0.5, 'calf_joint': 0.5, 'roller': 0.0}     # [N*m*s/rad]
+        damping = {
+            'FL_hip_joint': 0.5,  
+            'RL_hip_joint': 0.5,  
+            'FR_hip_joint': 0.5, 
+            'RR_hip_joint': 0.5, 
+
+            'FL_thigh_joint': 0.5,
+            'RL_thigh_joint': 0.5, 
+            'FR_thigh_joint': 0.5,  
+            'RR_thigh_joint': 0.5,   
+
+            'FL_calf_joint': 0.5,  
+            'RL_calf_joint': 0.5,  
+            'FR_calf_joint': 0.5,  
+            'RR_calf_joint': 0.5,  
+
+            'FL_roller_foot_joint': 0,
+            'FR_roller_foot_joint': 0,
+
+            'FR_tilt_joint':0.0,
+            'FL_tilt_joint':0.0,
+        }
+        
     class asset( Go1FwFlatClockCfg.asset ):
         file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/go1_fw/urdf/go1_fw3_contact_tilt_wheel.urdf'
-        name = "go1"
-        foot_name = "foot"
-        roller_name = "roller"
         roller_tilt_name = "tilt"
-        penalize_contacts_on = ["thigh", "calf"]
-        terminate_after_contacts_on = ["base"]
-        self_collisions = 1 # 1 to disable, 0 to enable...bitwise filter
-       
-        default_dof_drive_mode = 3 # see GymDofDriveModeFlags (0 is none, 1 is pos tgt, 2 is vel tgt, 3 effort)
-        replace_cylinder_with_capsule = False # replace collision cylinders with capsules, leads to faster/more stable simulation
-        flip_visual_attachments = False # Some .obj meshes must be flipped from y-up to z-up
-        
+
     # class commands(LeggedRobotCfg.commands):
     #     # num_commands = 1
     #     class ranges(LeggedRobotCfg.commands.ranges):
@@ -266,36 +282,3 @@ class Go1FwFlatTiltCfgPPO( Go1FwFlatClockCfgPPO ):
         run_name = ''
         experiment_name = 'go1_roller_tilt'
         
-
-
-
-'''
-Reward notes:
-
-3/16:
-1. fast; base stable
-            torques = -0.001
-            masked_legs_energy = -1e-4
-            lin_vel_z = -0.05                    
-            action_rate = -0.01
-            roller_action_rate = -0.05
-            hip = -0.5
-            penalize_roll = -1.0                 
-            front_leg = -1.5                      
-            front_hip = -1.0
-            raibert_heuristic = -0.1
-            tracking_swing_force = 1.0
-            tracking_stance_vel = 1.0
-
-
-            #***********************************
-            #    testing 3/15
-            #***********************************  
-            tracking_ang_vel = 0.5
-            lin_vel_x = 3.0
-            orientation = -0.5
-
-
-'''
-
-  
