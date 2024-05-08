@@ -149,7 +149,7 @@ class Go1FwFlatTiltCfg( Go1FwFlatClockCfg):
 
 
     class domain_rand(Go1FwFlatClockCfg.domain_rand):
-        roller_tilt_rand_range = [-0.1, 0.1]
+        roller_tilt_rand_range = [-0.01, 0.01]
 
 class Go1FwFlatTiltCfgPPO( Go1FwFlatClockCfgPPO ):
     class algorithm( LeggedRobotCfgPPO.algorithm ):

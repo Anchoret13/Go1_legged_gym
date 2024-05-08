@@ -8,8 +8,8 @@ from legged_gym.utils.math import *
 
 import torch
 from typing import Tuple, Dict
-# from ..base.wheeled_robot import WheeledRobot
-from ..base.wheeled_tilt_robot import WheeledRobot
+from ..base.wheeled_robot import WheeledRobot
+# from ..base.wheeled_tilt_robot import WheeledRobot
 from .go1_fw_tilt_config import Go1FwFlatTiltCfg
 from ..go1_fw_clock.go1_fw import Go1FwClock
 
@@ -94,13 +94,9 @@ class Go1FwTilt(WheeledRobot):
         self.base_pos = self.root_states[:self.num_envs, 0:3]
         self.wheel_indices = torch.tensor([6, 12], device = self.device)
         self.rear_feet_indices = torch.tensor([16, 20], device = self.device)
-<<<<<<< Updated upstream
-        
-=======
         #         self.rear_feet_indices[0] = self.gym.find_actor_rigid_body_handle(self.envs[0], self.actor_handles[0], 'RL_foot')
         # self.rear_feet_indices[1] = self.gym.find_actor_rigid_body_handle(self.envs[0], self.actor_handles[0], 'RR_foot')
         # FL_roller_foot
->>>>>>> Stashed changes
         # gait index from WTW
         self.gait_indices = torch.zeros(self.num_envs, dtype=torch.float, device=self.device,
                                         requires_grad=False)

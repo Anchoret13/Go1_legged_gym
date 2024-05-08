@@ -699,6 +699,9 @@ class WheeledRobot(BaseTask):
                     dof_props ["driveMode"][k] = gymapi.DOF_MODE_NONE
                     dof_props ["stiffness"][k] = 0.0
                     dof_props ["damping"][k] = 0.0
+                    dof_props ["effort"][k] = 0.0
+                    dof_props ["velocity"][k] = 1000.0
+                    dof_props ["friction"][k] = 0.2
                     dof_props ["lower"][k] = self.cfg.domain_rand.roller_tilt_rand_range[0]
                     dof_props ["upper"][k] = self.cfg.domain_rand.roller_tilt_rand_range[1]
             #  

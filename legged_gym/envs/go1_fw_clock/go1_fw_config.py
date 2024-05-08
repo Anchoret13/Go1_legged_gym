@@ -73,29 +73,6 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
         static_friction = 0.8
         dynamic_friction = 0.8
         
-    # class terrain( LeggedRobotCfg.terrain):
-    #     mesh_type = 'trimesh'
-        # horizontal_scale  = 0.1
-        # vertical_scale = 0.001
-        # border_size = 0
-        # curriculum = True
-        # static_friction = 1.0
-        # dynamic_friction = 1.0
-        # restitution = 0.0
-        # TODO: terrain noise magnitude
-        # TODO: terrain smoothness
-        # measure_heights = True
-        # measured_points_x = [-0.8, -0.7, -0.6, -0.5, -0.4, -0.3, -0.2, -0.1, 0., 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
-        # measured_points_y = [-0.5, -0.4, -0.3, -0.2, -0.1, 0., 0.1, 0.2, 0.3, 0.4, 0.5]
-        # selected = False
-        # terrain_length = 20.
-        # terrain_width = 20.
-        # num_cols = 10
-        # num_rows = 10
-        # # NOTE: terrain_proportions: [smooth slope, rough slope, stairs up, stairs down, discrete]
-        # terrain_proportions = [0.4, 0.4, 0.0, 0.0, 0.2]
-        # # trimesh  
-        # slope_treshold = 0.
 
     class control( LeggedRobotCfg.control ):
         # PD Drive parameters:
