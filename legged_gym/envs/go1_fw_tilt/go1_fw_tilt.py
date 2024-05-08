@@ -73,10 +73,11 @@ class Go1FwTilt(WheeledRobot):
 
         # TODO add friction for roller dof?
         # privileged observation
-        roller_dofs = torch.tensor([False, False, False, True, True,
-                                    False, False, False, True, True,
-                                    False, False, False,
-                                    False, False, False])
+        roller_dofs = ~dofs_to_keep
+        # roller_dofs = torch.tensor([False, False, False, True, True,
+        #                             False, False, False, True, True,
+        #                             False, False, False,
+        #                             False, False, False])
         self.roller_obs = self.dof_vel[:, roller_dofs]
         friction_coeff = self.friction_coeffs[:,0].to(self.device)
         # TO BE ADDED: TERRAIN INFO
@@ -93,13 +94,18 @@ class Go1FwTilt(WheeledRobot):
         self.base_pos = self.root_states[:self.num_envs, 0:3]
         self.wheel_indices = torch.tensor([6, 12], device = self.device)
         self.rear_feet_indices = torch.tensor([16, 20], device = self.device)
+<<<<<<< Updated upstream
         
+=======
+        #         self.rear_feet_indices[0] = self.gym.find_actor_rigid_body_handle(self.envs[0], self.actor_handles[0], 'RL_foot')
+        # self.rear_feet_indices[1] = self.gym.find_actor_rigid_body_handle(self.envs[0], self.actor_handles[0], 'RR_foot')
+        # FL_roller_foot
+>>>>>>> Stashed changes
         # gait index from WTW
         self.gait_indices = torch.zeros(self.num_envs, dtype=torch.float, device=self.device,
                                         requires_grad=False)
         
         # desired_contact_state from WTW
-         # TODO is 4 and 2 change?
         
         self.desired_contact_states = torch.zeros(self.num_envs, 4, dtype=torch.float, device=self.device,
                                                   requires_grad=False, )

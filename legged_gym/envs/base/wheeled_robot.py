@@ -476,9 +476,9 @@ class WheeledRobot(BaseTask):
         self.noise_scale_vec = self._get_noise_scale_vec(self.cfg)
         self.gravity_vec = to_torch(get_axis_params(-1., self.up_axis_idx), device=self.device).repeat((self.num_envs, 1))
         self.forward_vec = to_torch([1., 0., 0.], device=self.device).repeat((self.num_envs, 1))
-        self.torques = torch.zeros(self.num_envs, 14, dtype=torch.float, device=self.device, requires_grad=False)
-        self.p_gains = torch.zeros(14, dtype=torch.float, device=self.device, requires_grad=False)
-        self.d_gains = torch.zeros(14, dtype=torch.float, device=self.device, requires_grad=False)
+        self.torques = torch.zeros(self.num_envs, self.num_dof, dtype=torch.float, device=self.device, requires_grad=False)
+        self.p_gains = torch.zeros(self.num_dof, dtype=torch.float, device=self.device, requires_grad=False)
+        self.d_gains = torch.zeros(self.num_dof, dtype=torch.float, device=self.device, requires_grad=False)
         self.actions = torch.zeros(self.num_envs, self.num_actions, dtype=torch.float, device=self.device, requires_grad=False)
         self.last_actions = torch.zeros(self.num_envs, self.num_actions, dtype=torch.float, device=self.device, requires_grad=False)
         self.last_dof_vel = torch.zeros_like(self.dof_vel)
@@ -653,8 +653,11 @@ class WheeledRobot(BaseTask):
         self.body_ankle_names = [s for s in body_names if "ankle" in s]
         self.body_ankle_ids = [self.body_name_to_id[name] for name in self.body_ankle_names]
         # print(self.dof_roller_ids)
-        # 
-        #  
+        
+        self.is_roller_tilted = hasattr(self.cfg.asset, 'roller_tilt_name')
+        if self.is_roller_tilted:
+            self.dof_roller_tilt_names = [s for s in self.dof_names if self.cfg.asset.roller_tilt_name in s]
+            self.dof_roller_tilt_ids = [self.dof_name_to_id[name] for name in self.dof_roller_tilt_names]
         # # *****************************************************************************
         # Helper dictionary to map joint names to tensor ID
 
@@ -691,6 +694,15 @@ class WheeledRobot(BaseTask):
             # 
             #  
             # # *****************************************************************************
+            if self.is_roller_tilted:    
+                for k in self.dof_roller_tilt_ids:
+                    dof_props ["driveMode"][k] = gymapi.DOF_MODE_NONE
+                    dof_props ["stiffness"][k] = 0.0
+                    dof_props ["damping"][k] = 0.0
+                    dof_props ["lower"][k] = self.cfg.domain_rand.roller_tilt_rand_range[0]
+                    dof_props ["upper"][k] = self.cfg.domain_rand.roller_tilt_rand_range[1]
+            #  
+            # # *****************************************************************************
             self.gym.set_actor_dof_properties(env_handle, actor_handle, dof_props)
             
             body_props = self.gym.get_actor_rigid_body_properties(env_handle, actor_handle)
@@ -702,11 +714,22 @@ class WheeledRobot(BaseTask):
             self.actor_handles.append(actor_handle)
 
         self.feet_indices = torch.zeros(len(feet_names), dtype=torch.long, device=self.device, requires_grad=False)
+        print(feet_names)
         self.rear_feet_indices = torch.zeros(2, dtype=torch.long, device=self.device, requires_grad=False)
         for i in range(len(feet_names)):
             self.feet_indices[i] = self.gym.find_actor_rigid_body_handle(self.envs[0], self.actor_handles[0], feet_names[i])
-        self.rear_feet_indices[0] = 14
-        self.rear_feet_indices[1] = 18
+         # TODO is idx correct?
+
+        # # *****************************************************************************
+        #  14:RL ;  18:RR
+        self.rear_feet_indices[0] = self.gym.find_actor_rigid_body_handle(self.envs[0], self.actor_handles[0], 'RL_foot')
+        self.rear_feet_indices[1] = self.gym.find_actor_rigid_body_handle(self.envs[0], self.actor_handles[0], 'RR_foot')
+        # print('**********************************************************************************')
+        # print(self.gym.find_actor_rigid_body_handle(self.envs[0], self.actor_handles[0], 'RL_foot'))
+        # print(self.gym.find_actor_rigid_body_handle(self.envs[0], self.actor_handles[0], 'RR_foot'))
+        # print('**********************************************************************************')
+        #  
+        # # *****************************************************************************
         self.penalised_contact_indices = torch.zeros(len(penalized_contact_names), dtype=torch.long, device=self.device, requires_grad=False)
         for i in range(len(penalized_contact_names)):
             self.penalised_contact_indices[i] = self.gym.find_actor_rigid_body_handle(self.envs[0], self.actor_handles[0], penalized_contact_names[i])

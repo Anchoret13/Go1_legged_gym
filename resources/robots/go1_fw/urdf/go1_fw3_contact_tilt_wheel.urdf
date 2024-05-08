@@ -622,17 +622,17 @@
  <!-- *****************       FL roller        ***************** -->
   <joint name="FL_tilt_joint" type="revolute">
     <parent link="FL_ankle"/>
-    <child link="FL_turn"/>
+    <child link="FL_tilt"/>
     <origin xyz="-0.035 -0.00 -0.035" rpy="0 -0.8 0"/>
     <axis xyz="1 0 0"/>
     <dynamics damping="0" friction="0"/>
     <limit effort="33.5" lower="-0.01" upper="0.01" velocity="28"/>
   </joint>
-  <link name="FL_turn">
+  <link name="FL_tilt">
   </link>
 
   <joint name="FL_roller_foot_joint" type="continuous">
-    <parent link="FL_turn"/>
+    <parent link="FL_tilt"/>
     <child link="FL_roller_foot"/>
     <origin xyz="0 0 0" rpy="0 0 0"/>
     <axis xyz="-0 1 0"/> 
@@ -672,18 +672,18 @@
   <!-- *****************       FR roller        ***************** -->
   <joint name="FR_tilt_joint" type="revolute">
     <parent link="FR_ankle"/>
-    <child link="FR_turn"/>
+    <child link="FR_tilt"/>
     <origin xyz="-0.035 -0.00 -0.035" rpy="0 -0.8 0"/>
     <axis xyz="1 0 0"/>
     <dynamics damping="0" friction="0"/>
     <limit effort="33.5" lower="-0.01" upper="-0.01" velocity="28"/>
   </joint>
-  <link name="FR_turn">
+  <link name="FR_tilt">
   </link>
 
 
   <joint name="FR_roller_foot_joint" type="continuous">
-    <parent link="FR_turn"/>
+    <parent link="FR_tilt"/>
     <child link="FR_roller_foot"/>
     <origin xyz="0.0 -0.00 0.0" rpy="0 0 0"/>
     <axis xyz="0 1 0"/> 
