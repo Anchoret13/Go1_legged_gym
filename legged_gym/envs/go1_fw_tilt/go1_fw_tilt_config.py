@@ -35,28 +35,27 @@ class Go1FwFlatTiltCfg( Go1FwFlatClockCfg):
     class env( Go1FwFlatClockCfg.env):
         num_envs = 4096
         num_actions = 12
-        num_observations = 42 + 6 
-        #                    + 4
-        num_privileged_obs = 45 + 6 + 2
+        num_observations = 42  
+        num_privileged_obs = 45 + 2
     class init_state( Go1FwFlatClockCfg.init_state ):
         pos = [0.0, 0.0, 0.35] # x,y,z [m]
 
         #    'FL_hip_joint': 0.1,   # [rad]
         #     'RL_hip_joint': 0.1,   # [rad]
         default_joint_angles = { # = target angles [rad] when action = 0.0
-            'FL_hip_joint': 0.0,   # [rad]
+            'FL_hip_joint': 0.05,   # [rad]
             'RL_hip_joint': 0.1,   # [rad]
-            'FR_hip_joint': -0.0 ,  # [rad]
+            'FR_hip_joint': -0.05 ,  # [rad]
             'RR_hip_joint': -0.1,   # [rad]
 
-            'FL_thigh_joint': 0.6,     # [rad]
+            'FL_thigh_joint': 0.8,     # [rad]
             'RL_thigh_joint': 1.,   # [rad]
-            'FR_thigh_joint': 0.6,     # [rad]
+            'FR_thigh_joint': 0.8,     # [rad]
             'RR_thigh_joint': 1.,   # [rad]
 
-            'FL_calf_joint': -1.6,   # [rad]
+            'FL_calf_joint': -1.5,   # [rad]
             'RL_calf_joint': -1.5,    # [rad]
-            'FR_calf_joint': -1.6,  # [rad]
+            'FR_calf_joint': -1.5,  # [rad]
             'RR_calf_joint': -1.5,    # [rad]
 
             'FL_roller_foot_joint': 0,
@@ -273,7 +272,7 @@ class Go1FwFlatTiltCfg( Go1FwFlatClockCfg):
     #         alive = 0.5
 
     class domain_rand(Go1FwFlatClockCfg.domain_rand):
-        roller_tilt_rand_range = [-0.01, 0.01]
+        roller_tilt_rand_range = [-0.1, 0.1]
 
 class Go1FwFlatTiltCfgPPO( Go1FwFlatClockCfgPPO ):
     class algorithm( LeggedRobotCfgPPO.algorithm ):

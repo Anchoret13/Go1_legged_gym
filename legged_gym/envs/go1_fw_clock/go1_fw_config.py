@@ -202,7 +202,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             # penalize_slow_x_vel = 1.0
             feet_clearance = -5.0
             # tracking_contacts_binary = -0.1  
-            roller_action_diff = -0.01
+            roller_action_diff = -0.5
             # alive = 0.5
 
             base_height = -0.1
