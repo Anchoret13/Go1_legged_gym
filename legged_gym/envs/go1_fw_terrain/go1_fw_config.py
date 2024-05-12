@@ -19,16 +19,7 @@ class Go1FwTerrainCfg(Go1FwFlatClockCfg):
         # NOTE: [plane, rough, slope, stair, discrete, stepping]
         curriculum = True
         terrain_proportions = [0.4, 0.15, 0.15, 0.15, 0.15]
-
-        # customized_terrain = True
-        # customized_terrain_set = {
-        #     'plane': 0.5,
-        #     'rough': 0.3,
-        #     'pyramid_stairs':0.2
-        # }
-        # terrain_proportions = [0, 1.0, 0, 0, 0.0]
-        # NOTE: varibale below when mesh_type is trimesh
-        # if selected => terrain_kwargs is not None
+        difficulty_max = 0.5
         selected = False
 '''
         terrain_kwargs = {

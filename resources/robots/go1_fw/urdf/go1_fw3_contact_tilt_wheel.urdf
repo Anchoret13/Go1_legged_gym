@@ -663,7 +663,7 @@
     </inertial>
 
     <contact>
-      <lateral_friction value="100"/> <!-- Reduced lateral friction for smooth sliding -->
+      <lateral_friction value="25"/> <!-- Reduced lateral friction for smooth sliding -->
       <rolling_friction value="0.0001"/> <!-- Reduced rolling friction for continuous motion -->
     </contact>
   </link>
@@ -714,7 +714,7 @@
     </inertial>
 
     <contact>
-      <lateral_friction value="100"/> <!-- Reduced lateral friction for smooth sliding -->
+      <lateral_friction value="25"/> <!-- Reduced lateral friction for smooth sliding -->
       <rolling_friction value="0.0001"/> <!-- Reduced rolling friction for continuous motion -->
     </contact>
   </link>

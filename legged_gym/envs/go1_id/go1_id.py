@@ -55,11 +55,11 @@ class Go1FwID(WheeledRobot):
         active_dof_vel = self.dof_vel[:, dofs_to_keep]
 
         self.obs_buf = torch.cat((
-            self.projected_gravity,
-            self.commands[:, :3] * self.commands_scale,
-            (self.active_dof_pos - self.active_default_dof_pos) * self.obs_scales.dof_pos,
-            active_dof_vel * self.obs_scales.dof_vel,
-            torch.clip(self.actions, -1, 1)
+            self.projected_gravity, #0-2 
+            self.commands[:, :3] * self.commands_scale, # 3-5
+            (self.active_dof_pos - self.active_default_dof_pos) * self.obs_scales.dof_pos, # 12
+            active_dof_vel * self.obs_scales.dof_vel, # 12
+            torch.clip(self.actions, -1, 1) # 12
         ), dim = -1)
 
         roller_dofs = torch.tensor([False, False, False, True,  False, False, False, True, False, False,

@@ -151,7 +151,8 @@ class Terrain:
         for j in range(self.cfg.num_cols):
             for i in range(self.cfg.num_rows):
                 # difficulty = i / self.cfg.num_rows
-                difficulty = np.random.choice([0.1, 0.15])
+                # difficulty = np.random.choice([0.1, 0.15])
+                difficulty = 0.1 + (i / self.cfg.num_rows) * (self.cfg.difficulty_max - 0.0)
                 # choice = j / self.cfg.num_cols + 0.001
                 choice = i / self.cfg.num_rows + 0.001
                 terrain = self.make_terrain(choice, difficulty)

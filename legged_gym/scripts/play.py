@@ -61,10 +61,10 @@ def play(args):
     env_cfg.domain_rand.randomize_friction = True
     env_cfg.domain_rand.push_robots = False
 
-    env_cfg.terrain.curriculum = True
+    env_cfg.terrain.curriculum = False
     # NOTE: [plane, rough, slope, stair, discrete, stepping]
     env_cfg.terrain.terrain_proportions = [0.4, 0.3, 0.1, 0.1, 0.1]
-    env_cfg.terrain.selected = False
+    env_cfg.terrain.selected = True
     terrain_type = 'slope'
     if env_cfg.terrain.selected :
         if terrain_type == 'rough':
@@ -78,13 +78,13 @@ def play(args):
         elif terrain_type == 'slope':
             env_cfg.terrain.terrain_kwargs = {
                 'type': 'pyramid_sloped',
-                'slope': 0.3,
+                'slope': 0.2,
             }    
         elif terrain_type == 'stair':
             env_cfg.terrain.terrain_kwargs = {
                 'type': 'pyramid_stairs',
-                'step_width': 0.31,
-                'step_height': 0.05,
+                'step_width': 0.35,
+                'step_height': 0.08,
             }
         elif terrain_type == 'discrete':
             env_cfg.terrain.terrain_kwargs = {

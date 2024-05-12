@@ -64,10 +64,10 @@ def adaptive_sample_vel_cmd(min_vel, max_vel, current_step, env_ids, device, tot
     if len(env_ids) == 0:
         env_ids = torch.tensor([0])
     current_iteration = current_step // steps_per_iteration
-    k_min = -10
+    k_min = -4
     k_max = 1
-    if current_iteration < (total_iterations * 0.5):
-        k = k_min + (current_iteration * (k_max - k_min) /  (total_iterations * 0.5))
+    if current_iteration < (total_iterations * 0.4):
+        k = k_min + (current_iteration * (k_max - k_min) /  (total_iterations * 0.4))
     else:
         k = k_max
     values = torch.linspace(min_vel, max_vel, n_samples)
@@ -95,6 +95,7 @@ class Go1FwClock(WheeledRobot):
 
         self.active_dof_pos = self.dof_pos[:, dofs_to_keep]
         self.active_default_dof_pos = self.default_dof_pos[:, dofs_to_keep]
+        active_dof_vel = self.dof_vel[:, dofs_to_keep]
 
         body_lin_vel = self.base_lin_vel
         body_ang_vel = self.base_ang_vel
@@ -102,6 +103,7 @@ class Go1FwClock(WheeledRobot):
         trans_input = torch.cat((
             self.projected_gravity, #3
             (self.active_dof_pos - self.active_default_dof_pos) * self.obs_scales.dof_pos, #12
+            active_dof_vel
             # body_lin_vel, #3
             # body_ang_vel, #3
         ), dim = -1)
@@ -113,7 +115,8 @@ class Go1FwClock(WheeledRobot):
             self.roller_obs.to(self.device),
             self.friction_coeffs[:,0].to(self.device),
             self.base_lin_vel.to(self.device),
-            self.base_ang_vel.to(self.device)
+            self.base_ang_vel.to(self.device),
+            self.body_mass.to(self.device)
         ), dim = -1)
         return target
 
@@ -152,8 +155,8 @@ class Go1FwClock(WheeledRobot):
             (self.active_dof_pos - self.active_default_dof_pos) * self.obs_scales.dof_pos,
             active_dof_vel * self.obs_scales.dof_vel,
             torch.clip(self.actions, -1, 1),
-            # self.base_lin_vel,
-            # self.base_ang_vel
+            self.base_lin_vel,
+            self.base_ang_vel
         ), dim = -1)
 
         # self.compute_adapt_input()
@@ -357,9 +360,9 @@ class Go1FwClock(WheeledRobot):
         Args:
             env_ids (List[int]): Environments ids for which new commands are needed
         """
-        self.commands[env_ids, 0] = torch_rand_float(self.command_ranges["lin_vel_x"][0], self.command_ranges["lin_vel_x"][1], (len(env_ids), 1), device=self.device).squeeze(1)
+        # self.commands[env_ids, 0] = torch_rand_float(self.command_ranges["lin_vel_x"][0], self.command_ranges["lin_vel_x"][1], (len(env_ids), 1), device=self.device).squeeze(1)
         # adaptive_sample_vel_cmd(min_vel, max_vel, current_step, env_ids, device, total_iterations = 10000, n_samples = 1000, steps_per_iteration = 24):
-        # self.commands[env_ids, 0]  = adaptive_sample_vel_cmd(self.command_ranges["lin_vel_x"][0], self.command_ranges["lin_vel_x"][1], self.current_step, env_ids, self.device)
+        self.commands[env_ids, 0]  = adaptive_sample_vel_cmd(self.command_ranges["lin_vel_x"][0], self.command_ranges["lin_vel_x"][1], self.current_step, env_ids, self.device)
         self.commands[env_ids, 1] = torch_rand_float(self.command_ranges["lin_vel_y"][0], self.command_ranges["lin_vel_y"][1], (len(env_ids), 1), device=self.device).squeeze(1)
         if self.cfg.commands.heading_command:
             self.commands[env_ids, 3] = torch_rand_float(self.command_ranges["heading"][0], self.command_ranges["heading"][1], (len(env_ids), 1), device=self.device).squeeze(1)

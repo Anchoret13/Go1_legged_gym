@@ -34,8 +34,8 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
     class env( LeggedRobotCfg.env):
         num_envs = 4096
         num_actions = 12
-        num_observations = 42 
-        num_privileged_obs = 45
+        num_observations = 42 + 6
+        num_privileged_obs = 45 + 6
 
         # NOTE: For data collection:
         # episode_length_s = 20
@@ -140,7 +140,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
         # num_commands = 1
         class ranges(LeggedRobotCfg.commands.ranges):
             heading = [0, 0]
-            lin_vel_x = [0.0, 2.5] # min max [m/s]
+            lin_vel_x = [0.0, 3.0] # min max [m/s]
             # old range 3/15
             lin_vel_y = [0.0, 0.0]
             # ang_vel_yaw = [-0.0, 0.]    # min max [rad/s]
@@ -165,7 +165,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             masked_legs_energy = -5e-4
             tracking_ang_vel = 1.0
             lin_vel_x = 0.1
-            tracking_lin_vel_x = 3.5
+            tracking_lin_vel_x = 5.5
             orientation = -1.0
             lin_vel_z = -1.0
             action_rate = -0.01
@@ -179,7 +179,7 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
             # penalize_slow_x_vel = 1.0
             feet_clearance = -5.0
             # tracking_contacts_binary = -0.1  
-            roller_action_diff = -0.5
+            roller_action_diff = -0.05
             # alive = 0.5
 
             base_height = -0.1
@@ -191,11 +191,11 @@ class Go1FwFlatClockCfg( LeggedRobotCfg ):
         push_robots = False
         # push_interval_s = 15
         # max_push_vel_xy = 1.0
-        randomize_base_mass = False
+        randomize_base_mass = True
 
-        # added_mass_range = [-1, 3]
-        hip_friction_sim = False
-        hip_action_noise = 0.1
+        added_mass_range = [0, 3]
+        # hip_friction_sim = False
+        # hip_action_noise = 0.1
 
 class Go1FwFlatClockCfgPPO( LeggedRobotCfgPPO ):
     class algorithm( LeggedRobotCfgPPO.algorithm ):

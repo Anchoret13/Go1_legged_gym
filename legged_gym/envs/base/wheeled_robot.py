@@ -39,6 +39,10 @@ class WheeledRobot(BaseTask):
         self.debug_viz = False
         self.init_done = False
         self._parse_cfg(self.cfg)
+        
+        ### DOMAIN RAND PARAMETERS
+        self.body_mass = []
+
         super().__init__(self.cfg, sim_params, physics_engine, sim_device, headless)
 
         if not self.headless:
@@ -46,6 +50,9 @@ class WheeledRobot(BaseTask):
         self._init_buffers()
         self._prepare_reward_function()
         self.init_done = True
+
+        # RANDOMIZED PARAMETERS
+        
 
     def step(self, actions):
         """ Apply actions, simulate, call self.post_physics_step()
@@ -286,6 +293,7 @@ class WheeledRobot(BaseTask):
         # randomize base mass
         if self.cfg.domain_rand.randomize_base_mass:
             rng = self.cfg.domain_rand.added_mass_range
+            # self.payloads[env_id] = np.random.uniform(rng[0], rng[1])
             props[0].mass += np.random.uniform(rng[0], rng[1])
         return props
     
@@ -490,6 +498,8 @@ class WheeledRobot(BaseTask):
         self.base_lin_vel = quat_rotate_inverse(self.base_quat, self.root_states[:, 7:10])
         self.base_ang_vel = quat_rotate_inverse(self.base_quat, self.root_states[:, 10:13])
         self.projected_gravity = quat_rotate_inverse(self.base_quat, self.gravity_vec)
+
+        self.body_mass = torch.tensor(self.body_mass, dtype=torch.float, device=self.device, requires_grad=False).unsqueeze(1)
         if self.cfg.terrain.measure_heights:
             self.height_points = self._init_height_points()
         self.measured_heights = 0
@@ -710,6 +720,9 @@ class WheeledRobot(BaseTask):
             
             body_props = self.gym.get_actor_rigid_body_properties(env_handle, actor_handle)
             body_props = self._process_rigid_body_props(body_props, i)
+            
+            self.body_mass.append(body_props[0].mass)
+            
             self.gym.set_actor_rigid_body_properties(env_handle, actor_handle, body_props, recomputeInertia=True)
 
             self.gym.set_actor_dof_properties(env_handle, actor_handle, dof_props)
