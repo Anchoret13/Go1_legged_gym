@@ -65,7 +65,7 @@ def play(args):
     # NOTE: [plane, rough, slope, stair, discrete, stepping]
     env_cfg.terrain.terrain_proportions = [0.4, 0.3, 0.1, 0.1, 0.1]
     env_cfg.terrain.selected = False
-    terrain_type = 'slope'
+    terrain_type = 'stair'
     if env_cfg.terrain.selected :
         if terrain_type == 'rough':
             env_cfg.terrain.terrain_kwargs = {
