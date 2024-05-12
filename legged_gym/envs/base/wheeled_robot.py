@@ -690,7 +690,7 @@ class WheeledRobot(BaseTask):
             self.gym.set_asset_rigid_shape_properties(robot_asset, rigid_shape_props)
             actor_handle = self.gym.create_actor(env_handle, robot_asset, start_pose, self.cfg.asset.name, i, self.cfg.asset.self_collisions, 0)
             dof_props = self._process_dof_props(dof_props_asset, i)
-            # *********************** changed by xiaoyu ************************************
+            # ******************************************************************************
             #  this code change for passvie joint
             # 
             for j in self.dof_roller_ids:
@@ -700,7 +700,8 @@ class WheeledRobot(BaseTask):
                 dof_props ["damping"][j] = 0.0
                 dof_props ["effort"][j] = 0.0
                 dof_props ["velocity"][j] = 100000000.0
-                dof_props ["friction"][j] = 0.0
+                dof_props ["friction"][j] = 0.00
+                # dof_props ["friction"][j] = 0.01
             # 
             #  
             # # *****************************************************************************
@@ -711,9 +712,14 @@ class WheeledRobot(BaseTask):
                     dof_props ["damping"][k] = 0.0
                     dof_props ["effort"][k] = 0.0
                     dof_props ["velocity"][k] = 1000.0
-                    dof_props ["friction"][k] = 0.2
-                    dof_props ["lower"][k] = self.cfg.domain_rand.roller_tilt_rand_range[0]
-                    dof_props ["upper"][k] = self.cfg.domain_rand.roller_tilt_rand_range[1]
+                    dof_props ["friction"][k] = 0.00
+                    # dof_props ["friction"][k] = 0.00
+                    rand_limit = np.random.uniform(self.cfg.domain_rand.roller_tilt_rand_range[0],
+                                                   self.cfg.domain_rand.roller_tilt_rand_range[1])
+                    dof_props ["lower"][k] = rand_limit - 0.00001
+                    dof_props ["upper"][k] = rand_limit + 0.00001
+
+
             #  
             # # *****************************************************************************
             self.gym.set_actor_dof_properties(env_handle, actor_handle, dof_props)
@@ -730,12 +736,9 @@ class WheeledRobot(BaseTask):
             self.actor_handles.append(actor_handle)
 
         self.feet_indices = torch.zeros(len(feet_names), dtype=torch.long, device=self.device, requires_grad=False)
-        print(feet_names)
         self.rear_feet_indices = torch.zeros(2, dtype=torch.long, device=self.device, requires_grad=False)
         for i in range(len(feet_names)):
             self.feet_indices[i] = self.gym.find_actor_rigid_body_handle(self.envs[0], self.actor_handles[0], feet_names[i])
-         # TODO is idx correct?
-
         # # *****************************************************************************
         #  14:RL ;  18:RR
         self.rear_feet_indices[0] = self.gym.find_actor_rigid_body_handle(self.envs[0], self.actor_handles[0], 'RL_foot')

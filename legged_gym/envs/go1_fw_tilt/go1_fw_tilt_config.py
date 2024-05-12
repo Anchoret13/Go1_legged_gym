@@ -147,9 +147,41 @@ class Go1FwFlatTiltCfg( Go1FwFlatClockCfg):
         file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/go1_fw/urdf/go1_fw3_contact_tilt_wheel.urdf'
         roller_tilt_name = "tilt"
 
+    class rewards( Go1FwFlatClockCfg.rewards ):
+
+        class scales( Go1FwFlatClockCfg.rewards.scales ):
+            # # REMOVE HISTORY REWARD
+            # torques = -0.001
+            # # masked_legs_energy = -5e-3
+            masked_legs_energy = -1e-4
+            # tracking_ang_vel = 1.0
+            # lin_vel_x = 0.1
+            # tracking_lin_vel_x = 3.5
+            # orientation = -1.0
+            # lin_vel_z = -1.0
+            # action_rate = -0.01
+            # roller_action_rate = -0.1
+            hip = -1.0
+            # penalize_roll = -2.5                  
+            # front_leg = -3.5                      
+            # front_hip = -1.0
+            # raibert_heuristic = -5.0
+            # rear_feet_air_time = 3.5
+            # # penalize_slow_x_vel = 1.0
+            # feet_clearance = -5.0
+            # # tracking_contacts_binary = -0.1  
+            # roller_action_diff = -0.1
+            # # alive = 0.5
+
+            # base_height = -0.1
+            collision = -1.5
+
+
 
     class domain_rand(Go1FwFlatClockCfg.domain_rand):
-        roller_tilt_rand_range = [-0.01, 0.01]
+        roller_tilt_rand_range = [-0.05, 0.05]
+        randomize_base_mass = True
+        added_mass_range = [-3., 3.]
 
 class Go1FwFlatTiltCfgPPO( Go1FwFlatClockCfgPPO ):
     class algorithm( LeggedRobotCfgPPO.algorithm ):
@@ -157,4 +189,35 @@ class Go1FwFlatTiltCfgPPO( Go1FwFlatClockCfgPPO ):
     class runner( LeggedRobotCfgPPO.runner ):
         run_name = ''
         experiment_name = 'go1_roller_tilt'
+
+
+
+'''
+5-12 exps:
+
+    reward 1:
+        same as clock
+        comments: looks like torting, but two rear not really periodic 
+
+    reward 2:
+        masked_legs_energy = -1e-4
+        hip = -0.5
+        collision = -0
+
+        comments: torting
+
+    reward 3:
+        masked_legs_energy = -1e-4
+        hip = -0.5
+        collision = -1.5
+
+        comments: torting, no obvious difference with reward 2. guess, reducing cot play big role here. 
+
+    reward 3:
+        masked_legs_energy = -1e-4
+        hip = -1.0
+        collision = -1.5
+
+        comments: 
+'''
         
