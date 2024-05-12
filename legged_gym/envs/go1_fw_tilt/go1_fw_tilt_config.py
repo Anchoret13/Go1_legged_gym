@@ -161,7 +161,7 @@ class Go1FwFlatTiltCfg( Go1FwFlatClockCfg):
             # lin_vel_z = -1.0
             # action_rate = -0.01
             # roller_action_rate = -0.1
-            hip = -0.5
+            hip = -1.0
             # penalize_roll = -2.5                  
             # front_leg = -3.5                      
             # front_hip = -1.0
@@ -174,7 +174,9 @@ class Go1FwFlatTiltCfg( Go1FwFlatClockCfg):
             # # alive = 0.5
 
             # base_height = -0.1
-            collision = -0
+            collision = -1.5
+
+
 
     class domain_rand(Go1FwFlatClockCfg.domain_rand):
         roller_tilt_rand_range = [-0.05, 0.05]
@@ -187,4 +189,35 @@ class Go1FwFlatTiltCfgPPO( Go1FwFlatClockCfgPPO ):
     class runner( LeggedRobotCfgPPO.runner ):
         run_name = ''
         experiment_name = 'go1_roller_tilt'
+
+
+
+'''
+5-12 exps:
+
+    reward 1:
+        same as clock
+        comments: looks like torting, but two rear not really periodic 
+
+    reward 2:
+        masked_legs_energy = -1e-4
+        hip = -0.5
+        collision = -0
+
+        comments: torting
+
+    reward 3:
+        masked_legs_energy = -1e-4
+        hip = -0.5
+        collision = -1.5
+
+        comments: torting, no obvious difference with reward 2. guess, reducing cot play big role here. 
+
+    reward 3:
+        masked_legs_energy = -1e-4
+        hip = -1.0
+        collision = -1.5
+
+        comments: 
+'''
         
