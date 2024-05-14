@@ -147,12 +147,18 @@ class Go1FwFlatTiltCfg( Go1FwFlatClockCfg):
         file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/go1_fw/urdf/go1_fw3_contact_tilt_wheel.urdf'
         roller_tilt_name = "tilt"
 
+
+
+    class commands( Go1FwFlatClockCfg.commands):
+        # num_commands = 1
+        class ranges(Go1FwFlatClockCfg.commands.ranges):
+            lin_vel_x = [0.0, 3.6] # min max [m/s]
     class rewards( Go1FwFlatClockCfg.rewards ):
 
         class scales( Go1FwFlatClockCfg.rewards.scales ):
             # # REMOVE HISTORY REWARD
             # torques = -0.001
-            # # masked_legs_energy = -5e-3
+            # masked_legs_energy = -5e-3
             masked_legs_energy = -1e-4
             # tracking_ang_vel = 1.0
             # lin_vel_x = 0.1
@@ -160,12 +166,12 @@ class Go1FwFlatTiltCfg( Go1FwFlatClockCfg):
             # orientation = -1.0
             # lin_vel_z = -1.0
             # action_rate = -0.01
-            # roller_action_rate = -0.1
-            hip = -1.0
+            roller_action_rate = -0.0
+            # hip = -1.0
             # penalize_roll = -2.5                  
-            # front_leg = -3.5                      
-            # front_hip = -1.0
-            # raibert_heuristic = -5.0
+            front_leg = -3.5 /2                    
+            front_hip = -1.0/2
+            # raibert_heuristic = -0.0
             # rear_feet_air_time = 3.5
             # # penalize_slow_x_vel = 1.0
             # feet_clearance = -5.0
@@ -174,14 +180,14 @@ class Go1FwFlatTiltCfg( Go1FwFlatClockCfg):
             # # alive = 0.5
 
             # base_height = -0.1
-            collision = -1.5
+            # collision = -1.5
 
 
 
     class domain_rand(Go1FwFlatClockCfg.domain_rand):
-        roller_tilt_rand_range = [-0.05, 0.05]
+        roller_tilt_rand_range = [-0.01, 0.01]
         randomize_base_mass = True
-        added_mass_range = [-3., 3.]
+        added_mass_range = [-0., 3.]
 
 class Go1FwFlatTiltCfgPPO( Go1FwFlatClockCfgPPO ):
     class algorithm( LeggedRobotCfgPPO.algorithm ):
@@ -213,7 +219,7 @@ class Go1FwFlatTiltCfgPPO( Go1FwFlatClockCfgPPO ):
 
         comments: torting, no obvious difference with reward 2. guess, reducing cot play big role here. 
 
-    reward 3:
+    reward 4:
         masked_legs_energy = -1e-4
         hip = -1.0
         collision = -1.5

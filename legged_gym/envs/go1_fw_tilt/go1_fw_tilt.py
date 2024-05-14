@@ -136,14 +136,7 @@ class Go1FwTilt(WheeledRobot):
         self.wheel_air_time = torch.zeros(self.num_envs, self.wheel_indices.shape[0], dtype=torch.float, device=self.device, requires_grad=False)
         self.rear_feet_air_time = torch.zeros(self.num_envs, self.rear_feet_indices.shape[0], dtype=torch.float, device=self.device, requires_grad=False)
 
-    def _reward_masked_legs_energy(self):
-        mask = torch.ones(self.torques.size(-1), device=self.torques.device, dtype=torch.bool)
-        mask[self.dof_roller_ids] = False
 
-        masked_torques = self.torques[:, mask]
-        masked_dof_vel = self.dof_vel[:, mask]
-
-        return torch.sum(torch.square(masked_torques * masked_dof_vel), dim=1)
 
     def step(self, actions):
         self.current_step += 1
@@ -321,7 +314,17 @@ class Go1FwTilt(WheeledRobot):
 
         self.contact_detect = self.contact_forces[:, self.feet_indices, 2] > 1
         self.contact_detect = self.contact_detect.float()
-        
+
+    def _reward_masked_legs_energy(self):
+        mask = torch.ones(self.torques.size(-1), device=self.torques.device, dtype=torch.bool)
+        mask[self.dof_roller_ids] = False
+        mask[self.dof_roller_tilt_ids] = False
+
+        masked_torques = self.torques[:, mask]
+        masked_dof_vel = self.dof_vel[:, mask]
+
+        return torch.sum(torch.square(masked_torques * masked_dof_vel), dim=1)
+         
     ## ADDITIONAL REWARD FUNCTION FOR WHEELED ROBOT
     def _reward_roller_action_rate(self):
         return torch.sum(torch.square(self.last_actions[:,:6] - self.actions[:,:6]), dim = 1)
