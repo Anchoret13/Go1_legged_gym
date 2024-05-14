@@ -89,26 +89,34 @@ def GRU_test(args, eval_params, model_params):
     device=env.device
     window_size = eval_params['window_size']
 
-    input_shape = 15
+    input_shape = model_params['input_size']
     history = torch.zeros(ENV_NUM, window_size, input_shape).cuda()
     # tensor([[ 0.0463,  0.0487,  0.0087, -0.0476,  0.0367,  0.0201, -0.0883, -0.1690,
     #       0.5352,  0.0176, -0.2382,  0.5574]], device='cuda:0')
-    history[:, :, 0] = 0.0   
-    history[:, :, 1] = 0.0   
-    history[:, :, 2] = -1    
-    history[:, :, 3] = 0.03  
-    history[:, :, 4] = -0.06  
-    history[:, :, 5] = -0.13  
-    history[:, :, 6] = 0.013 
-    history[:, :, 7] = -0.06  
-    history[:, :, 8] = -0.12  
-    history[:, :, 9] = -0.06 
-    history[:, :, 10] = -0.06
-    history[:, :, 11] = -0.18 
-    history[:, :, 12] = -0.01 
-    history[:, :, 13] = 0.08
-    history[:, :, 14] = -0.08 
+    # history[:, :, 0] = 0.0   
+    # history[:, :, 1] = 0.0   
+    # history[:, :, 2] = -1    
+    # history[:, :, 3] = 0.03  
+    # history[:, :, 4] = -0.06  
+    # history[:, :, 5] = -0.13  
+    # history[:, :, 6] = 0.013 
+    # history[:, :, 7] = -0.06  
+    # history[:, :, 8] = -0.12  
+    # history[:, :, 9] = -0.06 
+    # history[:, :, 10] = -0.06
+    # history[:, :, 11] = -0.18 
+    # history[:, :, 12] = -0.01 
+    # history[:, :, 13] = 0.08
+    # history[:, :, 14] = -0.08 
+    STATIC_INPUT = torch.tensor([[-0.12987, -0.00079846, -0.99153, 0.015357, -0.065749,
+                                -0.14064, -0.017467, -0.065818, -0.14073, -0.012900,
+                                0.0084205, -0.14861, 0.015925, 0.0025151, -0.15289,
+                                -0.0018660, -0.0014161, -0.0017078, 0.00086044, -0.0022516,
+                                -0.0012027, -0.034837, 0.055386, -0.058765, 0.028869,
+                                0.051442, -0.052942]], device='cuda:0')
     # print(history)
+    for i in  range(STATIC_INPUT.size(1)):
+            history[:, :, i] = STATIC_INPUT[0, i]
 
 
     obs = env.get_observations()
@@ -194,30 +202,30 @@ def MLP_test(args, eval_params, model_params):
 
 if __name__ == "__main__":
     GRU_eval_params = {
-        'checkpoint_path': '../../sys_id/logs/GRU/2024-05-04_20-06-42/checkpoint_epoch_80.pth', 
+        'checkpoint_path': '../../sys_id/logs/GRU/2024-05-12_13-41-58/checkpoint_epoch_20.pth', 
         'dataset_folder_path': '../dataset/eval/wheeled_flat', 
         'window_size': 50,
         'batch_size': 1, 
     }
 
     GRU_model_params = {
-        "input_size": 15,
+        "input_size": 27,
         "hidden_size": 150,
         "n_layer": 2,
-        "output_size": 9
+        "output_size": 10
     }
     args = get_args()
     GRU_test(args, GRU_eval_params, GRU_model_params)
 
-    MLP_eval_params = {
-        'checkpoint_path': '../../sys_id/logs/MLP/2024-04-22_16-19-45/mlp_model_epoch_1000.pth', 
-        'window_size': 50,
-        'batch_size': 1, 
-    }
+    # MLP_eval_params = {
+    #     'checkpoint_path': '../../sys_id/logs/MLP/2024-04-22_16-19-45/mlp_model_epoch_1000.pth', 
+    #     'window_size': 50,
+    #     'batch_size': 1, 
+    # }
 
-    MLP_model_params = {
-        "input_size": 750,
-        "hidden_size": 150,
-        "output_size": 9
-    }
+    # MLP_model_params = {
+    #     "input_size": 750,
+    #     "hidden_size": 150,
+    #     "output_size": 9
+    # }
     # MLP_test(args, MLP_eval_params, MLP_model_params)

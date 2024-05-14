@@ -19,6 +19,11 @@ from legged_gym.utils.math import quat_apply_yaw, wrap_to_pi, torch_rand_sqrt_fl
 from legged_gym.utils.helpers import class_to_dict
 from .legged_robot_config import LeggedRobotCfg
 
+def get_scale_shift(range):
+    scale = 2./ (range[1] - range[0])
+    shift = (range[1] + range[0]) / 2.
+    return scale, shift
+
 class WheeledRobot(BaseTask):
     def __init__(self, cfg: LeggedRobotCfg, sim_params, physics_engine, sim_device, headless):
         """ Parses the provided config file,
@@ -295,6 +300,12 @@ class WheeledRobot(BaseTask):
             rng = self.cfg.domain_rand.added_mass_range
             # self.payloads[env_id] = np.random.uniform(rng[0], rng[1])
             props[0].mass += np.random.uniform(rng[0], rng[1])
+        if self.cfg.domain_rand.randomize_com_displacement:
+            rng = self.cfg.domain_rand.com_displacement_range
+            rand_x = np.random.uniform(rng[0], rng[1])
+            rand_y = np.random.uniform(rng[0], rng[1])
+            rand_z = np.random.uniform(rng[0], rng[1])
+            props[0].com = gymapi.Vec3(rand_x, rand_y, rand_z)
         return props
     
     def _post_physics_step_callback(self):
@@ -500,6 +511,8 @@ class WheeledRobot(BaseTask):
         self.projected_gravity = quat_rotate_inverse(self.base_quat, self.gravity_vec)
 
         self.body_mass = torch.tensor(self.body_mass, dtype=torch.float, device=self.device, requires_grad=False).unsqueeze(1)
+        
+        
         if self.cfg.terrain.measure_heights:
             self.height_points = self._init_height_points()
         self.measured_heights = 0
