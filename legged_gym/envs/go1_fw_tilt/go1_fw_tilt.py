@@ -11,7 +11,7 @@ from typing import Tuple, Dict
 from ..base.wheeled_robot import WheeledRobot
 # from ..base.wheeled_tilt_robot import WheeledRobot
 from .go1_fw_tilt_config import Go1FwFlatTiltCfg
-from ..go1_fw_clock.go1_fw import Go1FwClock
+from ..go1_fw_clock.go1_fw import Go1FwClock, adaptive_sample_vel_cmd
 
 class Go1FwTilt(WheeledRobot):
     cfg : Go1FwFlatTiltCfg
@@ -80,10 +80,10 @@ class Go1FwTilt(WheeledRobot):
         #                             False, False, False])
         self.roller_obs = self.dof_vel[:, roller_dofs]
         friction_coeff = self.friction_coeffs[:,0].to(self.device)
-        # TO BE ADDED: TERRAIN INFO
         self.privileged_obs_buf = torch.cat((self.obs_buf,
-                                             self.roller_obs,
-                                             friction_coeff), dim = -1)
+                                             self.base_lin_vel,
+                                             self.base_ang_vel
+                                            ), dim = -1)
         # print(self.privileged_obs_buf)
 
     def _init_buffers(self):
@@ -245,9 +245,8 @@ class Go1FwTilt(WheeledRobot):
         Args:
             env_ids (List[int]): Environments ids for which new commands are needed
         """
-        self.commands[env_ids, 0] = torch_rand_float(self.command_ranges["lin_vel_x"][0], self.command_ranges["lin_vel_x"][1], (len(env_ids), 1), device=self.device).squeeze(1)
-        # adaptive_sample_vel_cmd(min_vel, max_vel, current_step, env_ids, device, total_iterations = 10000, n_samples = 1000, steps_per_iteration = 24):
-        # self.commands[env_ids, 0]  = adaptive_sample_vel_cmd(self.command_ranges["lin_vel_x"][0], self.command_ranges["lin_vel_x"][1], self.current_step, env_ids, self.device)
+        # self.commands[env_ids, 0] = torch_rand_float(self.command_ranges["lin_vel_x"][0], self.command_ranges["lin_vel_x"][1], (len(env_ids), 1), device=self.device).squeeze(1)
+        self.commands[env_ids, 0]  = adaptive_sample_vel_cmd(self.command_ranges["lin_vel_x"][0], self.command_ranges["lin_vel_x"][1], self.current_step, env_ids, self.device)
         self.commands[env_ids, 1] = torch_rand_float(self.command_ranges["lin_vel_y"][0], self.command_ranges["lin_vel_y"][1], (len(env_ids), 1), device=self.device).squeeze(1)
         if self.cfg.commands.heading_command:
             self.commands[env_ids, 3] = torch_rand_float(self.command_ranges["heading"][0], self.command_ranges["heading"][1], (len(env_ids), 1), device=self.device).squeeze(1)

@@ -56,6 +56,7 @@ class WheeledRobot(BaseTask):
         self._prepare_reward_function()
         self.init_done = True
 
+        self.num_adapt = cfg.env.num_adapt_input
         # RANDOMIZED PARAMETERS
         
 

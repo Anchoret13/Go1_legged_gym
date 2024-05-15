@@ -36,7 +36,7 @@ class Go1FwFlatTiltCfg( Go1FwFlatClockCfg):
         num_envs = 4096
         num_actions = 12
         num_observations = 42  
-        num_privileged_obs = 45 + 2
+        num_privileged_obs = 42 + 6
     class init_state( Go1FwFlatClockCfg.init_state ):
         pos = [0.0, 0.0, 0.35] # x,y,z [m]
 
@@ -152,7 +152,7 @@ class Go1FwFlatTiltCfg( Go1FwFlatClockCfg):
     class commands( Go1FwFlatClockCfg.commands):
         # num_commands = 1
         class ranges(Go1FwFlatClockCfg.commands.ranges):
-            lin_vel_x = [0.0, 3.6] # min max [m/s]
+            lin_vel_x = [0.0, 4.5] # min max [m/s]
     class rewards( Go1FwFlatClockCfg.rewards ):
 
         class scales( Go1FwFlatClockCfg.rewards.scales ):
