@@ -36,8 +36,8 @@ class Go1FwFlatIDCfg( Go1FwFlatClockCfg ):
     class env( Go1FwFlatClockCfg.env):
         num_envs = 4096
         num_actions = 12
-        num_observations = 42 + 8      # obs: 42 ; roller+fric+lin+ang: 9; 
-        num_privileged_obs = 42 + 8
+        num_observations = 42 + 9      # obs: 42 ; roller+fric+lin+ang: 9; 
+        num_privileged_obs = 42 + 9
     # class init_state( Go1FwFlatClockCfg.init_state ):
     #     pos = [0.0, 0.0, 0.3] # x,y,z [m]
 

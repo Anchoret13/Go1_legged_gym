@@ -155,8 +155,8 @@ class Go1FwClock(WheeledRobot):
             (self.active_dof_pos - self.active_default_dof_pos) * self.obs_scales.dof_pos,
             active_dof_vel * self.obs_scales.dof_vel,
             torch.clip(self.actions, -1, 1),
-            self.base_lin_vel,
-            self.base_ang_vel
+            # self.base_lin_vel,
+            # self.base_ang_vel,
         ), dim = -1)
 
         # self.compute_adapt_input()
@@ -166,11 +166,14 @@ class Go1FwClock(WheeledRobot):
         False, False, False, False])
         self.roller_obs = self.dof_vel[:, roller_dofs]
         friction_coeff = self.friction_coeffs[:,0].to(self.device)
-        # TODO TO BE ADDED: TERRAIN INFO
-        self.privileged_obs_buf = torch.cat((self.obs_buf,
-                                             self.roller_obs,
-                                             friction_coeff), dim = -1)
+        # NOTE: old one
+        # self.privileged_obs_buf = torch.cat((self.obs_buf,
+        #                                      self.roller_obs,
+        #                                      friction_coeff), dim = -1)
         # print(self.privileged_obs_buf)
+        self.privileged_obs_buf = torch.cat((self.obs_buf,
+                                             self.base_lin_vel,
+                                             self.base_ang_vel), dim = -1)
 
     def _init_buffers(self):
         # # add for wheel robot 

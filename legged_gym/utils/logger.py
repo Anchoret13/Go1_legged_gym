@@ -294,12 +294,12 @@ class Logger:
         target = log['target']
         timesteps = list(range(len(prediction)))
 
-        fig, axes = plt.subplots(9, 1, figsize = (10, 15))
+        fig, axes = plt.subplots(10, 1, figsize = (10, 15))
         axes = axes.flatten()
 
-        titles = ["roller 1(rad/s)", "roller 2(rad/s)", "Installation Angle(rad)", "lin_x(m/s)", "lin_y(m/s)", "lin_z(m/s)", "roll(rad/s)", "pitch(rad/s)", "yaw(rad/s)"]
+        titles = ["roller 1(rad/s)", "roller 2(rad/s)", "Installation Angle(rad)", "lin_x(m/s)", "lin_y(m/s)", "lin_z(m/s)", "roll(rad/s)", "pitch(rad/s)", "yaw(rad/s)", "mass"]
 
-        for i in range(9):  # Since each tensor has 9 elements
+        for i in range(10):  # Since each tensor has 9 elements
             values_prediction = [tensor[0, i].item() for tensor in prediction]  # Extract all i-th elements from prediction
             values_target = [tensor[0, i].item() for tensor in target]  # Extract all i-th elements from target
 
@@ -309,17 +309,14 @@ class Logger:
                 max_val = max(combined_values)
                 range_val = max_val - min_val
 
-                # Scale both predictions and targets to the range -0.01 to 0.01
                 if range_val != 0:
                     values_prediction = [0.015 + 0.02 * ((y - min_val) / range_val) for y in values_prediction]
                     values_target = [0.015 + 0.02 * ((y - min_val) / range_val) for y in values_target]
                 else:
-                    # If all values are the same, set them to the midpoint of the range to avoid division by zero
                     values_prediction = [0.0 for _ in values_prediction]
                     values_target = [0.0 for _ in values_target]
 
 
-            # Plot each element, element-wise across the tensors, against the timestep
             axes[i].plot(timesteps, values_prediction, color='blue', label='Prediction' if i == 0 else "")
             axes[i].plot(timesteps, values_target, color='red', label='Target' if i == 0 else "")
 

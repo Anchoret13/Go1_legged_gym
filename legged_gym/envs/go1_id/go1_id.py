@@ -19,6 +19,14 @@ from torch.utils.data import DataLoader
 from torch.nn import MSELoss
 import numpy as np
 
+STATIC_INPUT = torch.tensor([[-0.12987, -0.00079846, -0.99153, 0.015357, -0.065749,
+                                -0.14064, -0.017467, -0.065818, -0.14073, -0.012900,
+                                0.0084205, -0.14861, 0.015925, 0.0025151, -0.15289,
+                                -0.0018660, -0.0014161, -0.0017078, 0.00086044, -0.0022516,
+                                -0.0012027, -0.034837, 0.055386, -0.058765, 0.028869,
+                                0.051442, -0.052942]], device='cuda:0')
+
+
 def update_history(history, new_obs):
     # print("+"*50)
     # print(history.shape)
@@ -70,20 +78,24 @@ class Go1FwID(WheeledRobot):
         friction_coeff = self.friction_coeffs[:,0].to(self.device)
         body_lin_vel = self.base_lin_vel
         body_ang_vel = self.base_ang_vel
+        body_mass = self.body_mass
 
         self.privileged_obs_buf = torch.cat((self.obs_buf,
                                              self.roller_obs,
                                             #  friction_coeff,
                                              body_lin_vel,
-                                             body_ang_vel), dim = -1)
+                                             body_ang_vel,
+                                             body_mass), dim = -1)
         
         # adaptation output
         current_adapt_input = torch.cat((
             self.projected_gravity,
             (self.active_dof_pos - self.active_default_dof_pos) * self.obs_scales.dof_pos,
+            active_dof_vel
             # body_lin_vel,
             # body_ang_vel,
         ), dim = -1)
+
         self.obs_history = update_history(self.obs_history, current_adapt_input)
         with torch.no_grad():
             id_output = self.adaptive_module(self.obs_history, None)
@@ -100,15 +112,15 @@ class Go1FwID(WheeledRobot):
         super()._init_buffers()
 
         # Adaptive module
-        self.sys_id_path = '../../sys_id/logs/GRU/2024-05-04_20-06-42/checkpoint_epoch_80.pth'
+        self.sys_id_path = '../../sys_id/logs/GRU/2024-05-12_13-41-58/checkpoint_epoch_20.pth'
         self.run_params = {
             'window_size': 50,
         }
         self.run_params['checkpoint_path'] = self.sys_id_path
         self.sys_model_params = {
             "n_layer": 2,
-            "output_size": 9,
-            "input_size": 15, 
+            "output_size": 10,
+            "input_size": 27, 
             "hidden_size": 150, 
         } # NOTE: modify this
         self.window_size = self.run_params['window_size'] # NOTE: this stupid asshole hardcode again
@@ -154,21 +166,10 @@ class Go1FwID(WheeledRobot):
 
         self.obs_history = torch.zeros(self.num_envs, self.window_size, self.sys_model_params["input_size"], dtype=torch.float, device=self.device, requires_grad=False)
         # NOTE: initialize self.obs_history with initial body states instead of zero
-        self.obs_history[:, :, 0] = 0.0   
-        self.obs_history[:, :, 1] = 0.0   
-        self.obs_history[:, :, 2] = -1    
-        self.obs_history[:, :, 3] = 0.03  
-        self.obs_history[:, :, 4] = -0.06  
-        self.obs_history[:, :, 5] = -0.13  
-        self.obs_history[:, :, 6] = 0.013 
-        self.obs_history[:, :, 7] = -0.06  
-        self.obs_history[:, :, 8] = -0.12  
-        self.obs_history[:, :, 9] = -0.06 
-        self.obs_history[:, :, 10] = -0.06
-        self.obs_history[:, :, 11] = -0.18 
-        self.obs_history[:, :, 12] = -0.01 
-        self.obs_history[:, :, 13] = 0.08 
-        self.obs_history[:, :, 14] = -0.08 
+
+        for i in  range(STATIC_INPUT.size(1)):
+            self.obs_history[:, :, i] = STATIC_INPUT[0, i]
+
 
     def _reward_masked_legs_energy(self):
         mask = torch.ones(self.torques.size(-1), device=self.torques.device, dtype=torch.bool)
@@ -275,21 +276,8 @@ class Go1FwID(WheeledRobot):
         self.gait_indices[env_ids] = 0
 
         # reset obs_history
-        self.obs_history[:, :, 0] = 0.0   
-        self.obs_history[:, :, 1] = 0.0   
-        self.obs_history[:, :, 2] = -1    
-        self.obs_history[:, :, 3] = 0.03  
-        self.obs_history[:, :, 4] = -0.06  
-        self.obs_history[:, :, 5] = -0.13  
-        self.obs_history[:, :, 6] = 0.013 
-        self.obs_history[:, :, 7] = -0.06  
-        self.obs_history[:, :, 8] = -0.12  
-        self.obs_history[:, :, 9] = -0.06 
-        self.obs_history[:, :, 10] = -0.06
-        self.obs_history[:, :, 11] = -0.18 
-        self.obs_history[:, :, 12] = -0.01 
-        self.obs_history[:, :, 13] = 0.08 
-        self.obs_history[:, :, 14] = -0.08 
+        for i in  range(STATIC_INPUT.size(1)):
+            self.obs_history[:, :, i] = STATIC_INPUT[0, i]
 
     def _resample_commands(self, env_ids):
         """ Randommly select commands of some environments
