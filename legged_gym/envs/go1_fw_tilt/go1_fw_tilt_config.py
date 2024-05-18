@@ -178,7 +178,6 @@ class Go1FwFlatTiltCfg( Go1FwFlatClockCfg):
             # # tracking_contacts_binary = -0.1  
             roller_action_diff = -0.1
             # # alive = 0.5
-
             # base_height = -0.1
             # collision = -1.5
 
@@ -220,7 +219,7 @@ class Go1FwFlatTiltCfgPPO( Go1FwFlatClockCfgPPO ):
             penalize_roll = -2.5                  
             front_leg = -3.5                     
             front_hip = -1.0/2
-            raibert_heuristic = -0.0
+            raibert_heuristic = -5.0
             rear_feet_air_time = 3.5
             # # penalize_slow_x_vel = 1.0
             feet_clearance = -5.0

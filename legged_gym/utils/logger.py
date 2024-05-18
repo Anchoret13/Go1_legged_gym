@@ -224,22 +224,24 @@ class Logger:
 
 
         #***********************************
-        #    plot 2 :    roller pos
+        #    plot 2 :    tilt angle  pos
         #*********************************** 
         num_roller = 2
         fig2, axs2 = plt.subplots(num_roller, 1, num=2)
-        if log["roller_angle"]:
-            angle = np.array(log["roller_angle"])
+        if log["tilt angle"]:
+            angle = np.array(log["tilt angle"])
             for i in range(angle.shape[1]):
                 if i == 0:
-                    axs2[i].plot(time, (angle[:, i] + 2 * np.pi) % (2 * np.pi), color='blue', label="roller FL")
-                    axs2[i].set_title(' FL wheel: q vs t')
+                    axs2[i].plot(time, angle[:, i], color='blue', label="tilt angle FL")
+                    # axs2[i].plot(time, (angle[:, i] + 2 * np.pi) % (2 * np.pi), color='blue', label="roller FL")
+                    axs2[i].set_title(' FL tilt angle: q vs t')
                     axs2[i].set_xlabel('t')
                     axs2[i].set_ylabel('q')
                     axs2[i].legend()
                 if i == 1:
-                    axs2[i].plot(time, (angle[:, i] + 2 * np.pi) % (2 * np.pi), color='blue', label="roller FR")
-                    axs2[i].set_title(' FR wheel: q vs t')
+                    # axs2[i].plot(time, (angle[:, i] + 2 * np.pi) % (2 * np.pi), color='blue', label="roller FR")
+                    axs2[i].plot(time, angle[:, i], color='blue', label="tilt angle FR")
+                    axs2[i].set_title(' FR tilt angle: q vs t')
                     axs2[i].set_xlabel('t')
                     axs2[i].set_ylabel('q')
                     axs2[i].legend()
