@@ -173,7 +173,8 @@ def play(args):
                     'contact_forces_z': env.contact_forces[robot_index, env.feet_indices, 2].cpu().numpy(),
                     # 'roller_angle': env.dof_pos[robot_index, env.dof_roller_ids].cpu().numpy(),  # add for debug by xiaoyu
                     'desired_contact': env.desired_contact_states[robot_index, :].cpu().numpy(),
-                    'actual_contact': env.contact_detect[robot_idx,:].cpu().numpy()
+                    'actual_contact': env.contact_detect[robot_idx,:].cpu().numpy(),
+                    'tilt angle': env.dof_pos[robot_index, env.dof_roller_tilt_ids].cpu().numpy(),  # add for debug by xiaoyu
                 }
             )
 

@@ -722,11 +722,12 @@ class WheeledRobot(BaseTask):
             if self.is_roller_tilted:    
                 for k in self.dof_roller_tilt_ids:
                     dof_props ["driveMode"][k] = gymapi.DOF_MODE_NONE
-                    dof_props ["stiffness"][k] = 0.0
-                    dof_props ["damping"][k] = 0.0
+                    dof_props ["stiffness"][k] = 10000
+                    dof_props ["damping"][k] = 10000
                     dof_props ["effort"][k] = 0.0
-                    dof_props ["velocity"][k] = 1000.0
-                    dof_props ["friction"][k] = 0.00
+                    dof_props ["velocity"][k] = 10.0
+                    dof_props ["friction"][k] = 1000
+                    # dof_props ['hasLimits'][k] = True
                     # dof_props ["friction"][k] = 0.00
                     rand_limit = np.random.uniform(self.cfg.domain_rand.roller_tilt_rand_range[0],
                                                    self.cfg.domain_rand.roller_tilt_rand_range[1])

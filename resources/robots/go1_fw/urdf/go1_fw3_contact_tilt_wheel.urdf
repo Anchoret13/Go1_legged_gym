@@ -355,7 +355,7 @@
     
     <visual>
      <!-- <origin xyz="-0.04 -0.0475 -0.045" rpy="1.98 0. 1.58"/>  -->
-      <origin xyz="-0.055 -0.0475 -0.04" rpy="2.08 0. 1.58"/> 
+      <origin xyz="-0.055 -0.0475 -0.035" rpy="2.08 0. 1.58"/> 
       <geometry>
         <mesh filename="../meshes/hunong.stl" scale="0.1 0.1 0.1"/> 
       </geometry>
@@ -625,8 +625,8 @@
     <child link="FL_tilt"/>
     <origin xyz="-0.035 -0.00 -0.035" rpy="0 -0.8 0"/>
     <axis xyz="1 0 0"/>
-    <dynamics damping="0" friction="0.02"/>
-    <limit effort="0" lower="-0.01" upper="0.01" velocity="100"/>
+    <dynamics damping="10000" friction="10000"/>
+    <limit effort="0" lower="-0.001" upper="0.001" velocity="1"/>
   </joint>
   <link name="FL_tilt">
   </link>
@@ -675,8 +675,8 @@
     <child link="FR_tilt"/>
     <origin xyz="-0.035 -0.00 -0.035" rpy="0 -0.8 0"/>
     <axis xyz="1 0 0"/>
-    <dynamics damping="0" friction="0.02"/>
-    <limit effort="0" lower="-0.01" upper="-0.01" velocity="100"/>
+    <dynamics damping="10000" friction="10000"/>
+    <limit effort="0" lower="-0.001" upper="-0.001" velocity="1"/>
   </joint>
   <link name="FR_tilt">
   </link>
