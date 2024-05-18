@@ -47,6 +47,7 @@ class WheeledRobot(BaseTask):
         
         ### DOMAIN RAND PARAMETERS
         self.body_mass = []
+        self.com_displacement = []
 
         super().__init__(self.cfg, sim_params, physics_engine, sim_device, headless)
 
@@ -512,8 +513,9 @@ class WheeledRobot(BaseTask):
         self.projected_gravity = quat_rotate_inverse(self.base_quat, self.gravity_vec)
 
         self.body_mass = torch.tensor(self.body_mass, dtype=torch.float, device=self.device, requires_grad=False).unsqueeze(1)
-        
-        
+        self.com_displacement = torch.tensor(self.com_displacement, dtype=torch.float, device=self.device, requires_grad=False)
+
+
         if self.cfg.terrain.measure_heights:
             self.height_points = self._init_height_points()
         self.measured_heights = 0
@@ -742,6 +744,11 @@ class WheeledRobot(BaseTask):
             body_props = self._process_rigid_body_props(body_props, i)
             
             self.body_mass.append(body_props[0].mass)
+            self.com_displacement.append([
+                body_props[0].com.x,
+                body_props[0].com.y,
+                body_props[0].com.z
+            ])
             
             self.gym.set_actor_rigid_body_properties(env_handle, actor_handle, body_props, recomputeInertia=True)
 

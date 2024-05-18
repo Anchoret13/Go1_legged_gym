@@ -169,12 +169,12 @@ class Go1FwFlatTiltCfg( Go1FwFlatClockCfg):
             roller_action_rate = -0.0
             # hip = -1.0
             # penalize_roll = -2.5                  
-            front_leg = -3.5 /2                    
-            front_hip = -1.0/2
+            front_leg = -3.5 /2
+            front_hip = -1.0 /2
             # raibert_heuristic = -0.0
-            # rear_feet_air_time = 3.5
+            rear_feet_air_time = 1.0
             # # penalize_slow_x_vel = 1.0
-            # feet_clearance = -5.0
+            # feet_clearance = -30.0
             # # tracking_contacts_binary = -0.1  
             roller_action_diff = -0.1
             # # alive = 0.5
@@ -185,8 +185,15 @@ class Go1FwFlatTiltCfg( Go1FwFlatClockCfg):
 
 
     class domain_rand(Go1FwFlatClockCfg.domain_rand):
-        roller_tilt_rand_range = [-0.01, 0.01]
+        randomize_friction = True
+        friction_range = [0.1, 0.75]
+        push_robots = False
         randomize_base_mass = True
+
+        added_mass_range = [0., 3.0]
+        randomize_com_displacement = False
+        com_displacement_range = [-0.10, 0.10]
+        roller_tilt_rand_range = [-0.01, 0.01]
         added_mass_range = [-0., 3.]
 
 class Go1FwFlatTiltCfgPPO( Go1FwFlatClockCfgPPO ):

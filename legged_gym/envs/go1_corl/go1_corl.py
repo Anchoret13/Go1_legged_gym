@@ -10,42 +10,65 @@ import torch
 from typing import Tuple, Dict
 from ..base.wheeled_robot import WheeledRobot
 # from ..base.wheeled_tilt_robot import WheeledRobot
-from .go1_fw_tilt_config import Go1FwFlatTiltCfg
+from .go1_corl_config import Go1CoRLCfg
 from ..go1_fw_clock.go1_fw import Go1FwClock, adaptive_sample_vel_cmd
 
-class Go1FwTilt(WheeledRobot):
-    cfg : Go1FwFlatTiltCfg
+class Go1CoRL(WheeledRobot):
+    cfg : Go1CoRLCfg
     def __init__(self, cfg, sim_params, physics_engine, sim_device, headless):
         super().__init__(cfg, sim_params, physics_engine, sim_device, headless)
         # self.num_passive_joints = self.cfg.env.num_passive_joints
-        self.frequencies = 4.5
+        self.frequencies = 3.0
         self.current_step = 0
+
+    def update_history(self, new_obs):
+        new_obs = new_obs.unsqueeze(1)
+        self.obs_history = torch.cat((self.obs_history[:, 1:, :], new_obs), dim=1)
+
+    def get_current_history(self):
+        return self.obs_history
 
     def compute_adapt_input(self):
         dofs_to_keep = torch.ones(self.num_dof, dtype=torch.bool)
         dofs_to_keep[self.dof_roller_ids] = False
+        dofs_to_keep[self.dof_roller_tilt_ids] = False
 
         self.active_dof_pos = self.dof_pos[:, dofs_to_keep]
         self.active_default_dof_pos = self.default_dof_pos[:, dofs_to_keep]
-
-        body_lin_vel = self.base_lin_vel
-        body_ang_vel = self.base_ang_vel
+        active_dof_vel = self.dof_vel[:, dofs_to_keep]
         
         trans_input = torch.cat((
             self.projected_gravity, #3
             (self.active_dof_pos - self.active_default_dof_pos) * self.obs_scales.dof_pos, #12
-            # body_lin_vel, #3
-            # body_ang_vel, #3
+            active_dof_vel # 12
         ), dim = -1)
-        # print(trans_input)
         return trans_input
     
     def compute_adapt_target(self):
+        # privileged observation
+        roller_dofs = torch.tensor([False, False, False,  False,  True, 
+                                    False, False, False,  False,  True,
+                                    False, False, False, 
+                                    False, False, False])
+        tilt_dofs = torch.tensor([  False, False, False,  True,  False, 
+                                    False, False, False,  True,  False,
+                                    False, False, False, 
+                                    False, False, False])
+        # roller_dofs = torch.tensor([False, False, False, True, True,
+        #                             False, False, False, True, True,
+        #                             False, False, False,
+        #                             False, False, False])
+        self.roller_obs = self.dof_vel[:, roller_dofs]
+        self.installation_angles= self.dof_pos[:, tilt_dofs]
+
         target = torch.cat((
-            self.roller_obs.to(self.device),
-            self.friction_coeffs[:,0].to(self.device),
-            self.base_lin_vel.to(self.device),
-            self.base_ang_vel.to(self.device)
+            self.roller_obs.to(self.device),                # 2
+            # self.friction_coeffs[:,0].to(self.device),    # 1
+            self.installation_angles.to(self.device),       # 2
+            self.base_lin_vel.to(self.device),              # 3
+            self.base_ang_vel.to(self.device),              # 3
+            self.body_mass.to(self.device),                 # 1
+            self.com_displacement.to(self.device)           # 3
         ), dim = -1)
         return target
     
@@ -67,35 +90,31 @@ class Go1FwTilt(WheeledRobot):
             (self.active_dof_pos - self.active_default_dof_pos) * self.obs_scales.dof_pos,
             active_dof_vel * self.obs_scales.dof_vel,
             torch.clip(self.actions, -1, 1),
-            # self.base_lin_vel,
-            # self.base_ang_vel
         ), dim = -1)
 
-        # TODO add friction for roller dof?
-        # privileged observation
-        roller_dofs = ~dofs_to_keep
-        tilt_dofs = torch.tensor([  False, False, False,  True,  False, 
-                                    False, False, False,  True,  False,
-                                    False, False, False, 
-                                    False, False, False])
-        self.installation_angles= self.dof_pos[:, tilt_dofs]
-        # roller_dofs = torch.tensor([False, False, False, True, True,
-        #                             False, False, False, True, True,
-        #                             False, False, False,
-        #                             False, False, False])
-        self.roller_obs = self.dof_vel[:, roller_dofs]
-        friction_coeff = self.friction_coeffs[:,0].to(self.device)
+        current_adapt_input = torch.cat((
+            self.projected_gravity,
+            (self.active_dof_pos - self.active_default_dof_pos) * self.obs_scales.dof_pos,
+            active_dof_vel
+        ), dim = -1)
+        
+        self.update_history(current_adapt_input)
+        
+        # use adapt module output
+        adapt_output = self.compute_adapt_target()
         self.privileged_obs_buf = torch.cat((self.obs_buf,
-                                             self.base_lin_vel,
-                                             self.base_ang_vel
+                                             adapt_output
                                             ), dim = -1)
         # print(self.privileged_obs_buf)
+
 
     def _init_buffers(self):
         # # add for wheel robot 
         # self.num_rollers = 2
         # TODO the idx will change with tilt joint added
         super()._init_buffers()
+        self.window_size = 50
+
         self.base_pos = self.root_states[:self.num_envs, 0:3]
         self.wheel_indices = torch.tensor([6, 12], device = self.device)
         self.rear_feet_indices = torch.tensor([16, 20], device = self.device)
@@ -140,7 +159,7 @@ class Go1FwTilt(WheeledRobot):
 
         self.wheel_air_time = torch.zeros(self.num_envs, self.wheel_indices.shape[0], dtype=torch.float, device=self.device, requires_grad=False)
         self.rear_feet_air_time = torch.zeros(self.num_envs, self.rear_feet_indices.shape[0], dtype=torch.float, device=self.device, requires_grad=False)
-
+        self.obs_history = torch.zeros(self.num_envs, self.window_size, self.cfg.env.num_adapt_input, dtype=torch.float, device=self.device, requires_grad=False)
 
 
     def step(self, actions):
@@ -152,10 +171,10 @@ class Go1FwTilt(WheeledRobot):
         modified_actions = torch.zeros(n, self.num_dof)
         modified_actions[:, :3] = self.actions[:, :3]  
         modified_actions[:, 3] = 0
-        modified_actions[:, 4] = 0
+        modified_actions[:, 4] = 0 
         modified_actions[:, 5:8] = self.actions[:, 3:6]  
         modified_actions[:, 8] = 0
-        modified_actions[:, 9] = 0
+        modified_actions[:, 9] = 0  
         modified_actions[:, 10:] = self.actions[:, 6:] 
         modified_actions = modified_actions.to(self.device)
 
@@ -173,9 +192,6 @@ class Go1FwTilt(WheeledRobot):
                 self.gym.fetch_results(self.sim, True)
             self.gym.refresh_dof_state_tensor(self.sim)
         self.post_physics_step()
-        # print("-"*50)
-        # print(self.desired_contact_states)
-        # print("-"*50)
 
         # return clipped obs, clipped states (None), rewards, dones and infos
         clip_obs = self.cfg.normalization.clip_observations
@@ -243,6 +259,14 @@ class Go1FwTilt(WheeledRobot):
     def reset_idx(self, env_ids):
         super().reset_idx(env_ids)
         self.gait_indices[env_ids] = 0
+        
+        # reset obs_history
+        self.obs_history[env_ids] = torch.zeros(
+        (self.window_size, self.cfg.env.num_adapt_input),
+        dtype=torch.float, 
+        device=self.device, 
+        requires_grad=False
+        )
 
     def _resample_commands(self, env_ids):
         """ Randommly select commands of some environments

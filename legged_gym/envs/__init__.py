@@ -68,6 +68,9 @@ from .go1_fw_terrain.go1_fw_config import Go1FwTerrainCfg, Go1FwTerrainCfgPPO
 from .go1_fw_test.go1_fw import Go1FwTest
 from .go1_fw_test.go1_fw_config import Go1FwTestCfg, Go1FwTestCfgPPO
 
+from .go1_corl.go1_corl import Go1CoRL
+from .go1_corl.go1_corl_config import Go1CoRLCfg, Go1CoRLCfgPPO
+
 import os
 
 from legged_gym.utils.task_registry import task_registry
@@ -86,9 +89,9 @@ task_registry.register( "go1_fw_clock", Go1FwClock, Go1FwFlatClockCfg(), Go1FwFl
 task_registry.register( "go1_legged", Go1_Flat, Go1FlatCfg(), Go1FlatCfgPPO())
 
 task_registry.register( "go1_id", Go1FwID, Go1FwFlatIDCfg(), Go1FwFlatIDCfgPPO())
-
 task_registry.register( "go1_fw_tilt", Go1FwTilt, Go1FwFlatTiltCfg(), Go1FwFlatTiltCfgPPO())
-
 task_registry.register( "go1_fw_terrain", Go1FwTerrain, Go1FwTerrainCfg(), Go1FwTerrainCfgPPO())
 
 task_registry.register( "go1_fw_test", Go1FwTest, Go1FwTestCfg(), Go1FwTestCfgPPO())
+
+task_registry.register( "go1_corl", Go1CoRL, Go1CoRLCfg(), Go1CoRLCfgPPO())

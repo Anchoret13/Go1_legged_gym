@@ -167,8 +167,8 @@ class Go1FwID(WheeledRobot):
         self.obs_history = torch.zeros(self.num_envs, self.window_size, self.sys_model_params["input_size"], dtype=torch.float, device=self.device, requires_grad=False)
         # NOTE: initialize self.obs_history with initial body states instead of zero
 
-        for i in  range(STATIC_INPUT.size(1)):
-            self.obs_history[:, :, i] = STATIC_INPUT[0, i]
+        # for i in range(STATIC_INPUT.size(1)):
+        #     self.obs_history[:, :, i] = STATIC_INPUT[0, i]
 
 
     def _reward_masked_legs_energy(self):
@@ -276,8 +276,13 @@ class Go1FwID(WheeledRobot):
         self.gait_indices[env_ids] = 0
 
         # reset obs_history
-        for i in  range(STATIC_INPUT.size(1)):
-            self.obs_history[:, :, i] = STATIC_INPUT[0, i]
+        self.obs_history[env_ids] = torch.zeros(
+        (self.window_size, self.sys_model_params["input_size"]),
+        dtype=torch.float, 
+        device=self.device, 
+        requires_grad=False
+        )
+
 
     def _resample_commands(self, env_ids):
         """ Randommly select commands of some environments
