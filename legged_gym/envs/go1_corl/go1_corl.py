@@ -72,6 +72,12 @@ class Go1CoRL(WheeledRobot):
         ), dim = -1)
         return target
     
+    def modify_obs(self, obs, adapt):
+        
+        obs_size_without_dummy = 42 # FIX THIS SHIT
+        obs[:, obs_size_without_dummy:] = adapt
+        return obs
+    
     def compute_observations(self):
         """ Computes observations to exclude passive joint
         """
@@ -84,11 +90,15 @@ class Go1CoRL(WheeledRobot):
         self.active_default_dof_pos = self.default_dof_pos[:, dofs_to_keep]
         active_dof_vel = self.dof_vel[:, dofs_to_keep]
 
+        adapt_output = self.compute_adapt_target()
+        dummy_output = torch.zeros_like(adapt_output)
+
         self.obs_buf = torch.cat((
             self.projected_gravity,
             self.commands[:, :3] * self.commands_scale,
             (self.active_dof_pos - self.active_default_dof_pos) * self.obs_scales.dof_pos,
             active_dof_vel * self.obs_scales.dof_vel,
+            dummy_output,
             torch.clip(self.actions, -1, 1),
         ), dim = -1)
 
@@ -101,11 +111,12 @@ class Go1CoRL(WheeledRobot):
         self.update_history(current_adapt_input)
         
         # use adapt module output
-        adapt_output = self.compute_adapt_target()
-        self.privileged_obs_buf = torch.cat((self.obs_buf,
-                                             adapt_output
-                                            ), dim = -1)
+        
+        self.privileged_obs_buf = self.modify_obs(self.obs_buf, adapt_output)
+        print(self.privileged_obs_buf.shape)
+        print(self.obs_buf.shape)
         # print(self.privileged_obs_buf)
+        
 
 
     def _init_buffers(self):

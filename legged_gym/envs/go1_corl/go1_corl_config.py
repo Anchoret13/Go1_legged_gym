@@ -31,12 +31,14 @@
 from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobotCfgPPO
 from legged_gym.envs.go1_fw_clock.go1_fw_config import Go1FwFlatClockCfg, Go1FwFlatClockCfgPPO
 
+from legged_gym.envs.go1_fw_tilt.go1_fw_tilt_config import Go1FwFlatTiltCfg
+
 class Go1CoRLCfg( Go1FwFlatClockCfg):
     class env( Go1FwFlatClockCfg.env):
         num_envs = 4096
         num_actions = 12
-        num_observations = 42  
-        num_privileged_obs = 42 + 6
+        num_observations = 42 + 14
+        num_privileged_obs = 42 + 14
 
         num_adapt_input = 27
         num_adapt_output = 14

@@ -174,7 +174,7 @@ class Go1FwFlatTiltCfg( Go1FwFlatClockCfg):
             # raibert_heuristic = -0.0
             rear_feet_air_time = 1.0
             # # penalize_slow_x_vel = 1.0
-            # feet_clearance = -30.0
+            feet_clearance = -10.0
             # # tracking_contacts_binary = -0.1  
             roller_action_diff = -0.1
             # # alive = 0.5
