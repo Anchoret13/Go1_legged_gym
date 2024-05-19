@@ -38,7 +38,7 @@ class Go1CoRLCfg( Go1FwFlatClockCfg):
         num_envs = 4096
         num_actions = 12
         num_observations = 42 + 14
-        num_privileged_obs = 42 + 14
+        # num_privileged_obs = 42 + 14
 
         num_adapt_input = 27
         num_adapt_output = 14

@@ -13,6 +13,9 @@ from ..base.wheeled_robot import WheeledRobot
 from .go1_corl_config import Go1CoRLCfg
 from ..go1_fw_clock.go1_fw import Go1FwClock, adaptive_sample_vel_cmd
 
+from torch.optim import Adam
+
+
 class Go1CoRL(WheeledRobot):
     cfg : Go1CoRLCfg
     def __init__(self, cfg, sim_params, physics_engine, sim_device, headless):
@@ -23,7 +26,7 @@ class Go1CoRL(WheeledRobot):
 
     def update_history(self, new_obs):
         new_obs = new_obs.unsqueeze(1)
-        self.obs_history = torch.cat((self.obs_history[:, 1:, :], new_obs), dim=1)
+        self.obs_history = torch.cat((self.obs_history[:, 1:, :], new_obs), dim=1) 
 
     def get_current_history(self):
         return self.obs_history
@@ -77,7 +80,43 @@ class Go1CoRL(WheeledRobot):
         obs_size_without_dummy = 42 # FIX THIS SHIT
         obs[:, obs_size_without_dummy:] = adapt
         return obs
-    
+
+
+
+# TODO: leave obs_est_net here
+    def _init_obs_net(self):
+        """
+        intialize the obs_net here
+        """
+        self.window_size = 50 #NOTE: It is fixed again lol this idiot
+        self.model_params = {
+            "input_size" : self.cfg.env.num_adapt_input,
+            "n_layer"    : 2,
+            "output_size": self.cfg.env.num_adapt_output,
+            "hidden_size": 150
+        }
+
+        self.gru = GRU(**self.model_params).to(self.device)
+        self.gru_optimizer = torch.optim.Adam(self.gru.parameters(), lr=0.001)
+
+    def _update_obs_net(self):
+        """
+        pass the state into the obs_net, and update the model
+        """
+        history = self.get_current_history().to(self.device) # NOTE: Modify your environment and make sure it has this function
+        
+        gru_output = self.gru(history, None)
+        gru_output.requires_grad_(True)
+        gru_target = self.env.compute_adapt_target().to(self.device) # TODO: double check this
+        gru_loss = torch.nn.MSELoss(gru_output, gru_target)
+        
+        self.gru_optimizer.zero_grad()
+        gru_loss.backward()
+        self.gru_optimizer.step()
+
+
+        return gru_output
+
     def compute_observations(self):
         """ Computes observations to exclude passive joint
         """
@@ -93,29 +132,39 @@ class Go1CoRL(WheeledRobot):
         adapt_output = self.compute_adapt_target()
         dummy_output = torch.zeros_like(adapt_output)
 
+
+
         self.obs_buf = torch.cat((
             self.projected_gravity,
             self.commands[:, :3] * self.commands_scale,
             (self.active_dof_pos - self.active_default_dof_pos) * self.obs_scales.dof_pos,
             active_dof_vel * self.obs_scales.dof_vel,
-            dummy_output,
-            torch.clip(self.actions, -1, 1),
+
+            torch.clip(self.actions, -1, 1),    # why the dummy is not last
+            # dummy_output,
+            adapt_output,
         ), dim = -1)
 
-        current_adapt_input = torch.cat((
-            self.projected_gravity,
-            (self.active_dof_pos - self.active_default_dof_pos) * self.obs_scales.dof_pos,
-            active_dof_vel
-        ), dim = -1)
+
+        # self.obs_buf = torch.cat((self.obs_buf,
+        #                             adapt_output
+        #                                     ), dim = -1) 
         
+
+        current_adapt_input = torch.cat((
+                            self.projected_gravity,
+                            (self.active_dof_pos - self.active_default_dof_pos) * self.obs_scales.dof_pos,
+                            active_dof_vel
+                        ), dim = -1)
+                        
         self.update_history(current_adapt_input)
         
-        # use adapt module output
+        # # use adapt module output
         
-        self.privileged_obs_buf = self.modify_obs(self.obs_buf, adapt_output)
-        print(self.privileged_obs_buf.shape)
-        print(self.obs_buf.shape)
-        # print(self.privileged_obs_buf)
+        # self.privileged_obs_buf = self.modify_obs(self.obs_buf, adapt_output)
+        # print(self.privileged_obs_buf.shape)
+        # print("- ",self.obs_buf.shape)
+        # print("* ",self.privileged_obs_buf)
         
 
 
@@ -170,8 +219,10 @@ class Go1CoRL(WheeledRobot):
 
         self.wheel_air_time = torch.zeros(self.num_envs, self.wheel_indices.shape[0], dtype=torch.float, device=self.device, requires_grad=False)
         self.rear_feet_air_time = torch.zeros(self.num_envs, self.rear_feet_indices.shape[0], dtype=torch.float, device=self.device, requires_grad=False)
-        self.obs_history = torch.zeros(self.num_envs, self.window_size, self.cfg.env.num_adapt_input, dtype=torch.float, device=self.device, requires_grad=False)
 
+        # NOTE: why this is num_adapt_input
+        self.obs_history = torch.zeros(self.num_envs, self.window_size, self.cfg.env.num_adapt_input, dtype=torch.float, device=self.device, requires_grad=False)
+        self.network_obs = torch.zeros(self.num_envs, self.cfg.env.num_adapt_output, dtype=torch.float, device=self.device, requires_grad=False)
 
     def step(self, actions):
         self.current_step += 1
@@ -571,3 +622,48 @@ class Go1CoRL(WheeledRobot):
         basis_vec = torch.zeros(q.shape[0], 3, device=q.device)
         basis_vec[:, axis] = 1
         return quat_rotate(q, basis_vec)
+    
+
+
+
+
+class GRU(torch.nn.Module):
+    name = "gru"
+    rnn_class = torch.nn.GRU
+    def __init__(self, input_size, hidden_size, n_layer, output_size):
+        super().__init__()
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.num_layers = n_layer
+        self.output_size = output_size
+
+        self.model = torch.nn.GRU(
+            input_size = self.input_size,
+            hidden_size = self.hidden_size,
+            num_layers = self.num_layers,
+            batch_first = True,
+            bias = True,
+            dropout = 0.2 if self.num_layers > 1 else 0.0
+        )
+        self.fc = torch.nn.Linear(self.hidden_size, self.output_size)
+        self._initialize()
+
+    def _initialize(self):
+        for name, param in self.model.named_parameters():
+            if "bias" in name:
+                torch.nn.init.constant_(param, 0)
+            elif "weight" in name:
+                torch.nn.init.orthogonal_(param)
+
+    def forward(self, inputs, h_0):
+        if h_0 is None:
+            h_0 = self.get_zero_internal_state(inputs.size(0))
+        
+        output, h_n = self.model(inputs, h_0)
+        output = self.fc(output[:, -1, :])  # Shape of out: (batch_size, output_size)
+        print(output)
+        return output
+
+    
+    def get_zero_internal_state(self, batch_size):
+        return torch.zeros((self.num_layers, batch_size, self.hidden_size), device=self.model.weight_ih_l0.device)
