@@ -159,27 +159,27 @@ class Go1FwFlatTiltCfg( Go1FwFlatClockCfg):
             # # REMOVE HISTORY REWARD
             # torques = -0.001
             # masked_legs_energy = -5e-3
-            masked_legs_energy = -1e-4
+            masked_legs_energy = -5e-4
             # tracking_ang_vel = 1.0
             # lin_vel_x = 0.1
             tracking_lin_vel_x = 3.5
-            # orientation = -1.0
-            # lin_vel_z = -1.0
-            # action_rate = -0.01
-            roller_action_rate = -0.0
-            # hip = -1.0
-            # penalize_roll = -2.5                  
-            front_leg = -3.5 /2
-            front_hip = -1.0 /2
-            # raibert_heuristic = -0.0
-            rear_feet_air_time = 0.5
+            orientation = -1.3
+            lin_vel_z = -5.0
+            action_rate = -0.02
+            roller_action_rate = -0.15
+            hip = -1.0
+            penalize_roll = -3.5                  
+            # front_leg = -3.5 /2
+            # front_hip = -1.0 /2
+            # raibert_heuristic = -5.0
+            # rear_feet_air_time = 0.5
             # # penalize_slow_x_vel = 1.0
-            feet_clearance = -30.0
+            # feet_clearance = -10.0
             # # tracking_contacts_binary = -0.1  
             roller_action_diff = -0.1
             # # alive = 0.5
-            # base_height = -0.1
-            # collision = -1.5
+            base_height = -30
+            collision = -1.5
 
 
 
