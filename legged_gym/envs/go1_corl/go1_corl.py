@@ -7,6 +7,7 @@ from isaacgym import gymtorch, gymapi, gymutil
 from legged_gym.utils.math import *
 
 import torch
+import torch.nn as nn
 from typing import Tuple, Dict
 from ..base.wheeled_robot import WheeledRobot
 # from ..base.wheeled_tilt_robot import WheeledRobot
@@ -75,12 +76,11 @@ class Go1CoRL(WheeledRobot):
         ), dim = -1)
         return target
     
-    def modify_obs(self, obs, adapt):
+    # def modify_obs(self, obs, adapt):
         
-        obs_size_without_dummy = 42 # FIX THIS SHIT
-        obs[:, obs_size_without_dummy:] = adapt
-        return obs
-
+    #     obs_size_without_dummy = 42 # FIX THIS SHIT
+    #     obs[:, obs_size_without_dummy:] = adapt
+    #     return obs
 
 
 # TODO: leave obs_est_net here
@@ -103,7 +103,7 @@ class Go1CoRL(WheeledRobot):
         """
         pass the state into the obs_net, and update the model
         """
-        history = self.get_current_history().to(self.device) # NOTE: Modify your environment and make sure it has this function
+        history = self.get_current_history().to(self.device)
         
         gru_output = self.gru(history, None)
         gru_output.requires_grad_(True)
@@ -113,7 +113,6 @@ class Go1CoRL(WheeledRobot):
         self.gru_optimizer.zero_grad()
         gru_loss.backward()
         self.gru_optimizer.step()
-
 
         return gru_output
 
@@ -139,17 +138,10 @@ class Go1CoRL(WheeledRobot):
             self.commands[:, :3] * self.commands_scale,
             (self.active_dof_pos - self.active_default_dof_pos) * self.obs_scales.dof_pos,
             active_dof_vel * self.obs_scales.dof_vel,
-
             torch.clip(self.actions, -1, 1),    # why the dummy is not last
             # dummy_output,
-            adapt_output,
         ), dim = -1)
 
-
-        # self.obs_buf = torch.cat((self.obs_buf,
-        #                             adapt_output
-        #                                     ), dim = -1) 
-        
 
         current_adapt_input = torch.cat((
                             self.projected_gravity,
@@ -161,11 +153,14 @@ class Go1CoRL(WheeledRobot):
         
         # # use adapt module output
         
-        # self.privileged_obs_buf = self.modify_obs(self.obs_buf, adapt_output)
-        # print(self.privileged_obs_buf.shape)
-        # print("- ",self.obs_buf.shape)
-        # print("* ",self.privileged_obs_buf)
-        
+        self.privileged_obs_buf = torch.cat((
+            self.projected_gravity,
+            self.commands[:, :3] * self.commands_scale,
+            (self.active_dof_pos - self.active_default_dof_pos) * self.obs_scales.dof_pos,
+            active_dof_vel * self.obs_scales.dof_vel,
+            torch.clip(self.actions, -1, 1),    # why the dummy is not last
+            adapt_output,
+        ), dim = -1)
 
 
     def _init_buffers(self):
@@ -429,7 +424,6 @@ class Go1CoRL(WheeledRobot):
         self.hips_pos = torch.index_select(self.dof_pos, 1, hips_idxs)
         diff = torch.sum(torch.square(self.hips_default_pos - self.hips_pos), dim = 1)
         return diff
-
     
     def _reward_front_hip(self):
         front_hips_idxs = torch.tensor([0, 5], device=self.torques.device)
@@ -475,7 +469,6 @@ class Go1CoRL(WheeledRobot):
         lin_vel_error = torch.square(self.commands[:, 0] - self.base_lin_vel[:, 0])
         return torch.exp(-lin_vel_error/self.cfg.rewards.tracking_sigma)
     
-    
     def _reward_penalize_roll(self):
         # Penalize non flat base orientation
         return torch.sum(torch.square(self.projected_gravity[:, :1]), dim=1)
@@ -491,8 +484,7 @@ class Go1CoRL(WheeledRobot):
         normalized_loss = total_loss / contact_detect.numel()
 
         return normalized_loss
-    
-    
+        
     def _reward_tracking_rear_swing_force(self):
         desired_contact = self.desired_rear_contact_states
         foot_forces = torch.norm(self.contact_forces[:, self.rear_feet_indices, :], dim = 1)
@@ -608,6 +600,12 @@ class Go1CoRL(WheeledRobot):
         target_height = 0.08 * phases + 0.08 # currently target height is 0.04
         rew_foot_clearance = torch.square(target_height - foot_height) * (1 - self.desired_rear_contact_states)
         return torch.sum(rew_foot_clearance, dim=1)
+    
+    def train_GRU(self):
+        pass
+
+    def prepare_transitions(self):
+        pass
 
     # NOTE: simulate front hip joint noise
     def _apply_curriculum_noise(self):
@@ -625,11 +623,9 @@ class Go1CoRL(WheeledRobot):
     
 
 
-
-
-class GRU(torch.nn.Module):
+class GRU(nn.Module):
     name = "gru"
-    rnn_class = torch.nn.GRU
+    rnn_class = nn.GRU
     def __init__(self, input_size, hidden_size, n_layer, output_size):
         super().__init__()
         self.input_size = input_size
@@ -637,7 +633,7 @@ class GRU(torch.nn.Module):
         self.num_layers = n_layer
         self.output_size = output_size
 
-        self.model = torch.nn.GRU(
+        self.model = nn.GRU(
             input_size = self.input_size,
             hidden_size = self.hidden_size,
             num_layers = self.num_layers,
@@ -645,15 +641,15 @@ class GRU(torch.nn.Module):
             bias = True,
             dropout = 0.2 if self.num_layers > 1 else 0.0
         )
-        self.fc = torch.nn.Linear(self.hidden_size, self.output_size)
+        self.fc = nn.Linear(self.hidden_size, self.output_size)
         self._initialize()
 
     def _initialize(self):
         for name, param in self.model.named_parameters():
             if "bias" in name:
-                torch.nn.init.constant_(param, 0)
+                nn.init.constant_(param, 0)
             elif "weight" in name:
-                torch.nn.init.orthogonal_(param)
+                nn.init.orthogonal_(param)
 
     def forward(self, inputs, h_0):
         if h_0 is None:

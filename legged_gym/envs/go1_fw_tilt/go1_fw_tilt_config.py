@@ -152,7 +152,7 @@ class Go1FwFlatTiltCfg( Go1FwFlatClockCfg):
     class commands( Go1FwFlatClockCfg.commands):
         # num_commands = 1
         class ranges(Go1FwFlatClockCfg.commands.ranges):
-            lin_vel_x = [0.0, 4.5] # min max [m/s]
+            lin_vel_x = [0.0, 2.5] # min max [m/s]
     class rewards( Go1FwFlatClockCfg.rewards ):
 
         class scales( Go1FwFlatClockCfg.rewards.scales ):
@@ -172,9 +172,9 @@ class Go1FwFlatTiltCfg( Go1FwFlatClockCfg):
             front_leg = -3.5 /2
             front_hip = -1.0 /2
             # raibert_heuristic = -0.0
-            rear_feet_air_time = 1.0
+            rear_feet_air_time = 0.5
             # # penalize_slow_x_vel = 1.0
-            feet_clearance = -10.0
+            feet_clearance = -30.0
             # # tracking_contacts_binary = -0.1  
             roller_action_diff = -0.1
             # # alive = 0.5

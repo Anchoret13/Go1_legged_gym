@@ -32,7 +32,7 @@ def collect_trajectory(args, traj_num):
 
     # load policy
     train_cfg.runner.resume = True
-    args.load_run = "/home/well/Desktop/Skating/legged_gym/logs/roller_skating_asac/May12_11-32-12_"
+    args.load_run = "/home/well/Desktop/Skating/legged_gym/logs/go1_roller_tilt/May18_14-32-35_"
     ppo_runner, train_cfg = task_registry.make_alg_runner(env=env, name=args.task, args=args, train_cfg=train_cfg)
     policy = ppo_runner.get_inference_policy(device=env.device)
     dataset_dir = os.path.join(LEGGED_GYM_ROOT_DIR, 'dataset', 'short', 'wheeled_flat')
@@ -83,6 +83,7 @@ def collect_trajectory(args, traj_num):
         multi_trajectories[idx]["obs"] = multi_obs[idx][:clip_length]
         multi_trajectories[idx]["physprops"] = multi_physprops[idx][:clip_length]
         multi_trajectories[idx]["act"] = multi_actions[idx][:clip_length]
+        print(len(multi_trajectories[idx]["act"]))
         file_path = os.path.join(dataset_dir, f'traj_{idx:04d}.pkl')
         print(f'{idx} trajectories collected')
         with open(file_path, "wb") as f:

@@ -305,7 +305,8 @@ class WheeledRobot(BaseTask):
         if self.cfg.domain_rand.randomize_com_displacement:
             rng = self.cfg.domain_rand.com_displacement_range
             rand_x = np.random.uniform(rng[0], rng[1])
-            rand_y = np.random.uniform(rng[0], rng[1])
+            # rand_y = np.random.uniform(rng[0], rng[1])
+            rand_y = 0 # NOTE: we don't add y-axis displacement currently.
             rand_z = np.random.uniform(rng[0], rng[1])
             props[0].com = gymapi.Vec3(rand_x, rand_y, rand_z)
         return props

@@ -35,10 +35,10 @@ from legged_gym.envs.go1_fw_tilt.go1_fw_tilt_config import Go1FwFlatTiltCfg
 
 class Go1CoRLCfg( Go1FwFlatClockCfg):
     class env( Go1FwFlatClockCfg.env):
-        num_envs = 4096
+        num_envs = 1024
         num_actions = 12
-        num_observations = 42 + 14
-        # num_privileged_obs = 42 + 14
+        num_observations = 42
+        num_privileged_obs = 42 + 14
 
         num_adapt_input = 27
         num_adapt_output = 14
