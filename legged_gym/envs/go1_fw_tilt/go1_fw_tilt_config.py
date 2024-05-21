@@ -178,7 +178,7 @@ class Go1FwFlatTiltCfg( Go1FwFlatClockCfg):
             # # tracking_contacts_binary = -0.1  
             roller_action_diff = -0.1
             # # alive = 0.5
-            base_height = -30
+            base_height = -1.
             collision = -1.5
 
 
