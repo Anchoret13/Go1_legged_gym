@@ -37,7 +37,7 @@ import numpy as np
 from rsl_rl.env import VecEnv
 from rsl_rl.runners import OnPolicyRunner
 
-from rsl_rl.runners import OnPolicyGRURunner
+# from rsl_rl.runners import OnPolicyGRURunner
 
 from legged_gym import LEGGED_GYM_ROOT_DIR, LEGGED_GYM_ENVS_DIR
 from .helpers import get_args, update_cfg_from_args, class_to_dict, get_load_path, set_seed, parse_sim_params
@@ -156,44 +156,44 @@ class TaskRegistry():
             runner.load(resume_path)
         return runner, train_cfg
     
-    def make_gru_alg_runner(
-            self,
-            env,
-            name = None,
-            args = None,
-            train_cfg = None,
-            log_root = "default"
-    )-> Tuple[OnPolicyGRURunner, LeggedRobotCfgPPO]:
-        if args is None:
-            args = get_args
+    # def make_gru_alg_runner(
+    #         self,
+    #         env,
+    #         name = None,
+    #         args = None,
+    #         train_cfg = None,
+    #         log_root = "default"
+    # )-> Tuple[OnPolicyGRURunner, LeggedRobotCfgPPO]:
+    #     if args is None:
+    #         args = get_args
 
-        if train_cfg is None:
-            if name is None:
-                raise ValueError("Either 'name' or 'train_cfg' must be not None")
-            # load config files
-            _, train_cfg = self.get_cfgs(name)
-        else:
-            if name is not None:
-                print(f"'train_cfg' provided -> Ignoring 'name={name}'")
-        # override cfg from args (if specified)
-        _, train_cfg = update_cfg_from_args(None, train_cfg, args)
+    #     if train_cfg is None:
+    #         if name is None:
+    #             raise ValueError("Either 'name' or 'train_cfg' must be not None")
+    #         # load config files
+    #         _, train_cfg = self.get_cfgs(name)
+    #     else:
+    #         if name is not None:
+    #             print(f"'train_cfg' provided -> Ignoring 'name={name}'")
+    #     # override cfg from args (if specified)
+    #     _, train_cfg = update_cfg_from_args(None, train_cfg, args)
 
-        if log_root == "default":
-            log_root = os.path.join(LEGGED_GYM_ROOT_DIR, 'logs', train_cfg.runner.experiment_name)
-            log_dir = os.path.join(log_root, datetime.now().strftime('%b%d_%H-%M-%S') + '_' + train_cfg.runner.run_name)
-        elif log_root is None:
-            log_dir = None
-        else:
-            log_dir = os.path.join(log_root, datetime.now().strftime('%b%d_%H-%M-%S') + '_' + train_cfg.runner.run_name)
+    #     if log_root == "default":
+    #         log_root = os.path.join(LEGGED_GYM_ROOT_DIR, 'logs', train_cfg.runner.experiment_name)
+    #         log_dir = os.path.join(log_root, datetime.now().strftime('%b%d_%H-%M-%S') + '_' + train_cfg.runner.run_name)
+    #     elif log_root is None:
+    #         log_dir = None
+    #     else:
+    #         log_dir = os.path.join(log_root, datetime.now().strftime('%b%d_%H-%M-%S') + '_' + train_cfg.runner.run_name)
         
-        train_cfg_dict = class_to_dict(train_cfg)
-        runner = OnPolicyGRURunner(env, train_cfg_dict, log_dir, device = args.rl_device)
-        resume = train_cfg.runner.resume
-        if resume:
-            resume_path = get_load_path(log_root, load_run=train_cfg.runner.load_run, checkpoint=train_cfg.runner.checkpoint)
-            print(f"Loading model from: {resume_path}")
-            runner.load(resume_path)
-        return runner, train_cfg
+    #     train_cfg_dict = class_to_dict(train_cfg)
+    #     runner = OnPolicyGRURunner(env, train_cfg_dict, log_dir, device = args.rl_device)
+    #     resume = train_cfg.runner.resume
+    #     if resume:
+    #         resume_path = get_load_path(log_root, load_run=train_cfg.runner.load_run, checkpoint=train_cfg.runner.checkpoint)
+    #         print(f"Loading model from: {resume_path}")
+    #         runner.load(resume_path)
+    #     return runner, train_cfg
 
 # make global task registry
 task_registry = TaskRegistry()

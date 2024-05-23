@@ -48,13 +48,13 @@ class Go1FlatCfg( LeggedRobotCfg ):
         resampling_time = 10. # time before command are changed[s]
         heading_command = False # if true: compute ang vel command from heading error
         class ranges:
-            lin_vel_x = [0.0, 1.5] # min max [m/s]
+            lin_vel_x = [0.0, 3.5] # min max [m/s]
             lin_vel_y = [-0.0, 0.0]   # min max [m/s]
             ang_vel_yaw = [-0.0, 0.0]    # min max [rad/s]
             heading = [-0., 0.]
 
     class init_state( LeggedRobotCfg.init_state ):
-        pos = [0.0, 0.0, 0.34] # x,y,z [m]
+        pos = [0.0, 0.0, 0.3] # x,y,z [m]
         default_joint_angles = { # = target angles [rad] when action = 0.0
             'FL_hip_joint': 0.1,  # [rad]
             'RL_hip_joint': 0.1,  # [rad]
@@ -90,19 +90,23 @@ class Go1FlatCfg( LeggedRobotCfg ):
         terminate_after_contacts_on = ["base"]
         self_collisions = 1 # 1 to disable, 0 to enable...bitwise filter
         flip_visual_attachments = False
-  
+
+    class commands( LeggedRobotCfg.commands):
+        # num_commands = 1
+        class ranges(LeggedRobotCfg.commands.ranges):
+            lin_vel_x = [0.0, 4.5] # min max [m/s] 
     class rewards( LeggedRobotCfg.rewards ):
         soft_dof_pos_limit = 0.9
         base_height_target = 0.34
         only_positive_rewards = False
-        class scales:
+        class scales( LeggedRobotCfg.rewards.scales ):
 
             # "NOTE: back to something old"
-            # torques = -0.0001
-            # action_rate = -0.01
-            # dof_pos_limits = -10.0
-            # orientation = -10.0
-            # base_height = -1.0
+            torques = -0.0001
+            action_rate = -0.01
+            dof_pos_limits = -10.0
+            orientation = -5.0
+            base_height = -10.0
 
             # # from base
             # tracking_lin_vel = 10.0
@@ -113,20 +117,26 @@ class Go1FlatCfg( LeggedRobotCfg ):
             # dof_acc = -2.5e-7
 
             # legged_gym reward:
-            tracking_lin_vel = 1.0
-            tracking_ang_vel = 0.5
-            lin_vel_z = -4.0
-            ang_vel_xy = -0.05
-            orientation = -5.
-            torques = -0.00001
-            dof_vel = -0.
-            # dof_acc = -2.5e-7
-            base_height = -10. 
-            feet_air_time =  2.0
-            collision = -1.
-            feet_stumble = -0.0 
-            action_rate = -0.01
-            stand_still = -0.
+            tracking_lin_vel = 2.0
+            # tracking_ang_vel = 0.5
+            # lin_vel_z = -4.0
+            # ang_vel_xy = -0.05
+            # orientation = -5.
+            # torques = -0.00001
+            dof_vel = -1e-4
+            # # dof_acc = -2.5e-7
+            # base_height = -10. 
+            feet_air_time =  4.0
+            collision = -1.5
+            # feet_stumble = -0.0 
+            # action_rate = -0.01
+            # stand_still = -0.
+
+
+            torques = -0.0001
+            # dof_pos_limits = -10.0
+            legs_energy = -1e-4
+            lin_vel_x = 2.0
             
             
     class domain_rand( LeggedRobotCfg.domain_rand):

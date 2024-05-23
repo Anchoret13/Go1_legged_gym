@@ -123,3 +123,11 @@ class Go1_Flat(OnlyLeggedRobot):
 
         if self.viewer and self.enable_viewer_sync and self.debug_viz:
             self._draw_debug_vis()
+
+
+
+        def _reward_lin_vel_x(self):
+            return self.root_states[:, 7]
+        def _reward_legs_energy(self):
+
+            return torch.sum(torch.square(self.torques * self.dof_vel), dim=1)
