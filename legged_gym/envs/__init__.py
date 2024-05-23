@@ -55,8 +55,8 @@ from .go1_fw_clock.go1_fw_config import Go1FwFlatClockCfg, Go1FwFlatClockCfgPPO
 from .go1_legged.go1 import Go1_Flat
 from .go1_legged.go1_config import Go1FlatCfg, Go1FlatCfgPPO
 
-from .go1_id.go1_id import Go1FwID
-from .go1_id.go1_id_config import Go1FwFlatIDCfg, Go1FwFlatIDCfgPPO
+from .go1_fw_id.go1_id import Go1FwID
+from .go1_fw_id.go1_id_config import Go1FwFlatIDCfg, Go1FwFlatIDCfgPPO
 
 
 from .go1_fw_tilt.go1_fw_tilt import Go1FwTilt

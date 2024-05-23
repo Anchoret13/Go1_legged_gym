@@ -37,7 +37,7 @@ class Go1CoRLCfg( Go1FwFlatClockCfg):
     class env( Go1FwFlatClockCfg.env):
         num_envs = 1024
         num_actions = 12
-        num_observations = 42
+        num_observations = 42 + 14
         num_privileged_obs = 42 + 14
 
         num_adapt_input = 27

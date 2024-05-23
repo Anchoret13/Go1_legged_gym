@@ -40,12 +40,40 @@ class Go1FwTilt(WheeledRobot):
         # print(trans_input)
         return trans_input
     
+    # def compute_adapt_target(self):
+    #     target = torch.cat((
+    #         self.roller_obs.to(self.device),
+    #         self.friction_coeffs[:,0].to(self.device),
+    #         self.base_lin_vel.to(self.device),
+    #         self.base_ang_vel.to(self.device)
+    #     ), dim = -1)
+    #     return target
+
     def compute_adapt_target(self):
+        # privileged observation
+        roller_dofs = torch.tensor([False, False, False,  False,  True, 
+                                    False, False, False,  False,  True,
+                                    False, False, False, 
+                                    False, False, False])
+        tilt_dofs = torch.tensor([  False, False, False,  True,  False, 
+                                    False, False, False,  True,  False,
+                                    False, False, False, 
+                                    False, False, False])
+        # roller_dofs = torch.tensor([False, False, False, True, True,
+        #                             False, False, False, True, True,
+        #                             False, False, False,
+        #                             False, False, False])
+        self.roller_obs = self.dof_vel[:, roller_dofs]
+        self.installation_angles= self.dof_pos[:, tilt_dofs]
+
         target = torch.cat((
-            self.roller_obs.to(self.device),
-            self.friction_coeffs[:,0].to(self.device),
-            self.base_lin_vel.to(self.device),
-            self.base_ang_vel.to(self.device)
+            self.roller_obs.to(self.device),                # 2
+            # self.friction_coeffs[:,0].to(self.device),    # 1
+            self.installation_angles.to(self.device),       # 2
+            self.base_lin_vel.to(self.device),              # 3
+            self.base_ang_vel.to(self.device),              # 3
+            self.body_mass.to(self.device),                 # 1
+            self.com_displacement.to(self.device)           # 3
         ), dim = -1)
         return target
     
@@ -61,15 +89,7 @@ class Go1FwTilt(WheeledRobot):
         self.active_default_dof_pos = self.default_dof_pos[:, dofs_to_keep]
         active_dof_vel = self.dof_vel[:, dofs_to_keep]
 
-        self.obs_buf = torch.cat((
-            self.projected_gravity,
-            self.commands[:, :3] * self.commands_scale,
-            (self.active_dof_pos - self.active_default_dof_pos) * self.obs_scales.dof_pos,
-            active_dof_vel * self.obs_scales.dof_vel,
-            torch.clip(self.actions, -1, 1),
-            # self.base_lin_vel,
-            # self.base_ang_vel
-        ), dim = -1)
+        
 
         # TODO add friction for roller dof?
         # privileged observation
@@ -85,10 +105,32 @@ class Go1FwTilt(WheeledRobot):
         #                             False, False, False])
         self.roller_obs = self.dof_vel[:, roller_dofs]
         friction_coeff = self.friction_coeffs[:,0].to(self.device)
-        self.privileged_obs_buf = torch.cat((self.obs_buf,
-                                             self.base_lin_vel,
-                                             self.base_ang_vel
-                                            ), dim = -1)
+        # self.privileged_obs_buf = torch.cat((self.obs_buf,
+        #                                      self.base_lin_vel,
+        #                                      self.base_ang_vel
+        #                                     ), dim = -1)
+
+        adapt_output = self.compute_adapt_target()
+        dummy_output = torch.zeros_like(adapt_output)
+
+        self.obs_buf = torch.cat((
+            self.projected_gravity,
+            self.commands[:, :3] * self.commands_scale,
+            (self.active_dof_pos - self.active_default_dof_pos) * self.obs_scales.dof_pos,
+            active_dof_vel * self.obs_scales.dof_vel,
+            torch.clip(self.actions, -1, 1),
+            dummy_output
+        ), dim = -1)
+
+
+        self.privileged_obs_buf = torch.cat((
+            self.projected_gravity,
+            self.commands[:, :3] * self.commands_scale,
+            (self.active_dof_pos - self.active_default_dof_pos) * self.obs_scales.dof_pos,
+            active_dof_vel * self.obs_scales.dof_vel,
+            torch.clip(self.actions, -1, 1),    # why the dummy is not last
+            adapt_output,
+        ), dim = -1)
         # print(self.privileged_obs_buf)
 
     def _init_buffers(self):
