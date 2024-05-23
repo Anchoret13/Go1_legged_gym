@@ -102,7 +102,7 @@ class Go1FlatCfg( LeggedRobotCfg ):
             # action_rate = -0.01
             # dof_pos_limits = -10.0
             # orientation = -10.0
-            # base_height = -30.0
+            # base_height = -1.0
 
             # # from base
             # tracking_lin_vel = 10.0
@@ -113,17 +113,16 @@ class Go1FlatCfg( LeggedRobotCfg ):
             # dof_acc = -2.5e-7
 
             # legged_gym reward:
-            termination = -0.0
             tracking_lin_vel = 1.0
             tracking_ang_vel = 0.5
-            lin_vel_z = -2.0
+            lin_vel_z = -4.0
             ang_vel_xy = -0.05
-            orientation = -0.
+            orientation = -5.
             torques = -0.00001
             dof_vel = -0.
-            dof_acc = -2.5e-7
-            base_height = -0. 
-            feet_air_time =  1.0
+            # dof_acc = -2.5e-7
+            base_height = -10. 
+            feet_air_time =  2.0
             collision = -1.
             feet_stumble = -0.0 
             action_rate = -0.01
@@ -132,10 +131,10 @@ class Go1FlatCfg( LeggedRobotCfg ):
             
     class domain_rand( LeggedRobotCfg.domain_rand):
         randomize_friction = True
-        friction_range = [0.05, 4.5]
-        randomize_base_mass = True
-        added_mass_range = [-1., 3]
-        push_robots = True
+        friction_range = [0.15, 0.85]
+        randomize_base_mass = False
+        added_mass_range = [0., 5.0]
+        push_robots = False
         push_interval_s = 15
         max_push_vel_xy = 0.5 
 
