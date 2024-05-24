@@ -75,7 +75,7 @@ class Go1FlatCfg( LeggedRobotCfg ):
     class control( LeggedRobotCfg.control ):
         # PD Drive parameters:
         control_type = 'P'
-        stiffness = {'joint': 20.}  # [N*m/rad]
+        stiffness = {'joint': 30.}  # [N*m/rad]
         damping = {'joint': 0.5}     # [N*m*s/rad]
         # action scale: target angle = actionScale * action + defaultAngle
         action_scale = 0.25
@@ -114,25 +114,37 @@ class Go1FlatCfg( LeggedRobotCfg ):
 
 
             # WTW weights
-            tracking_lin_vel = 0.05 * 50
-            tracking_ang_vel = 0.01 * 50
-            tracking_contacts_shaped_force = -0.08 * 50
-            # tracking_stance_vel = -0.08 * 50
-            tracking_contacts_shaped_vel = -0.08 * 50
-            # tracking_swing_force = -0.08 * 50
-            base_height = -0.2 * 50
+            # tracking_lin_vel = 0.05 * 50
+            # tracking_ang_vel = 0.01 * 50
+            # tracking_contacts_shaped_force = -0.08 * 50
+            # # tracking_stance_vel = -0.08 * 50
+            # tracking_contacts_shaped_vel = -0.08 * 50
+            # # tracking_swing_force = -0.08 * 50
+            # base_height = -0.2 * 50
             # pitch_tracking = -0.1 * 50
             raibert_heuristic = -0.2 * 50
-            # feet_clearance = -0.6 * 50
-            lin_vel_z = -4e-4 * 50
-            orientation = -2e-5 * 50
-            # foot slip
-            collision = -0.02 * 50
-            dof_pos_limits = -0.2 * 50
-            torques = -2e-5 * 50
-            dof_vel = -2e-5 * 50
-            dof_acc = -5e-9 * 50
-            action_rate = -2e-4 * 50
+            feet_clearance = -0.6 * 50
+            # lin_vel_z = -4e-4 * 50
+            # orientation = -2e-5 * 50
+            # # foot slip
+            # collision = -0.02 * 50
+            # dof_pos_limits = -0.2 * 50
+            # torques = -2e-5 * 50
+            # dof_vel = -2e-5 * 50
+            # dof_acc = -5e-9 * 50
+            # action_rate = -2e-4 * 50
+
+            torques = -0.0001
+            action_rate = -0.01
+            dof_pos_limits = -10.0
+            orientation = -5.0
+            base_height = -10.0
+            tracking_lin_vel = 2.0
+            dof_vel = -1e-4
+            feet_air_time =  4.0
+            collision = -1.5
+            legs_energy = -1e-4
+            lin_vel_x = 2.0
             
             
             
