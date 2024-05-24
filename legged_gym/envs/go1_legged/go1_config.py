@@ -123,7 +123,7 @@ class Go1FlatCfg( LeggedRobotCfg ):
             # base_height = -0.2 * 50
             # pitch_tracking = -0.1 * 50
             raibert_heuristic = -0.2 * 50
-            feet_clearance = -0.6 * 50
+            feet_clearance = -0.1 * 50
             # lin_vel_z = -4e-4 * 50
             # orientation = -2e-5 * 50
             # # foot slip
@@ -144,7 +144,7 @@ class Go1FlatCfg( LeggedRobotCfg ):
             feet_air_time =  4.0
             collision = -1.5
             legs_energy = -1e-4
-            lin_vel_x = 2.0
+            # lin_vel_x = 2.0
             
             
             
