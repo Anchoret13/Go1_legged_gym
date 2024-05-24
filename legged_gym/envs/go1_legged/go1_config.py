@@ -32,23 +32,23 @@ from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobot
 
 class Go1FlatCfg( LeggedRobotCfg ):
     class env (LeggedRobotCfg.env):
-        num_observations = 42
-        observe_vel = False
+        num_observations = 42 + 6
+        num_privileged_obs = 42 + 6
 
     class terrain (LeggedRobotCfg.terrain):
         mesh_type = 'plane'
-        # static_friction = 10.0
-        # dynamic_friction = 1.0
+        static_friction = 1.0
+        dynamic_friction = 1.0
         measure_heights = False
 
-    class command (LeggedRobotCfg.commands): 
+    class commands (LeggedRobotCfg.commands): 
         curriculum = True
         max_curriculum = 1.
         num_commands = 4 # default: lin_vel_x, lin_vel_y, ang_vel_yaw, heading (in heading mode ang_vel_yaw is recomputed from heading error)
         resampling_time = 10. # time before command are changed[s]
         heading_command = False # if true: compute ang vel command from heading error
         class ranges:
-            lin_vel_x = [0.0, 3.5] # min max [m/s]
+            lin_vel_x = [0.0, 1.5] # min max [m/s]
             lin_vel_y = [-0.0, 0.0]   # min max [m/s]
             ang_vel_yaw = [-0.0, 0.0]    # min max [rad/s]
             heading = [-0., 0.]
@@ -91,57 +91,54 @@ class Go1FlatCfg( LeggedRobotCfg ):
         self_collisions = 1 # 1 to disable, 0 to enable...bitwise filter
         flip_visual_attachments = False
 
-    class commands( LeggedRobotCfg.commands):
-        # num_commands = 1
-        class ranges(LeggedRobotCfg.commands.ranges):
-            lin_vel_x = [0.0, 4.5] # min max [m/s] 
+    # class commands( LeggedRobotCfg.commands):
+    #     # num_commands = 1
+    #     class ranges(LeggedRobotCfg.commands.ranges):
+    #         lin_vel_x = [0.0, 4.5] # min max [m/s] 
     class rewards( LeggedRobotCfg.rewards ):
         soft_dof_pos_limit = 0.9
         base_height_target = 0.34
         only_positive_rewards = False
         class scales( LeggedRobotCfg.rewards.scales ):
-
-            # "NOTE: back to something old"
-            torques = -0.0001
-            action_rate = -0.01
-            dof_pos_limits = -10.0
-            orientation = -5.0
-            base_height = -10.0
-
-            # # from base
-            # tracking_lin_vel = 10.0
-            # tracking_ang_vel = 0.5
-            # lin_vel_z = -2.0
-            # ang_vel_xy = -2.0
-            # dof_vel = -0.
-            # dof_acc = -2.5e-7
-
-            # legged_gym reward:
-            tracking_lin_vel = 2.0
-            # tracking_ang_vel = 0.5
-            # lin_vel_z = -4.0
-            # ang_vel_xy = -0.05
-            # orientation = -5.
-            # torques = -0.00001
-            dof_vel = -1e-4
-            # # dof_acc = -2.5e-7
-            # base_height = -10. 
-            feet_air_time =  4.0
-            collision = -1.5
-            # feet_stumble = -0.0 
-            # action_rate = -0.01
-            # stand_still = -0.
+            # torques = -0.0001
+            
+            # orientation = -5.0
+            # base_height = -10.0
+            # tracking_lin_vel = 2.0
+            # dof_vel = -1e-4
+            # feet_air_time =  4.0
+            # collision = -1.5
+            # torques = -0.0001
+            # legs_energy = -1e-4
+            # lin_vel_x = 2.0
 
 
-            torques = -0.0001
-            # dof_pos_limits = -10.0
-            legs_energy = -1e-4
-            lin_vel_x = 2.0
+            # WTW weights
+            tracking_lin_vel = 0.05 * 50
+            tracking_ang_vel = 0.01 * 50
+            tracking_contacts_shaped_force = -0.08 * 50
+            # tracking_stance_vel = -0.08 * 50
+            tracking_contacts_shaped_vel = -0.08 * 50
+            # tracking_swing_force = -0.08 * 50
+            base_height = -0.2 * 50
+            # pitch_tracking = -0.1 * 50
+            raibert_heuristic = -0.2 * 50
+            # feet_clearance = -0.6 * 50
+            lin_vel_z = -4e-4 * 50
+            orientation = -2e-5 * 50
+            # foot slip
+            collision = -0.02 * 50
+            dof_pos_limits = -0.2 * 50
+            torques = -2e-5 * 50
+            dof_vel = -2e-5 * 50
+            dof_acc = -5e-9 * 50
+            action_rate = -2e-4 * 50
+            
             
             
     class domain_rand( LeggedRobotCfg.domain_rand):
-        randomize_friction = True
-        friction_range = [0.15, 0.85]
+        randomize_friction = False
+        friction_range = [0.55, 1.25]
         randomize_base_mass = False
         added_mass_range = [0., 5.0]
         push_robots = False

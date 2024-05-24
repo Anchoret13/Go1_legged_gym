@@ -34,6 +34,8 @@ import os
 
 from isaacgym.torch_utils import *
 from isaacgym import gymtorch, gymapi, gymutil
+from legged_gym.utils.math import quat_apply_yaw, wrap_to_pi, torch_rand_sqrt_float
+
 
 import torch
 from typing import Tuple, Dict
@@ -43,35 +45,51 @@ class Go1_Flat(OnlyLeggedRobot):
     def _create_envs(self):
         super()._create_envs()
 
+    def compute_adapt_target(self):
+        target = torch.cat((
+            self.base_lin_vel.to(self.device),              # 3
+            self.base_ang_vel.to(self.device),              # 3
+            # self.body_mass.to(self.device),                 # 1
+            # self.com_displacement.to(self.device)           # 3
+        ), dim = -1)
+        return target
+
+    def compute_adapt_input(self):
+        pass
+
     def compute_observations(self):
         """ Computes observations to exclude passive joint
         """
-        # dofs_to_keep = torch.ones(self.num_dof, dtype=torch.bool)
-        # dofs_to_keep[self.dof_roller_ids] = False
 
-        # # Select the columns
-        # active_dof_pos = self.dof_pos[:, dofs_to_keep]
-        # active_default_dof_pos = self.default_dof_pos[:, dofs_to_keep]
-        # active_dof_vel = self.dof_vel[:, dofs_to_keep]
-        # active_actions = self.actions[:, dofs_to_keep]
+        # self.obs_buf = torch.cat((
+        #     self.projected_gravity,
+        #     self.commands[:, :3] * self.commands_scale,
+        #     (self.dof_pos - self.default_dof_pos) * self.obs_scales.dof_pos,
+        #     self.dof_vel * self.obs_scales.dof_vel,
+        #     torch.clip(self.actions, -1, 1)
+        # ), dim = -1)
 
-        
-        # self.obs_buf = torch.cat((  self.base_lin_vel * self.obs_scales.lin_vel,
-        #                             self.base_ang_vel  * self.obs_scales.ang_vel,
-        #                             self.projected_gravity,
-        #                             self.commands[:, :3] * self.commands_scale,
-        #                             (active_dof_pos - active_default_dof_pos) * self.obs_scales.dof_pos,
-        #                             active_dof_vel * self.obs_scales.dof_vel,
-        #                             active_actions
-        #                             ),dim=-1)
+        adapt_output = self.compute_adapt_target()
+        dummy_output = torch.zeros_like(adapt_output)
 
         self.obs_buf = torch.cat((
             self.projected_gravity,
             self.commands[:, :3] * self.commands_scale,
             (self.dof_pos - self.default_dof_pos) * self.obs_scales.dof_pos,
             self.dof_vel * self.obs_scales.dof_vel,
-            torch.clip(self.actions, -1, 1)
+            torch.clip(self.actions, -1, 1),
+            dummy_output
         ), dim = -1)
+
+        self.privileged_obs_buf = torch.cat((
+            self.projected_gravity,
+            self.commands[:, :3] * self.commands_scale,
+            (self.dof_pos - self.default_dof_pos) * self.obs_scales.dof_pos,
+            self.dof_vel * self.obs_scales.dof_vel,
+            torch.clip(self.actions, -1, 1),  
+            adapt_output,
+        ), dim = -1)
+
 
     def _init_buffers(self):
         super()._init_buffers()
@@ -124,10 +142,72 @@ class Go1_Flat(OnlyLeggedRobot):
         if self.viewer and self.enable_viewer_sync and self.debug_viz:
             self._draw_debug_vis()
 
+    def _reward_feet_clearance(self):
+        # NOTE: based on phase, not working as expected?
+        phases = 1 - torch.abs(1.0 - torch.clip((self.foot_indices * 2.0) - 1.0, 0.0, 1.0) * 2.0)
+        foot_height = (self.foot_positions[:, :, 2]).view(self.num_envs, -1)
+        target_height = 0.08 * phases + 0.08 # currently target height is 0.04
+        rew_foot_clearance = torch.square(target_height - foot_height) * (1 - self.desired_rear_contact_states)
+        return torch.sum(rew_foot_clearance, dim=1)
+    
+    def _reward_tracking_contacts_shaped_force(self):
+        foot_forces = torch.norm(self.contact_forces[:, self.feet_indices, :], dim=-1)
+        desired_contact = self.desired_contact_states
 
+        reward = 0
+        for i in range(4):
+            reward += - (1 - desired_contact[:, i]) * (
+                        1 - torch.exp(-1 * foot_forces[:, i] ** 2 / 100))
+        return reward / 4
 
-        def _reward_lin_vel_x(self):
-            return self.root_states[:, 7]
-        def _reward_legs_energy(self):
+    def _reward_tracking_contacts_shaped_vel(self):
+        foot_velocities = torch.norm(self.foot_velocities, dim=2).view(self.num_envs, -1)
+        desired_contact = self.desired_contact_states
+        reward = 0
+        for i in range(4):
+            reward += - (desired_contact[:, i] * (
+                        1 - torch.exp(-1 * foot_velocities[:, i] ** 2 / 10)))
+        return reward / 4
+    
+    def _reward_raibert_heuristic(self):
+        cur_footsteps_translated = self.foot_positions - self.base_pos.unsqueeze(1)
+        footsteps_in_body_frame = torch.zeros(self.num_envs, 4, 3, device=self.device)
+        for i in range(4):
+            footsteps_in_body_frame[:, i, :] = quat_apply_yaw(quat_conjugate(self.base_quat),
+                                                              cur_footsteps_translated[:, i, :])
 
-            return torch.sum(torch.square(self.torques * self.dof_vel), dim=1)
+        # nominal positions: [FR, FL, RR, RL]
+        # if self.cfg.commands.num_commands >= 13:
+        #     desired_stance_width = self.commands[:, 12:13]
+        #     desired_ys_nom = torch.cat([desired_stance_width / 2, -desired_stance_width / 2, desired_stance_width / 2, -desired_stance_width / 2], dim=1)
+        # else:
+        desired_stance_width = 0.3
+        desired_ys_nom = torch.tensor([desired_stance_width / 2,  -desired_stance_width / 2, desired_stance_width / 2, -desired_stance_width / 2], device=self.device).unsqueeze(0)
+
+        # if self.cfg.commands.num_commands >= 14:
+        #     desired_stance_length = self.commands[:, 13:14]
+        #     desired_xs_nom = torch.cat([desired_stance_length / 2, desired_stance_length / 2, -desired_stance_length / 2, -desired_stance_length / 2], dim=1)
+        # else:
+        desired_stance_length = 0.45
+        desired_xs_nom = torch.tensor([desired_stance_length / 2,  desired_stance_length / 2, -desired_stance_length / 2, -desired_stance_length / 2], device=self.device).unsqueeze(0)
+
+        # raibert offsets
+        phases = torch.abs(1.0 - (self.foot_indices * 2.0)) * 1.0 - 0.5
+        frequencies = 3.0
+        x_vel_des = self.commands[:, 0:1]
+        yaw_vel_des = self.commands[:, 2:3]
+        y_vel_des = yaw_vel_des * desired_stance_length / 2
+        desired_ys_offset = phases * y_vel_des * (0.5 / frequencies)
+        desired_ys_offset[:, 2:4] *= -1
+        desired_xs_offset = phases * x_vel_des * (0.5 / frequencies)
+
+        desired_ys_nom = desired_ys_nom + desired_ys_offset
+        desired_xs_nom = desired_xs_nom + desired_xs_offset
+
+        desired_footsteps_body_frame = torch.cat((desired_xs_nom.unsqueeze(2), desired_ys_nom.unsqueeze(2)), dim=2)
+
+        err_raibert_heuristic = torch.abs(desired_footsteps_body_frame - footsteps_in_body_frame[:, :, 0:2])
+
+        reward = torch.sum(torch.square(err_raibert_heuristic), dim=(1, 2))
+
+        return reward

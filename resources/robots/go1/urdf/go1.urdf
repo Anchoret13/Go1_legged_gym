@@ -37,7 +37,6 @@
       </geometry>
     </visual>
   </link>
-  
   <joint name="floating_base" type="fixed">
     <origin rpy="0 0 0" xyz="0 0 0"/>
     <parent link="base"/>
@@ -104,12 +103,12 @@
       </geometry>
       <material name="silver"/>
     </visual>
-    <!-- <collision>
+    <collision>
       <origin rpy="1.57079632679 0 0" xyz="0 -0.045 0"/>
       <geometry>
         <cylinder length="0.04" radius="0.046"/>
       </geometry>
-    </collision> -->
+    </collision>
     <inertial>
       <origin rpy="0 0 0" xyz="-0.00541 0.00074 6e-06"/>
       <mass value="0.510299"/>
@@ -227,12 +226,12 @@
       </geometry>
       <material name="silver"/>
     </visual>
-    <!-- <collision>
+    <collision>
       <origin rpy="1.57079632679 0 0" xyz="0 0.045 0"/>
       <geometry>
         <cylinder length="0.04" radius="0.046"/>
       </geometry>
-    </collision> -->
+    </collision>
     <inertial>
       <origin rpy="0 0 0" xyz="-0.00541 -0.00074 6e-06"/>
       <mass value="0.510299"/>
@@ -350,12 +349,12 @@
       </geometry>
       <material name="silver"/>
     </visual>
-    <!-- <collision>
+    <collision>
       <origin rpy="1.57079632679 0 0" xyz="0 -0.045 0"/>
       <geometry>
         <cylinder length="0.04" radius="0.046"/>
       </geometry>
-    </collision> -->
+    </collision>
     <inertial>
       <origin rpy="0 0 0" xyz="0.00541 0.00074 6e-06"/>
       <mass value="0.510299"/>
@@ -473,12 +472,12 @@
       </geometry>
       <material name="silver"/>
     </visual>
-    <!-- <collision>
+    <collision>
       <origin rpy="1.57079632679 0 0" xyz="0 0.045 0"/>
       <geometry>
         <cylinder length="0.04" radius="0.046"/>
       </geometry>
-    </collision> -->
+    </collision>
     <inertial>
       <origin rpy="0 0 0" xyz="0.00541 -0.00074 6e-06"/>
       <mass value="0.510299"/>
@@ -580,4 +579,3 @@
     </inertial>
   </link>
  </robot>
-
