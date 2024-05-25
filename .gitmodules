@@ -1,0 +1,3 @@
+[submodule "sys_id"]
+	path = sys_id
+	url = git@github.com:Anchoret13/sys_id.git
