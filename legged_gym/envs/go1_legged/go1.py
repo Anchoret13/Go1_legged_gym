@@ -46,16 +46,32 @@ class Go1_Flat(OnlyLeggedRobot):
         super()._create_envs()
 
     def compute_adapt_target(self):
-        target = torch.cat((
-            self.base_lin_vel.to(self.device),              # 3
-            self.base_ang_vel.to(self.device),              # 3
-            # self.body_mass.to(self.device),                 # 1
-            # self.com_displacement.to(self.device)           # 3
-        ), dim = -1)
+        if self.cfg.terrain.measure_heights:
+            heights = torch.clip(self.root_states[:, 2].unsqueeze(1) - 0.5 - self.measured_heights, -1, 1.) * self.obs_scales.height_measurements
+            target = torch.cat((
+                self.base_lin_vel.to(self.device),              # 3
+                self.base_ang_vel.to(self.device),              # 3
+                self.body_mass.to(self.device),                 # 1
+                self.com_displacement.to(self.device),          # 3
+                heights.to(self.device)                         # 6
+            ), dim = -1)
+        else:
+            target = torch.cat((
+                self.base_lin_vel.to(self.device),              # 3
+                self.base_ang_vel.to(self.device),              # 3
+                self.body_mass.to(self.device),                 # 1
+                self.com_displacement.to(self.device),          # 3
+                # heights.to(self.device)                         # 6
+            ), dim = -1)
         return target
 
     def compute_adapt_input(self):
-        pass
+        input = torch.cat((
+            self.projected_gravity.to(self.device),
+            (self.dof_pos - self.default_dof_pos) * self.obs_scales.dof_pos,
+            self.dof_vel * self.obs_scales.dof_vel,
+        ), dim = -1)
+        return input
 
     def compute_observations(self):
         """ Computes observations to exclude passive joint

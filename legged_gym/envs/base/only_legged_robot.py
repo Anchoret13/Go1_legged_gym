@@ -43,7 +43,8 @@ from typing import Tuple, Dict
 
 from legged_gym import LEGGED_GYM_ROOT_DIR
 from legged_gym.envs.base.base_task import BaseTask
-from legged_gym.utils.terrain import Terrain
+# from legged_gym.utils.terrain import Terrain
+from legged_gym.utils.terrain_old import Terrain
 from legged_gym.utils.math import quat_apply_yaw, wrap_to_pi, torch_rand_sqrt_float
 from legged_gym.utils.helpers import class_to_dict
 from .legged_robot_config import LeggedRobotCfg
@@ -68,6 +69,10 @@ class OnlyLeggedRobot(BaseTask):
         self.debug_viz = False
         self.init_done = False
         self._parse_cfg(self.cfg)
+        # RANDOMIZED PARAMETERS
+        self.body_mass = []
+        self.com_displacement = []
+        
         super().__init__(self.cfg, sim_params, physics_engine, sim_device, headless)
 
         if not self.headless:
@@ -75,6 +80,8 @@ class OnlyLeggedRobot(BaseTask):
         self._init_buffers()
         self._prepare_reward_function()
         self.init_done = True
+
+        
 
     def step(self, actions):
         """ Apply actions, simulate, call self.post_physics_step()
@@ -318,6 +325,13 @@ class OnlyLeggedRobot(BaseTask):
         if self.cfg.domain_rand.randomize_base_mass:
             rng = self.cfg.domain_rand.added_mass_range
             props[0].mass += np.random.uniform(rng[0], rng[1])
+
+        if self.cfg.domain_rand.randomize_com_displacement:
+            rng = self.cfg.domain_rand.com_displacement_range
+            rand_x = np.random.uniform(rng[0], rng[1])
+            rand_y = 0
+            rand_z = np.random.uniform(rng[0], rng[1])
+            props[0].com = gymapi.Vec3(rand_x, rand_y, rand_z)
         return props
     
     def _post_physics_step_callback(self):
@@ -583,6 +597,10 @@ class OnlyLeggedRobot(BaseTask):
         self.base_lin_vel = quat_rotate_inverse(self.base_quat, self.root_states[:, 7:10])
         self.base_ang_vel = quat_rotate_inverse(self.base_quat, self.root_states[:, 10:13])
         self.projected_gravity = quat_rotate_inverse(self.base_quat, self.gravity_vec)
+
+        self.body_mass = torch.tensor(self.body_mass, dtype=torch.float, device=self.device, requires_grad=False).unsqueeze(1)
+        self.com_displacement = torch.tensor(self.com_displacement, dtype=torch.float, device=self.device, requires_grad=False)
+
         if self.cfg.terrain.measure_heights:
             self.height_points = self._init_height_points()
         self.measured_heights = 0
@@ -747,6 +765,14 @@ class OnlyLeggedRobot(BaseTask):
             self.gym.set_actor_dof_properties(env_handle, actor_handle, dof_props)
             body_props = self.gym.get_actor_rigid_body_properties(env_handle, actor_handle)
             body_props = self._process_rigid_body_props(body_props, i)
+
+            self.body_mass.append(body_props[0].mass)
+            self.com_displacement.append([
+                body_props[0].com.x,
+                body_props[0].com.y,
+                body_props[0].com.z
+            ])
+
             self.gym.set_actor_rigid_body_properties(env_handle, actor_handle, body_props, recomputeInertia=True)
             self.envs.append(env_handle)
             self.actor_handles.append(actor_handle)

@@ -32,14 +32,29 @@ from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobot
 
 class Go1FlatCfg( LeggedRobotCfg ):
     class env (LeggedRobotCfg.env):
-        num_observations = 42 + 6
-        num_privileged_obs = 42 + 6
+        num_observations = 42 + 10
+        num_privileged_obs = 42 + 10
 
     class terrain (LeggedRobotCfg.terrain):
         mesh_type = 'plane'
         static_friction = 1.0
         dynamic_friction = 1.0
         measure_heights = False
+
+    # class terrain (LeggedRobotCfg.terrain):
+    #     mesh_type = 'trimesh'
+    #     horizontal_scale = 0.1
+    #     vertical_scale = 0.005
+    #     border_size = 1
+    #     curriculum = True
+    #     static_friction = 0.8
+    #     dynamic_friction = 0.8
+    #     restitution = 0
+    #     measure_heights = True
+    #     measured_points_x = [0.1, 0.3]
+    #     measured_points_y = [-0.2, 0.,0.2]
+    #     # terrain types: [smooth slope, rough slope, stairs up, stairs down, discrete]
+    #     terrain_proportions = [0.3, 0.4, 0.3, 0.0, 0.0]
 
     class commands (LeggedRobotCfg.commands): 
         curriculum = True
@@ -145,14 +160,18 @@ class Go1FlatCfg( LeggedRobotCfg ):
             collision = -1.5
             legs_energy = -1e-4
             # lin_vel_x = 2.0
+            # alive = 0.1
             
             
             
     class domain_rand( LeggedRobotCfg.domain_rand):
-        randomize_friction = False
+        randomize_friction = True
         friction_range = [0.55, 1.25]
-        randomize_base_mass = False
+        randomize_base_mass = True
         added_mass_range = [0., 5.0]
+
+        randomize_com_displacement = True
+        com_displacement_range = [-0.10, 0.10]
         push_robots = False
         push_interval_s = 15
         max_push_vel_xy = 0.5 

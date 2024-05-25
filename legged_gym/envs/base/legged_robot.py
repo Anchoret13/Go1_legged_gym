@@ -65,7 +65,7 @@ class LeggedRobot(BaseTask):
         self.cfg = cfg
         self.sim_params = sim_params
         self.height_samples = None
-        self.debug_viz = False
+        self.debug_viz = True
         self.init_done = False
         self._parse_cfg(self.cfg)
         super().__init__(self.cfg, sim_params, physics_engine, sim_device, headless)
