@@ -168,7 +168,7 @@ class Go1FlatCfg( LeggedRobotCfg ):
         randomize_friction = True
         friction_range = [0.55, 1.25]
         randomize_base_mass = True
-        added_mass_range = [0., 5.0]
+        added_mass_range = [0., 4.0]
 
         randomize_com_displacement = True
         com_displacement_range = [-0.10, 0.10]
