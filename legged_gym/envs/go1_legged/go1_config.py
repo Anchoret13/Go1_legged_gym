@@ -138,7 +138,7 @@ class Go1FlatCfg( LeggedRobotCfg ):
             # base_height = -0.2 * 50
             # pitch_tracking = -0.1 * 50
             raibert_heuristic = -0.2 * 50
-            feet_clearance = -0.1 * 50
+            feet_clearance = -0.2 * 50
             # lin_vel_z = -4e-4 * 50
             # orientation = -2e-5 * 50
             # # foot slip
@@ -158,7 +158,7 @@ class Go1FlatCfg( LeggedRobotCfg ):
             dof_vel = -1e-4
             feet_air_time =  4.0
             collision = -1.5
-            legs_energy = -1e-4
+            # legs_energy = -1e-4
             # lin_vel_x = 2.0
             # alive = 0.1
             
@@ -168,7 +168,7 @@ class Go1FlatCfg( LeggedRobotCfg ):
         randomize_friction = True
         friction_range = [0.55, 1.25]
         randomize_base_mass = True
-        added_mass_range = [0., 4.0]
+        added_mass_range = [0., 5.0]
 
         randomize_com_displacement = True
         com_displacement_range = [-0.10, 0.10]

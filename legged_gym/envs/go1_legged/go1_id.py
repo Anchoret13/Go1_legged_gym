@@ -10,9 +10,8 @@ import torch
 from typing import Tuple, Dict
 from ..base.wheeled_robot import WheeledRobot
 from ..go1_legged.go1 import Go1_Flat
-from .go1_id_config import Go1FwFlatIDCfg
 
-from sys_id.model import GPT2
+# from sys_id.model import GPT2
 from sys_id.RNN import GRU
 from torch.utils.data import DataLoader
 from torch.nn import MSELoss
@@ -34,7 +33,8 @@ class Go1FlatID(Go1_Flat):
     
     def _init_buffers(self):
         super()._init_buffers()
-        self.sys_id_path = '../../sys_id/logs/GRU/2024-05-12_13-41-58/checkpoint_epoch_20.pth'
+        self.sys_id_path = '../../sys_id/logs/GRU/2024-05-25_02-13-35/checkpoint_epoch_100.pth'
+        
         self.run_params = {
             'window_size': 50,
         }

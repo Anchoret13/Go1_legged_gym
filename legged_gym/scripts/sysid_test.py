@@ -108,15 +108,15 @@ def GRU_test(args, eval_params, model_params):
     # history[:, :, 12] = -0.01 
     # history[:, :, 13] = 0.08
     # history[:, :, 14] = -0.08 
-    STATIC_INPUT = torch.tensor([[-0.12987, -0.00079846, -0.99153, 0.015357, -0.065749,
-                                -0.14064, -0.017467, -0.065818, -0.14073, -0.012900,
-                                0.0084205, -0.14861, 0.015925, 0.0025151, -0.15289,
-                                -0.0018660, -0.0014161, -0.0017078, 0.00086044, -0.0022516,
-                                -0.0012027, -0.034837, 0.055386, -0.058765, 0.028869,
-                                0.051442, -0.052942]], device='cuda:0')
-    # print(history)
-    for i in  range(STATIC_INPUT.size(1)):
-            history[:, :, i] = STATIC_INPUT[0, i]
+    # STATIC_INPUT = torch.tensor([[-0.12987, -0.00079846, -0.99153, 0.015357, -0.065749,
+    #                             -0.14064, -0.017467, -0.065818, -0.14073, -0.012900,
+    #                             0.0084205, -0.14861, 0.015925, 0.0025151, -0.15289,
+    #                             -0.0018660, -0.0014161, -0.0017078, 0.00086044, -0.0022516,
+    #                             -0.0012027, -0.034837, 0.055386, -0.058765, 0.028869,
+    #                             0.051442, -0.052942]], device='cuda:0')
+    # # print(history)
+    # for i in  range(STATIC_INPUT.size(1)):
+    #         history[:, :, i] = STATIC_INPUT[0, i]
 
 
     obs = env.get_observations()
@@ -202,7 +202,7 @@ def MLP_test(args, eval_params, model_params):
 
 if __name__ == "__main__":
     GRU_eval_params = {
-        'checkpoint_path': '../../sys_id/logs/GRU/2024-05-12_13-41-58/checkpoint_epoch_20.pth', 
+        'checkpoint_path': '../../sys_id/logs/GRU/2024-05-25_02-13-35/checkpoint_epoch_100.pth', 
         'dataset_folder_path': '../dataset/eval/wheeled_flat', 
         'window_size': 50,
         'batch_size': 1, 
