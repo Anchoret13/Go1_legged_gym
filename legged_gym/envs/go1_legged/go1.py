@@ -85,8 +85,8 @@ class Go1_Flat(OnlyLeggedRobot):
         #     torch.clip(self.actions, -1, 1)
         # ), dim = -1)
 
-        adapt_output = self.compute_adapt_target()
-        dummy_output = torch.zeros_like(adapt_output)
+        adapt_target = self.compute_adapt_target()
+        dummy_output = torch.zeros_like(adapt_target)
 
         self.obs_buf = torch.cat((
             self.projected_gravity,
@@ -94,7 +94,8 @@ class Go1_Flat(OnlyLeggedRobot):
             (self.dof_pos - self.default_dof_pos) * self.obs_scales.dof_pos,
             self.dof_vel * self.obs_scales.dof_vel,
             torch.clip(self.actions, -1, 1),
-            dummy_output
+            # dummy_output
+            # adapt_target,
         ), dim = -1)
 
         self.privileged_obs_buf = torch.cat((
@@ -103,7 +104,7 @@ class Go1_Flat(OnlyLeggedRobot):
             (self.dof_pos - self.default_dof_pos) * self.obs_scales.dof_pos,
             self.dof_vel * self.obs_scales.dof_vel,
             torch.clip(self.actions, -1, 1),  
-            adapt_output,
+            # adapt_target,
         ), dim = -1)
 
 

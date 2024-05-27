@@ -156,6 +156,36 @@ class TaskRegistry():
             runner.load(resume_path)
         return runner, train_cfg
     
+    def make_warmup_runner(self, env, name=None, args=None, train_cfg=None, log_root="default", warmup_path = "/home/well/Desktop/Skating/legged_gym/logs/go1_legged/modified_ground_truth/model_3000.pt") -> Tuple[OnPolicyRunner, LeggedRobotCfgPPO]:
+        if args is None:
+            args = get_args()
+        if train_cfg is None:
+            if name is None:
+                raise ValueError("Either 'name' or 'train_cfg' must be not None")
+            # load config files
+            _, train_cfg = self.get_cfgs(name)
+        else:
+            if name is not None:
+                print(f"'train_cfg' provided -> Ignoring 'name={name}'")
+        # override cfg from args (if specified)
+        _, train_cfg = update_cfg_from_args(None, train_cfg, args)
+
+        if log_root=="default":
+            log_root = os.path.join(LEGGED_GYM_ROOT_DIR, 'logs', train_cfg.runner.experiment_name)
+            log_dir = os.path.join(log_root, datetime.now().strftime('%b%d_%H-%M-%S') + '_' + train_cfg.runner.run_name)
+        elif log_root is None:
+            log_dir = None
+        else:
+            log_dir = os.path.join(log_root, datetime.now().strftime('%b%d_%H-%M-%S') + '_' + train_cfg.runner.run_name)
+        
+        train_cfg_dict = class_to_dict(train_cfg)
+        runner = OnPolicyRunner(env, train_cfg_dict, log_dir, device=args.rl_device)
+        #save resume path before creating a new log_dir
+        resume = train_cfg.runner.resume
+        if resume:
+            runner.load(warmup_path)
+        return runner, train_cfg
+
     # def make_gru_alg_runner(
     #         self,
     #         env,

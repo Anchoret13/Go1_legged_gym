@@ -299,7 +299,7 @@ class Logger:
         fig, axes = plt.subplots(10, 1, figsize = (10, 15))
         axes = axes.flatten()
 
-        titles = ["roller 1(rad/s)", "roller 2(rad/s)", "Installation Angle(rad)", "lin_x(m/s)", "lin_y(m/s)", "lin_z(m/s)", "roll(rad/s)", "pitch(rad/s)", "yaw(rad/s)", "mass"]
+        titles = ["lin_x(m/s)", "lin_y(m/s)", "lin_z(m/s)", "roll(rad/s)", "pitch(rad/s)", "yaw(rad/s)", "mass", "com displacement_x", "com_displacement_y", "com_displacement_z"]
 
         for i in range(10):  # Since each tensor has 9 elements
             values_prediction = [tensor[0, i].item() for tensor in prediction]  # Extract all i-th elements from prediction

@@ -33,7 +33,7 @@ class Go1FlatID(Go1_Flat):
     
     def _init_buffers(self):
         super()._init_buffers()
-        self.sys_id_path = '../../sys_id/logs/GRU/2024-05-25_02-13-35/checkpoint_epoch_100.pth'
+        self.sys_id_path = '../../sys_id/logs/GRU/2024-05-25_22-06-52/checkpoint_epoch_100.pth'
         
         self.run_params = {
             'window_size': 50,
@@ -41,7 +41,7 @@ class Go1FlatID(Go1_Flat):
         self.run_params['checkpoint_path'] = self.sys_id_path
         self.sys_model_params = {
             "n_layer": 2,
-            "output_size": 16,
+            "output_size": 10,
             "input_size": 27, 
             "hidden_size": 150, 
         } # NOTE: modify this
@@ -50,9 +50,9 @@ class Go1FlatID(Go1_Flat):
         self.obs_history = torch.zeros(self.num_envs, self.window_size, self.sys_model_params["input_size"], dtype=torch.float, device=self.device, requires_grad=False)
     
     def compute_observations(self):
-        adapt_output = self.compute_adapt_target()
+        id_target = self.compute_adapt_target()
         id_input = self.compute_adapt_input()
-        self.history = update_history(self.obs_history, id_input)
+        self.obs_history = update_history(self.obs_history, id_input)
         with torch.no_grad():
             id_output = self.adaptive_module(self.obs_history, None)
         self.obs_buf = torch.cat((
@@ -70,7 +70,7 @@ class Go1FlatID(Go1_Flat):
             (self.dof_pos - self.default_dof_pos) * self.obs_scales.dof_pos,
             self.dof_vel * self.obs_scales.dof_vel,
             torch.clip(self.actions, -1, 1),  
-            adapt_output,
+            id_target,
         ), dim = -1)
 
     def reset_idx(self, env_ids):
